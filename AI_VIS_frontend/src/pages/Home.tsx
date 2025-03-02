@@ -73,14 +73,16 @@ export function Home() {
             Revolutionize Hiring with{" "}
             <span className="text-indigo-400">AI VIS</span>
           </h1>
-          <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-            AI-VIS is your ultimate recruitment partner, designed to simplify
-            hiring and empower careers. For HR professionals, it identifies top
-            talent with precision and fairness. For candidates, it provides a
-            platform to shine and showcase your potential. Experience smarter,
-            unbiased hiring and take the first step into the future of
-            recruitment today{" "}
-          </p>
+          <div className="bg-black/50 rounded-lg p-4 mb-4">
+            <p className="text-xl text-gray-300 mb-4 leading-relaxed">
+              AI-VIS is your ultimate recruitment partner, designed to simplify
+              hiring and empower careers. For HR professionals, it identifies
+              top talent with precision and fairness. For candidates, it
+              provides a platform to shine and showcase your potential.
+              Experience smarter, unbiased hiring and take the first step into
+              the future of recruitment today{" "}
+            </p>
+          </div>
           <Button
             onClick={() => navigate(`/signup`)}
             className="bg-purple-600 text-white px-8 py-3 text-lg rounded-lg shadow-lg hover:bg-purple-700"
