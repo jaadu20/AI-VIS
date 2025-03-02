@@ -7,9 +7,12 @@ import { About } from "./About";
 export function Home() {
   const navigate = useNavigate();
 
-  const scrollToSection = (id: number) => {
+  const scrollToSection = (id: string) => {
     const section = document.getElementById(id);
-    section.scrollIntoView({ behavior: "smooth" });
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+
   };
 
   return (
@@ -91,10 +94,13 @@ export function Home() {
           </Button>
         </div>
         <div className="md:w-1/2 flex justify-center">
-          <img
-            src="https://img.freepik.com/premium-photo/cute-robot-with-headset-notebook-exemplifies-automation-customer-service_795881-12769.jpg?w=900"
-            className="w-full max-w-md md:max-w-lg drop-shadow-2xl rounded-lg"
-          />
+            <img
+              src="https://img.freepik.com/premium-photo/cute-robot-with-headset-notebook-exemplifies-automation-customer-service_795881-12769.jpg?w=900"
+              alt="Cute robot with headset and notebook"
+              className="w-full max-w-md md:max-w-lg drop-shadow-2xl rounded-lg"
+            />
+
+
         </div>
       </motion.div>
 
@@ -172,8 +178,15 @@ export function Home() {
               placeholder="Your Message"
               className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white"
             ></textarea>
-            <Button className="w-full bg-yellow-400 text-indigo-900 px-4 py-2 rounded-lg shadow-lg hover:bg-yellow-500">
+            <Button
+              className="w-full bg-yellow-400 text-indigo-900 px-4 py-2 rounded-lg shadow-lg hover:bg-yellow-500"
+              onClick={() => {
+                // Handle form submission
+                console.log("Form submitted");
+              }}
+            >
               Send Message
+
             </Button>
           </form>
         </div>
