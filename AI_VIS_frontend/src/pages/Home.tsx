@@ -7,7 +7,6 @@ import { About } from "./About";
 export function Home() {
   const navigate = useNavigate();
 
-
   const scrollToSection = (id: number) => {
     const section = document.getElementById(id);
     section.scrollIntoView({ behavior: "smooth" });
@@ -62,7 +61,6 @@ export function Home() {
         </div>
       </header>
 
-     
       <motion.div
         id="hero"
         initial={{ opacity: 0, y: -20 }}
@@ -81,7 +79,7 @@ export function Home() {
             talent with precision and fairness. For candidates, it provides a
             platform to shine and showcase your potential. Experience smarter,
             unbiased hiring and take the first step into the future of
-            recruitment today!{" "}
+            recruitment today{" "}
           </p>
           <Button
             onClick={() => navigate(`/signup`)}
@@ -98,7 +96,6 @@ export function Home() {
         </div>
       </motion.div>
 
-  
       <div id="pricing" className="max-w-7xl mx-auto px-4 py-16">
         <h2 className="text-5xl font-bold text-center text-white mb-12">
           Transforming the Way Talent Meets Opportunity
@@ -155,7 +152,6 @@ export function Home() {
         </div>
       </div>
 
-     
       <div id="contact" className="bg-gray-900 text-gray-300 py-16">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-4xl font-bold text-center mb-8">Contact Us</h2>
@@ -181,7 +177,6 @@ export function Home() {
         </div>
       </div>
 
-     
       <footer className="bg-transparent text-gray-300 py-8">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
           <p className="mb-4 md:mb-0 text-lg">
