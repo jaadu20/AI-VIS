@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 export function Navbar() {
   return (
-    <header className="fixed w-full bg-black bg-opacity-60 py-4 z-10 shadow-md">
+    <header className="fixed w-full bg-black bg-opacity-90 py-4 z-10 shadow-md">
       <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
         <h1 className="text-3xl font-extrabold text-yellow-300 tracking-wide">
           AI VIS
