@@ -1,0 +1,27 @@
+# Core Django
+django==4.2.7
+djangorestframework==3.14.0
+django-cors-headers==4.2.0
+djangorestframework-simplejwt==5.2.2
+django-storages==1.13.2
+boto3==1.28.62  # AWS S3
+
+# FastAPI
+fastapi==0.103.1
+uvicorn==0.23.2
+python-dotenv==1.0.0
+
+# AI/ML
+transformers==4.34.0
+torch==2.0.1
+spacy==3.7.2
+opencv-python==4.8.1.78
+deepface==0.0.79
+google-cloud-speech==2.21.0  # Speech-to-Text
+
+# Async
+celery==5.3.1
+redis==4.6.0
+
+# Database
+psycopg2==2.9.7
