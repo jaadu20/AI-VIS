@@ -7,6 +7,7 @@ import { Button } from "../../components/ui/Button";
 import { useAuthStore } from "../../store/authStore";
 import { Navbar } from "../../components/Navbar";
 import { Footer } from "../../components/Footer";
+import api from "../../api";
 
 interface LoginForm {
   email: string;
@@ -28,13 +29,24 @@ export function Login() {
 
   const onSubmit = async (data: LoginForm) => {
     try {
-      setUser({
-        id: "1",
+      // Call the API to log in
+      const response = await api.post("/login/", {
         email: data.email,
-        role: userType as "student" | "company" | "admin",
-        name: "John Doe",
+        password: data.password,
       });
 
+      // Save the access token to localStorage
+      localStorage.setItem("access_token", response.data.access);
+
+      // Set user in the global state
+      setUser({
+        id: "1", // Replace with actual user ID from the API
+        email: data.email,
+        role: userType as "student" | "company" | "admin",
+        name: "John Doe", // Replace with actual name from the API
+      });
+
+      // Redirect based on user type
       switch (userType) {
         case "student":
           navigate("/student/dashboard");
@@ -45,9 +57,12 @@ export function Login() {
         case "admin":
           navigate("/admin/dashboard");
           break;
+        default:
+          navigate("/");
       }
     } catch (err) {
-      setError("Invalid credentials");
+      setError("Invalid credentials. Please try again.");
+      console.error("Login error:", err);
     }
   };
 
@@ -169,7 +184,7 @@ export function Login() {
 
             {error && <div className="text-sm text-red-600">{error}</div>}
 
-            <Button type="submit" className="w-full ">
+            <Button type="submit" className="w-full">
               Sign in
             </Button>
             <p className="mt-2 text-center text-sm text-gray-600">

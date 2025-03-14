@@ -6,6 +6,7 @@ import { User, Mail, Lock, Building2, Phone } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { useAuthStore } from "../../store/authStore";
 import { Footer } from "../../components/Footer";
+import api from "../../api";
 
 interface SignupForm {
   name: string;
@@ -30,15 +31,28 @@ export function Signup() {
 
   const onSubmit = async (data: SignupForm) => {
     try {
-      
+      // Call the API to register the user
+      const response = await api.post("/signup/", {
+        email: data.email,
+        password: data.password,
+        name: data.name,
+        phone: data.phone,
+        is_company: userType === "company",
+        company_name: userType === "company" ? data.company : "",
+      });
+
+      // Save the access token to localStorage
+      localStorage.setItem("access_token", response.data.access);
+
+      // Set user in the global state
       setUser({
-        id: "1",
+        id: "1", // Replace with actual user ID from the API
         email: data.email,
         role: userType as "student" | "company" | "admin",
         name: data.name,
       });
 
-     
+      // Redirect based on user type
       switch (userType) {
         case "student":
           navigate("/student/dashboard");
@@ -46,9 +60,12 @@ export function Signup() {
         case "company":
           navigate("/company/dashboard");
           break;
+        default:
+          navigate("/");
       }
     } catch (err) {
-      setError("Registration failed");
+      setError("Registration failed. Please try again.");
+      console.error("Signup error:", err);
     }
   };
 
@@ -95,6 +112,7 @@ export function Signup() {
           </Button>
         </div>
       </header>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
