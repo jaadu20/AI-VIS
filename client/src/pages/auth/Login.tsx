@@ -28,7 +28,6 @@ export function Login() {
 
   const onSubmit = async (data: LoginForm) => {
     try {
-      
       setUser({
         id: "1",
         email: data.email,
@@ -36,7 +35,6 @@ export function Login() {
         name: "John Doe",
       });
 
-      
       switch (userType) {
         case "student":
           navigate("/student/dashboard");
@@ -133,7 +131,7 @@ export function Login() {
                 <input
                   {...register("email", { required: "Email is required" })}
                   type="email"
-                  className="pl-10 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
+                  className="pl-10 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md text-black"
                 />
               </div>
               {errors.email && (
@@ -159,7 +157,7 @@ export function Login() {
                     required: "Password is required",
                   })}
                   type="password"
-                  className="pl-10 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
+                  className="pl-10 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md text-black"
                 />
               </div>
               {errors.password && (

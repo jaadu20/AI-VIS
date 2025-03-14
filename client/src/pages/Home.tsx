@@ -12,7 +12,6 @@ export function Home() {
     if (section) {
       section.scrollIntoView({ behavior: "smooth" });
     }
-
   };
 
   return (
@@ -24,7 +23,7 @@ export function Home() {
         backgroundAttachment: "fixed",
       }}
     >
-      <header className="fixed w-full bg-black bg-opacity-60 py-4 z-10 shadow-md">
+      <header className="fixed w-full bg-black bg-opacity-100 py-4 z-10 shadow-md">
         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
           <h1 className="text-3xl font-extrabold text-yellow-300 tracking-wide">
             AI VIS
@@ -94,13 +93,11 @@ export function Home() {
           </Button>
         </div>
         <div className="md:w-1/2 flex justify-center">
-            <img
-              src="https://img.freepik.com/premium-photo/cute-robot-with-headset-notebook-exemplifies-automation-customer-service_795881-12769.jpg?w=900"
-              alt="Cute robot with headset and notebook"
-              className="w-full max-w-md md:max-w-lg drop-shadow-2xl rounded-lg"
-            />
-
-
+          <img
+            src="https://img.freepik.com/premium-photo/cute-robot-with-headset-notebook-exemplifies-automation-customer-service_795881-12769.jpg?w=900"
+            alt="Cute robot with headset and notebook"
+            className="w-full max-w-md md:max-w-lg drop-shadow-2xl rounded-lg"
+          />
         </div>
       </motion.div>
 
@@ -186,7 +183,6 @@ export function Home() {
               }}
             >
               Send Message
-
             </Button>
           </form>
         </div>
