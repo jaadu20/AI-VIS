@@ -138,8 +138,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.your-email-provider.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your-email@example.com'
-EMAIL_HOST_PASSWORD = 'your-email-password'
+EMAIL_HOST_USER = 'jawadfarid383@gmail.com'
+EMAIL_HOST_PASSWORD = '52-IsB_24'
 DEFAULT_FROM_EMAIL = 'noreply@yourdomain.com'
 
 # Frontend URL
