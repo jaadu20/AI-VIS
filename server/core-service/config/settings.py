@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,10 +26,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users.apps.UsersConfig',
-    'rest_framework',  
+    'rest_framework',
+    'rest_framework.authtoken',
+    'rest_framework_simplejwt',
     'corsheaders',
-    'jobs',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -68,7 +70,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'aivis_db',
+        'NAME': 'aivisdb',
         'USER': 'postgres',
         'PASSWORD': '52-IsB_24',
         'HOST': 'localhost',
@@ -79,7 +81,13 @@ DATABASES = {
 
 AUTH_USER_MODEL = 'users.User'
 
+# settings.py
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
 
+CORS_ALLOW_ALL_ORIGINS = True  # For development only
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -87,9 +95,11 @@ REST_FRAMEWORK = {
     )
 }
 
-from datetime import timedelta
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'TOKEN_OBTAIN_SERIALIZER': 'users.serializers.CustomTokenObtainPairSerializer',
 }
 
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -123,6 +133,17 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.your-email-provider.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email@example.com'
+EMAIL_HOST_PASSWORD = 'your-email-password'
+DEFAULT_FROM_EMAIL = 'noreply@yourdomain.com'
+
+# Frontend URL
+FRONTEND_URL = 'http://localhost:5173'  # Your React app URL
 
 AWS_ACCESS_KEY_ID = 'AKIAYDWHTEIK3HT3NBVV'
 AWS_SECRET_ACCESS_KEY = '5voo3bvMMMei+9JL78/VFhFjG64Y8bzwWHTBjaiT'
@@ -134,8 +155,7 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 STATIC_URL = 'static/'
 
-
-CORS_ALLOW_ALL_ORIGINS = True  # Temporarily for development
+CORS_ALLOW_CREDENTIALS = True
 
 
 # Default primary key field type

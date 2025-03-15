@@ -1,25 +1,35 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import { Lock, Mail } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { useAuthStore } from "../../store/authStore";
-import { Navbar } from "../../components/Navbar";
 import { Footer } from "../../components/Footer";
 import api from "../../api";
+import { toast, Toaster } from "react-hot-toast";
+import { jwtDecode } from "jwt-decode";
 
 interface LoginForm {
   email: string;
   password: string;
 }
 
+interface DecodedToken {
+  id: string;
+  email: string;
+  role: "student" | "company" | "admin";
+  name: string;
+  phone: string;
+  company_name?: string;
+  company_address?: string;
+}
+
 export function Login() {
-  const [searchParams] = useSearchParams();
-  const userType = searchParams.get("type") || "student";
   const navigate = useNavigate();
   const setUser = useAuthStore((state) => state.setUser);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
@@ -28,41 +38,47 @@ export function Login() {
   } = useForm<LoginForm>();
 
   const onSubmit = async (data: LoginForm) => {
+    setIsLoading(true);
     try {
-      // Call the API to log in
-      const response = await api.post("/login/", {
+      const response = await api.post("/api/auth/login/", {
         email: data.email,
         password: data.password,
       });
 
-      // Save the access token to localStorage
-      localStorage.setItem("access_token", response.data.access);
+      const decoded: DecodedToken = jwtDecode(response.data.access);
 
-      // Set user in the global state
-      setUser({
-        id: "1", // Replace with actual user ID from the API
-        email: data.email,
-        role: userType as "student" | "company" | "admin",
-        name: "John Doe", // Replace with actual name from the API
-      });
+      // Set user with all profile data including phone
+      setUser(
+        {
+          id: decoded.id,
+          email: decoded.email,
+          role: decoded.role,
+          name: decoded.name,
+          phone: decoded.phone,
+          ...(decoded.role === "company" && {
+            companyName: decoded.company_name,
+            companyAddress: decoded.company_address,
+          }),
+        },
+        response.data.access
+      );
 
-      // Redirect based on user type
-      switch (userType) {
-        case "student":
-          navigate("/student/dashboard");
-          break;
-        case "company":
-          navigate("/company/dashboard");
-          break;
-        case "admin":
-          navigate("/admin/dashboard");
-          break;
-        default:
-          navigate("/");
-      }
+      // Redirect based on role
+      const dashboardPaths = {
+        student: "/student/dashboard",
+        company: "/company/dashboard",
+        admin: "/admin/dashboard",
+      };
+
+      navigate(dashboardPaths[decoded.role] || "/");
+
+      toast.success("Login successful!");
     } catch (err) {
       setError("Invalid credentials. Please try again.");
+      toast.error("Login failed. Please check your credentials.");
       console.error("Login error:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -75,7 +91,10 @@ export function Login() {
         backgroundAttachment: "fixed",
       }}
     >
-      <header className="fixed w-full bg-black bg-opacity-60 py-4 z-10 shadow-md">
+      <Toaster />
+
+      {/* Header */}
+      <header className="fixed w-full bg-black bg-opacity-100 py-4 z-10 shadow-md">
         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
           <h1 className="text-3xl font-extrabold text-yellow-300 tracking-wide">
             AI VIS
@@ -87,7 +106,9 @@ export function Login() {
             >
               Home
             </button>
-            <button>About Us</button>
+            <button className="text-gray-200 hover:text-yellow-300">
+              About Us
+            </button>
             <button
               onClick={() => navigate("/getstarted")}
               className="text-gray-200 hover:text-yellow-300"
@@ -103,9 +124,9 @@ export function Login() {
           </nav>
           <Button
             className="bg-yellow-400 text-indigo-900 px-4 py-2 rounded-lg shadow-lg hover:bg-yellow-500"
-            onClick={() => navigate("/login?student")}
+            onClick={() => navigate("/signup")}
           >
-            Login
+            Sign Up
           </Button>
         </div>
       </header>
@@ -115,23 +136,24 @@ export function Login() {
         animate={{ opacity: 1, y: 0 }}
         className="items-center max-w-7xl mx-auto px-4 py-20"
       >
-        <h2 className="text-center text-3xl font-extrabold text-gray-900 font-bold text-yellow-300 leading-tight mb-6">
+        <h2 className="text-center text-3xl font-extrabold text-yellow-300 leading-tight mt-12">
           Sign in to your Account
         </h2>
-        <p className="mt-2 text-center text-sm text-yellow-600">
-          Or{" "}
+        <p className="mt-4 text-center text-sm text-yellow-600">
+          Don't have an account?{" "}
           <button
-            onClick={() => navigate(`/signup?type=${userType}`)}
-            className="font-medium text-blue-600 hover:text-white-500 font-bold text-white-300 leading-tight mb-6"
+            onClick={() => navigate("/signup")}
+            className="font-medium text-blue-400 hover:text-blue-300"
           >
-            create a new account
+            Create one here
           </button>
         </p>
       </motion.div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white/90 backdrop-blur-sm py-8 px-4 shadow-xl rounded-2xl sm:px-10 mb-8">
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            {/* Email Field */}
             <div>
               <label
                 htmlFor="email"
@@ -146,7 +168,7 @@ export function Login() {
                 <input
                   {...register("email", { required: "Email is required" })}
                   type="email"
-                  className="pl-10 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md text-black"
+                  className="pl-10 block w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-black"
                 />
               </div>
               {errors.email && (
@@ -156,6 +178,7 @@ export function Login() {
               )}
             </div>
 
+            {/* Password Field */}
             <div>
               <label
                 htmlFor="password"
@@ -170,9 +193,10 @@ export function Login() {
                 <input
                   {...register("password", {
                     required: "Password is required",
+                    minLength: { value: 8, message: "Minimum 8 characters" },
                   })}
                   type="password"
-                  className="pl-10 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md text-black"
+                  className="pl-10 block w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-black"
                 />
               </div>
               {errors.password && (
@@ -184,21 +208,26 @@ export function Login() {
 
             {error && <div className="text-sm text-red-600">{error}</div>}
 
-            <Button type="submit" className="w-full">
-              Sign in
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg transition-all duration-300"
+              disabled={isLoading}
+            >
+              {isLoading ? "Signing In..." : "Sign in"}
             </Button>
+
             <p className="mt-2 text-center text-sm text-gray-600">
-              {" "}
               <button
-                onClick={() => navigate(`/forgetpass`)}
+                onClick={() => navigate("/forgetpass")}
                 className="font-medium text-blue-600 hover:text-blue-500"
               >
-                Forget password?
+                Forgot password?
               </button>
             </p>
           </form>
         </div>
       </div>
+
       <Footer />
     </div>
   );
