@@ -1,5 +1,11 @@
 from fastapi import FastAPI
 from ai_service.question_generation.routers import questions
+from ai_service.question_generation.models.t5_generator import T5QuestionGenerator
+
+# Add this before creating FastAPI app
+print("Warming up model...")
+T5QuestionGenerator().generate("warmup")
+print("Model ready!")
 
 app = FastAPI()
 
