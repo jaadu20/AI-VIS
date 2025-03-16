@@ -19,6 +19,8 @@ spacy==3.7.2
 opencv-python==4.8.1.78
 deepface==0.0.79
 google-cloud-speech==2.21.0  # Speech-to-Text
+python-multipart>=0.0.6
+sentencepiece>=0.1.99
 
 # Async
 celery==5.3.1
