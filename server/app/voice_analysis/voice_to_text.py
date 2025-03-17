@@ -31,7 +31,7 @@ def recognize_speech_with_azure():
         cancellation_details = result.cancellation_details
         print(f"Speech recognition canceled: {cancellation_details.reason}")
         if cancellation_details.reason == speechsdk.CancellationReason.Error:
-            print(f"Error details: {cancellation_details.error_details}")
+            print(f"Error : {cancellation_details.error_details}")
     return None
 
 if __name__ == "__main__":
