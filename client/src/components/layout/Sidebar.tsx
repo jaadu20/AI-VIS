@@ -1,5 +1,5 @@
-import { useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useLocation, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   LayoutDashboard,
   Users,
@@ -10,9 +10,9 @@ import {
   GraduationCap,
   FileText,
   MessageSquare,
-} from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
-import { cn } from '../../lib/utils';
+} from "lucide-react";
+import { useAuthStore } from "../../pages/auth/store/authStore";
+import { cn } from "../../lib/utils";
 
 interface SidebarItem {
   icon: any;
@@ -27,24 +27,28 @@ export function Sidebar() {
 
   const sidebarItems: Record<string, SidebarItem[]> = {
     student: [
-      { icon: LayoutDashboard, label: 'Dashboard', href: '/student/dashboard' },
-      { icon: Briefcase, label: 'Jobs', href: '/student/jobs' },
-      { icon: MessageSquare, label: 'Interviews', href: '/student/interviews' },
-      { icon: FileText, label: 'Applications', href: '/student/applications' },
-      { icon: GraduationCap, label: 'Profile', href: '/student/profile' },
+      { icon: LayoutDashboard, label: "Dashboard", href: "/student/dashboard" },
+      { icon: Briefcase, label: "Jobs", href: "/student/jobs" },
+      { icon: MessageSquare, label: "Interviews", href: "/student/interviews" },
+      { icon: FileText, label: "Applications", href: "/student/applications" },
+      { icon: GraduationCap, label: "Profile", href: "/student/profile" },
     ],
     company: [
-      { icon: LayoutDashboard, label: 'Dashboard', href: '/company/dashboard' },
-      { icon: Briefcase, label: 'Post Job', href: '/company/post-job' },
-      { icon: Users, label: 'Candidates Result', href: '/company/candidatesresults' },
-      { icon: Building2, label: 'Profile', href: '/company/profile' },
+      { icon: LayoutDashboard, label: "Dashboard", href: "/company/dashboard" },
+      { icon: Briefcase, label: "Post Job", href: "/company/post-job" },
+      {
+        icon: Users,
+        label: "Candidates Result",
+        href: "/company/candidatesresults",
+      },
+      { icon: Building2, label: "Profile", href: "/company/profile" },
     ],
     admin: [
-      { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard' },
-      { icon: Users, label: 'Users', href: '/admin/users' },
-      { icon: Building2, label: 'Companies', href: '/admin/companies' },
-      { icon: Briefcase, label: 'Jobs', href: '/admin/jobs' },
-      { icon: Settings, label: 'Settings', href: '/admin/settings' },
+      { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
+      { icon: Users, label: "Users", href: "/admin/users" },
+      { icon: Building2, label: "Companies", href: "/admin/companies" },
+      { icon: Briefcase, label: "Jobs", href: "/admin/jobs" },
+      { icon: Settings, label: "Settings", href: "/admin/settings" },
     ],
   };
 
@@ -52,15 +56,15 @@ export function Sidebar() {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
   return (
     <div
       className="h-screen w-64 flex flex-col"
       style={{
-        background: 'linear-gradient(to bottom,rgb(46, 54, 190), #2a4365)', // Gradient from purple to dark blue
-        color: '#ffffff',
+        background: "linear-gradient(to bottom,rgb(46, 54, 190), #2a4365)", // Gradient from purple to dark blue
+        color: "#ffffff",
       }}
     >
       <div className="p-6">
@@ -77,10 +81,10 @@ export function Sidebar() {
               <button
                 onClick={() => navigate(item.href)}
                 className={cn(
-                  'w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                  "w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   location.pathname === item.href
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-white hover:bg-blue-700' 
+                    ? "bg-blue-600 text-white"
+                    : "text-white hover:bg-blue-700"
                 )}
               >
                 <item.icon className="h-5 w-5" />

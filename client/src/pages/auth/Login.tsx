@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import { Lock, Mail } from "lucide-react";
 import { Button } from "../../components/ui/Button";
-import { useAuthStore } from "../../store/authStore";
+import { useAuthStore } from "./store/authStore";
 import { Footer } from "../../components/Footer";
 import api from "../../api";
 import { toast, Toaster } from "react-hot-toast";
@@ -18,7 +18,7 @@ interface LoginForm {
 interface DecodedToken {
   id: string;
   email: string;
-  role: "student" | "company" | "admin";
+  role: "candidate" | "company";
   name: string;
   phone: string;
   company_name?: string;
@@ -48,6 +48,7 @@ export function Login() {
       const decoded: DecodedToken = jwtDecode(response.data.access);
 
       // Set user with all profile data including phone
+      // Update the setUser call
       setUser(
         {
           id: decoded.id,
@@ -56,26 +57,31 @@ export function Login() {
           name: decoded.name,
           phone: decoded.phone,
           ...(decoded.role === "company" && {
-            companyName: decoded.company_name,
-            companyAddress: decoded.company_address,
+            company_name: decoded.company_name, // Use snake_case
+            company_address: decoded.company_address,
           }),
         },
         response.data.access
       );
-
       // Redirect based on role
       const dashboardPaths = {
-        student: "/student/dashboard",
+        candidate: "/candidate/dashboard",
         company: "/company/dashboard",
-        admin: "/admin/dashboard",
       };
 
-      navigate(dashboardPaths[decoded.role] || "/");
+      navigate(dashboardPaths[decoded.role], {
+        replace: true,
+        state: { fromLogin: true }, // Optional: Add state if needed
+      });
 
       toast.success("Login successful!");
     } catch (err) {
-      setError("Invalid credentials. Please try again.");
-      toast.error("Login failed. Please check your credentials.");
+      let errorMessage = "Login failed. Please check your credentials.";
+      if (err.response?.status === 401) {
+        errorMessage = "Invalid email or password";
+      }
+      setError(errorMessage);
+      toast.error(errorMessage);
       console.error("Login error:", err);
     } finally {
       setIsLoading(false);

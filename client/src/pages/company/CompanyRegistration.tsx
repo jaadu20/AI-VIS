@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { motion } from 'framer-motion';
-import { Building2, Mail, Phone, Globe, MapPin } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
-import { useAuthStore } from '../../store/authStore';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { motion } from "framer-motion";
+import { Building2, Mail, Phone, Globe, MapPin } from "lucide-react";
+import { Button } from "../../components/ui/Button";
+import { useAuthStore } from "../auth/store/authStore";
 
 interface CompanyRegistrationForm {
   companyName: string;
@@ -20,22 +20,25 @@ interface CompanyRegistrationForm {
 export function CompanyRegistration() {
   const navigate = useNavigate();
   const setUser = useAuthStore((state) => state.setUser);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  const { register, handleSubmit, formState: { errors } } = useForm<CompanyRegistrationForm>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CompanyRegistrationForm>();
 
   const onSubmit = async (data: CompanyRegistrationForm) => {
     try {
-    
       setUser({
-        id: '1',
+        id: "1",
         email: data.email,
-        role: 'company',
-        name: data.companyName
+        role: "company",
+        name: data.companyName,
       });
-      navigate('/company/dashboard');
+      navigate("/company/dashboard");
     } catch (err) {
-      setError('Registration failed. Please try again.');
+      setError("Registration failed. Please try again.");
     }
   };
 
@@ -50,9 +53,9 @@ export function CompanyRegistration() {
           Register your Company
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Already registered?{' '}
+          Already registered?{" "}
           <button
-            onClick={() => navigate('/login?type=company')}
+            onClick={() => navigate("/login?type=company")}
             className="font-medium text-blue-600 hover:text-blue-500"
           >
             Sign in
@@ -72,12 +75,16 @@ export function CompanyRegistration() {
                   <Building2 className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  {...register('companyName', { required: 'Company name is required' })}
+                  {...register("companyName", {
+                    required: "Company name is required",
+                  })}
                   className="pl-10 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
               {errors.companyName && (
-                <p className="mt-1 text-sm text-red-600">{errors.companyName.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.companyName.message}
+                </p>
               )}
             </div>
 
@@ -90,13 +97,15 @@ export function CompanyRegistration() {
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  {...register('email', { required: 'Email is required' })}
+                  {...register("email", { required: "Email is required" })}
                   type="email"
                   className="pl-10 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
               {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
@@ -109,13 +118,15 @@ export function CompanyRegistration() {
                   <Phone className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  {...register('phone', { required: 'Phone is required' })}
+                  {...register("phone", { required: "Phone is required" })}
                   type="tel"
                   className="pl-10 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
               {errors.phone && (
-                <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.phone.message}
+                </p>
               )}
             </div>
 
@@ -128,7 +139,7 @@ export function CompanyRegistration() {
                   <Globe className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  {...register('website')}
+                  {...register("website")}
                   type="url"
                   className="pl-10 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
                 />
@@ -140,7 +151,7 @@ export function CompanyRegistration() {
                 Industry
               </label>
               <select
-                {...register('industry', { required: 'Industry is required' })}
+                {...register("industry", { required: "Industry is required" })}
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
               >
                 <option value="">Select industry</option>
@@ -153,7 +164,9 @@ export function CompanyRegistration() {
                 <option value="other">Other</option>
               </select>
               {errors.industry && (
-                <p className="mt-1 text-sm text-red-600">{errors.industry.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.industry.message}
+                </p>
               )}
             </div>
 
@@ -162,7 +175,7 @@ export function CompanyRegistration() {
                 Company Size
               </label>
               <select
-                {...register('size', { required: 'Company size is required' })}
+                {...register("size", { required: "Company size is required" })}
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
               >
                 <option value="">Select size</option>
@@ -173,7 +186,9 @@ export function CompanyRegistration() {
                 <option value="501+">501+ employees</option>
               </select>
               {errors.size && (
-                <p className="mt-1 text-sm text-red-600">{errors.size.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.size.message}
+                </p>
               )}
             </div>
 
@@ -186,12 +201,16 @@ export function CompanyRegistration() {
                   <MapPin className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  {...register('location', { required: 'Location is required' })}
+                  {...register("location", {
+                    required: "Location is required",
+                  })}
                   className="pl-10 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
               {errors.location && (
-                <p className="mt-1 text-sm text-red-600">{errors.location.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.location.message}
+                </p>
               )}
             </div>
 
@@ -200,18 +219,20 @@ export function CompanyRegistration() {
                 Company Description
               </label>
               <textarea
-                {...register('description', { required: 'Description is required' })}
+                {...register("description", {
+                  required: "Description is required",
+                })}
                 rows={4}
                 className="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
               />
               {errors.description && (
-                <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.description.message}
+                </p>
               )}
             </div>
 
-            {error && (
-              <div className="text-sm text-red-600">{error}</div>
-            )}
+            {error && <div className="text-sm text-red-600">{error}</div>}
 
             <Button type="submit" className="w-full">
               Register Company

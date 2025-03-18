@@ -12,7 +12,6 @@ import {
   MapPin,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
-import { useAuthStore } from "../../store/authStore";
 import { Footer } from "../../components/Footer";
 import { toast, Toaster } from "react-hot-toast";
 import api from "../../api";
@@ -21,7 +20,7 @@ interface SignupForm {
   name: string;
   email: string;
   password: string;
-  role: "student" | "company";
+  role: "candidate" | "company";
   phone: string;
   company_name?: string;
   company_address?: string;
@@ -42,24 +41,22 @@ interface ApiResponse {
 
 export function Signup() {
   const navigate = useNavigate();
-  const setUser = useAuthStore((state) => state.setUser);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<"student" | "company">(
-    "student"
+  const [selectedRole, setSelectedRole] = useState<"candidate" | "company">(
+    "candidate"
   );
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<SignupForm>({
-    defaultValues: { role: "student" },
-  });
+  } = useForm<SignupForm>({ defaultValues: { role: "candidate" } });
 
   const onSubmit = async (data: SignupForm) => {
     setIsLoading(true);
     try {
+      // Build payload according to backend expectations.
       const payload = {
         email: data.email,
         password: data.password,
@@ -72,44 +69,23 @@ export function Signup() {
         }),
       };
 
-      const response = await api.post<ApiResponse>(
-        "/api/auth/signup/",
-        payload
-      );
+      // Send a POST request to Django backend
+      await api.post<ApiResponse>("/api/auth/signup/", payload);
 
-      localStorage.setItem("access_token", response.data.access);
-
-      setUser(
-        {
-          id: response.data.user.id,
-          email: response.data.user.email,
-          role: response.data.user.role as "student" | "company" | "admin",
-          name: response.data.user.name,
-          phone: response.data.user.phone,
-          ...(response.data.user.role === "company" && {
-            company_name: response.data.user.company_name,
-            company_address: response.data.user.company_address,
-          }),
-        },
-        response.data.access
-      );
-
-      navigate(
-        response.data.user.role === "company"
-          ? "/company/dashboard"
-          : "/student/dashboard"
-      );
-
-      toast.success("Account created successfully!", {
+      // Show success notification and redirect to login page after delay.
+      toast.success("Account created successfully! Please log in.", {
         position: "top-right",
         duration: 3000,
         style: { background: "#4caf50", color: "#fff" },
       });
+      setTimeout(() => navigate("/login"), 3000);
     } catch (err: any) {
+      // Extract error message from backend response
       const backendError = err.response?.data;
       let errorMessage = "Registration failed. Please try again.";
-
-      // Handle Django validation errors
+      if (err.response?.data?.email) {
+        errorMessage = "This email is already registered. Please use a different email.";
+      }  
       if (backendError) {
         if (typeof backendError === "object") {
           errorMessage = Object.values(backendError).flat().join(". ");
@@ -117,7 +93,6 @@ export function Signup() {
           errorMessage = backendError;
         }
       }
-
       setError(errorMessage);
       toast.error(errorMessage, {
         position: "top-right",
@@ -214,11 +189,11 @@ export function Signup() {
                 <select
                   {...register("role", { required: "Role is required" })}
                   onChange={(e) =>
-                    setSelectedRole(e.target.value as "student" | "company")
+                    setSelectedRole(e.target.value as "candidate" | "company")
                   }
                   className="pl-10 w-full border border-gray-300 rounded-lg py-2 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-black"
                 >
-                  <option value="student">Student</option>
+                  <option value="candidate">candidate</option>
                   <option value="company">Company</option>
                 </select>
               </div>
@@ -250,7 +225,7 @@ export function Signup() {
               )}
             </div>
 
-            {/* Company Address Field */}
+            {/* Company Address Field (only for Company role) */}
             {selectedRole === "company" && (
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
