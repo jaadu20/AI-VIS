@@ -7,17 +7,15 @@ import {
 import { Home } from "./pages/Home";
 import { Login } from "./pages/auth/Login";
 import { Signup } from "./pages/auth/Signup";
-import { CompanyRegistration } from "./pages/company/CompanyRegistration";
-import { StudentDashboard } from "./pages/student/StudentDashboard";
-import { CompanyDashboard } from "./pages/company/CompanyDashboard";
-import { AdminDashboard } from "./pages/admin/AdminDashboard";
+import { CompanyDashboard } from "./pages/company/Dashboard";
+import { CandidateDashboard } from "./pages/candidate/Dashboard";
 import { AIInterview } from "./pages/interview/AIInterview";
-import { StudentProfile } from "./pages/student/StudentProfile";
+import { CandidateProfile } from "./pages/candidate/CandidateProfile";
 import { JobPostingForm } from "./pages/company/JobPostingForm";
-import { useAuthStore } from "./store/authStore";
+import { useAuthStore } from "./pages/auth/store/authStore";
 import { About } from "./pages/About";
 import { Contact } from "./pages/Contact";
-import { Forgetpass } from "./pages/auth/Forgetpass";
+import { Forgetpass } from "./pages/auth/ForgetPassword";
 import { ResetPassword } from "./pages/auth/ResetPassword";
 import { CandidatesResult } from "./pages/company/CandidatesResult";
 import { CompanyProfile } from "./pages/company/CompanyProfile";
@@ -28,7 +26,7 @@ function PrivateRoute({
   allowedRoles,
 }: {
   children: JSX.Element;
-  allowedRoles: ("student" | "company" | "admin")[]; // Updated role types
+  allowedRoles: ("candidate" | "company")[];
 }) {
   const user = useAuthStore((state) => state.user);
 
@@ -59,7 +57,16 @@ function App() {
           path="/reset-password/:uidb64/:token"
           element={<ResetPassword />}
         />
+
         {/* Company Routes */}
+        <Route
+          path="/company/dashboard"
+          element={
+            <PrivateRoute allowedRoles={["company"]}>
+              <CompanyDashboard />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/company/candidatesresults"
           element={
@@ -77,14 +84,6 @@ function App() {
           }
         />
         <Route
-          path="/company/dashboard"
-          element={
-            <PrivateRoute allowedRoles={["company"]}>
-              <CompanyDashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
           path="/company/post-job"
           element={
             <PrivateRoute allowedRoles={["company"]}>
@@ -92,47 +91,29 @@ function App() {
             </PrivateRoute>
           }
         />
-        <Route
-          path="/company/register"
-          element={
-            <PrivateRoute allowedRoles={["company"]}>
-              <CompanyRegistration />
-            </PrivateRoute>
-          }
-        />
 
-        {/* Student Routes */}
+        {/* Candidate Routes */}
         <Route
-          path="/student/dashboard"
+          path="/candidate/dashboard"
           element={
-            <PrivateRoute allowedRoles={["student"]}>
-              <StudentDashboard />
+            <PrivateRoute allowedRoles={["candidate"]}>
+              <CandidateDashboard />
             </PrivateRoute>
           }
         />
         <Route
-          path="/student/profile"
+          path="/candidate/profile"
           element={
-            <PrivateRoute allowedRoles={["student"]}>
-              <StudentProfile />
+            <PrivateRoute allowedRoles={["candidate"]}>
+              <CandidateProfile />
             </PrivateRoute>
           }
         />
         <Route
           path="/interview"
           element={
-            <PrivateRoute allowedRoles={["student"]}>
+            <PrivateRoute allowedRoles={["candidate"]}>
               <AIInterview />
-            </PrivateRoute>
-          }
-        />
-
-        {/* Admin Routes */}
-        <Route
-          path="/admin/dashboard"
-          element={
-            <PrivateRoute allowedRoles={["admin"]}>
-              <AdminDashboard />
             </PrivateRoute>
           }
         />

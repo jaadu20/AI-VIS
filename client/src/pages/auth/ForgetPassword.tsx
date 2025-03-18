@@ -1,20 +1,18 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
-import { Lock } from "lucide-react";
+import { Mail, Home, Info, Rocket, PhoneCall } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { toast, Toaster } from "react-hot-toast";
 import { Footer } from "../../components/Footer";
 import api from "../../api";
 
-interface ResetPassForm {
-  password: string;
-  confirmPassword: string;
+interface ForgetPassForm {
+  email: string;
 }
 
-export function ResetPassword() {
-  const { uidb64, token } = useParams();
+export function Forgetpass() {
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -22,35 +20,27 @@ export function ResetPassword() {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
-  } = useForm<ResetPassForm>();
+  } = useForm<ForgetPassForm>();
 
-  const onSubmit = async (data: ResetPassForm) => {
-    if (data.password !== data.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
+  const onSubmit = async (data: ForgetPassForm) => {
     setIsLoading(true);
     try {
-      const response = await api.post("/api/auth/reset-password/", {
-        password: data.password,
-        token,
-        uidb64,
+      const response = await api.post("/api/auth/forgot-password/", {
+        email: data.email,
       });
 
       if (response.status === 200) {
-        toast.success("Password reset successfully!", {
+        toast.success("Password reset email sent! Check your inbox", {
           position: "top-right",
           duration: 4000,
           style: { background: "#4caf50", color: "#fff" },
         });
-        setTimeout(() => navigate("/login"), 3000);
+        setTimeout(() => navigate("/login"), 4000);
       }
     } catch (err: any) {
       const backendError = err.response?.data;
-      let errorMessage = "Password reset failed. Please try again.";
+      let errorMessage = "Failed to send reset email. Please try again.";
 
       if (backendError) {
         if (typeof backendError === "object") {
@@ -92,13 +82,25 @@ export function ResetPassword() {
               onClick={() => navigate("/")}
               className="text-gray-200 hover:text-yellow-300"
             >
-              Home
+              <Home className="mr-1 inline h-5 w-5" /> Home
             </button>
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/about")}
               className="text-gray-200 hover:text-yellow-300"
             >
-              Login
+              <Info className="mr-1 inline h-5 w-5" /> About
+            </button>
+            <button
+              onClick={() => navigate("/getstarted")}
+              className="text-gray-200 hover:text-yellow-300"
+            >
+              <Rocket className="mr-1 inline h-5 w-5" /> Get Started
+            </button>
+            <button
+              onClick={() => navigate("/contact")}
+              className="text-gray-200 hover:text-yellow-300"
+            >
+              <PhoneCall className="mr-1 inline h-5 w-5" /> Contact
             </button>
           </nav>
         </div>
@@ -111,10 +113,10 @@ export function ResetPassword() {
       >
         <div className="sm:mx-auto sm:w-full sm:max-w-md mt-24">
           <h2 className="text-center text-3xl font-extrabold text-yellow-300 mb-6">
-            Reset Your Password
+            Forgot Your Password?
           </h2>
           <p className="mt-2 text-center text-sm text-yellow-600">
-            Enter your new password below
+            Enter your email to receive a password reset link
           </p>
         </div>
 
@@ -123,58 +125,30 @@ export function ResetPassword() {
             <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
               <div>
                 <label
-                  htmlFor="password"
+                  htmlFor="email"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  New Password
+                  Email address
                 </label>
                 <div className="mt-1 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
+                    <Mail className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    {...register("password", {
-                      required: "Password is required",
-                      minLength: {
-                        value: 8,
-                        message: "Minimum 8 characters",
+                    {...register("email", {
+                      required: "Email is required",
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: "Invalid email address",
                       },
                     })}
-                    type="password"
+                    type="email"
                     className="pl-10 block w-full border border-gray-300 rounded-lg py-2 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
-                {errors.password && (
+                {errors.email && (
                   <p className="mt-2 text-sm text-red-600">
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Confirm Password
-                </label>
-                <div className="mt-1 relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    {...register("confirmPassword", {
-                      required: "Please confirm your password",
-                      validate: (value) =>
-                        value === watch("password") || "Passwords do not match",
-                    })}
-                    type="password"
-                    className="pl-10 block w-full border border-gray-300 rounded-lg py-2 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  />
-                </div>
-                {errors.confirmPassword && (
-                  <p className="mt-2 text-sm text-red-600">
-                    {errors.confirmPassword.message}
+                    {errors.email.message}
                   </p>
                 )}
               </div>
@@ -186,8 +160,17 @@ export function ResetPassword() {
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-2 rounded-lg transition-all duration-300"
                 disabled={isLoading}
               >
-                {isLoading ? "Resetting..." : "Reset Password"}
+                {isLoading ? "Sending..." : "Send Reset Link"}
               </Button>
+
+              <div className="text-center text-sm">
+                <button
+                  onClick={() => navigate("/signup")}
+                  className="font-medium text-blue-600 hover:text-blue-500"
+                >
+                  Don't have an account? Sign up
+                </button>
+              </div>
             </form>
           </div>
         </div>
