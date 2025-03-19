@@ -7,6 +7,8 @@ from django.utils.encoding import force_bytes, force_str
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView
+
 
 from .serializers import (
     SignupSerializer,
@@ -19,34 +21,13 @@ User = get_user_model()
 
 
 class SignupView(generics.CreateAPIView):
-    """
-    POST /api/auth/signup/
-    Registers a new user. Username is automatically set to the email if not provided.
-    """
     serializer_class = SignupSerializer
 
-    def create(self, request, *args, **kwargs):
-        # Call the serializer's create() method and return a 201 status
-        response = super().create(request, *args, **kwargs)
-        return Response(response.data, status=status.HTTP_201_CREATED)
-
-
 # Login view using SimpleJWT with a custom token serializer
-from rest_framework_simplejwt.views import TokenObtainPairView
-
 class MyTokenObtainPairView(TokenObtainPairView):
-    """
-    POST /api/auth/login/
-    Returns a JWT access token with custom claims (id, email, role, name, phone, etc.).
-    """
     serializer_class = MyTokenObtainPairSerializer
 
-
 class ForgotPasswordView(APIView):
-    """
-    POST /api/auth/forgot-password/
-    Accepts an email address and sends a password reset code or link.
-    """
     serializer_class = ForgotPasswordSerializer
 
     def post(self, request, *args, **kwargs):
@@ -76,7 +57,7 @@ class ForgotPasswordView(APIView):
         f"Your password reset code is: {code}\n\n"
         f"Or reset your password using the link below:\n"
         f"http://localhost:5174/resetpassword/{uidb64}/{token}",
-        "jawadgfarid383@gmail.com",  # Use the same email as EMAIL_HOST_USER if testing with Gmail
+        "mjconnect.solutions@gmail.com",  
         [email],
         fail_silently=False,
     )
@@ -110,7 +91,6 @@ class ResetPasswordView(APIView):
 
         user.set_password(new_password)
         user.save()
-        # Delete all existing password resets for this user
         PasswordReset.objects.filter(user=user).delete()
         
         return Response(

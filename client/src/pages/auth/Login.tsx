@@ -48,7 +48,6 @@ export function Login() {
       const decoded: DecodedToken = jwtDecode(response.data.access);
 
       // Set user with all profile data including phone
-      // Update the setUser call
       setUser(
         {
           id: decoded.id,
@@ -57,7 +56,7 @@ export function Login() {
           name: decoded.name,
           phone: decoded.phone,
           ...(decoded.role === "company" && {
-            company_name: decoded.company_name, // Use snake_case
+            company_name: decoded.company_name, 
             company_address: decoded.company_address,
           }),
         },

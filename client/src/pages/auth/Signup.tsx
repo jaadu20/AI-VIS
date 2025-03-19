@@ -17,26 +17,12 @@ import { toast, Toaster } from "react-hot-toast";
 import api from "../../api";
 
 interface SignupForm {
-  name: string;
   email: string;
   password: string;
   role: "candidate" | "company";
   phone: string;
-  company_name?: string;
+  name: string;
   company_address?: string;
-}
-
-interface ApiResponse {
-  access: string;
-  user: {
-    id: string;
-    email: string;
-    role: string;
-    name: string;
-    phone: string;
-    company_name?: string;
-    company_address?: string;
-  };
 }
 
 export function Signup() {
@@ -51,12 +37,13 @@ export function Signup() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<SignupForm>({ defaultValues: { role: "candidate" } });
+  } = useForm<SignupForm>({
+    defaultValues: { role: "candidate" },
+  });
 
   const onSubmit = async (data: SignupForm) => {
     setIsLoading(true);
     try {
-      // Build payload according to backend expectations.
       const payload = {
         email: data.email,
         password: data.password,
@@ -64,42 +51,44 @@ export function Signup() {
         phone: data.phone,
         role: data.role,
         ...(data.role === "company" && {
-          company_name: data.company_name,
           company_address: data.company_address,
         }),
       };
 
-      // Send a POST request to Django backend
-      await api.post<ApiResponse>("/api/auth/signup/", payload);
+      await api.post("/api/auth/signup/", payload);
 
-      // Show success notification and redirect to login page after delay.
-      toast.success("Account created successfully! Please log in.", {
+      toast.success("Account created successfully! Redirecting...", {
         position: "top-right",
-        duration: 3000,
-        style: { background: "#4caf50", color: "#fff" },
+        duration: 2000,
       });
-      setTimeout(() => navigate("/login"), 3000);
+      navigate("/login");
     } catch (err: any) {
-      // Extract error message from backend response
-      const backendError = err.response?.data;
       let errorMessage = "Registration failed. Please try again.";
-      if (err.response?.data?.email) {
-        errorMessage = "This email is already registered. Please use a different email.";
-      }  
-      if (backendError) {
-        if (typeof backendError === "object") {
-          errorMessage = Object.values(backendError).flat().join(". ");
-        } else if (typeof backendError === "string") {
-          errorMessage = backendError;
+
+      // Improved error handling
+      if (err.response?.data) {
+        const errorData = err.response.data;
+
+        // Handle field-specific errors
+        if (typeof errorData === "object") {
+          errorMessage = Object.entries(errorData)
+            .map(
+              ([key, value]) =>
+                `${key}: ${Array.isArray(value) ? value.join(" ") : value}`
+            )
+            .join(". ");
+        }
+        // Handle generic error messages
+        else if (typeof errorData === "string") {
+          errorMessage = errorData;
         }
       }
+
       setError(errorMessage);
       toast.error(errorMessage, {
         position: "top-right",
         duration: 3000,
-        style: { background: "#f44336", color: "#fff" },
       });
-      console.error("Signup error:", err.response?.data || err);
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +105,6 @@ export function Signup() {
     >
       <Toaster />
 
-      {/* Header */}
       <header className="fixed w-full bg-black bg-opacity-100 py-4 z-10 shadow-md">
         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
           <h1 className="text-3xl font-extrabold text-yellow-300 tracking-wide">
@@ -130,7 +118,7 @@ export function Signup() {
               Home
             </button>
             <button className="text-gray-200 hover:text-yellow-300">
-              About Us
+              About
             </button>
             <button
               onClick={() => navigate("/getstarted")}
@@ -160,7 +148,7 @@ export function Signup() {
         className="items-center max-w-7xl mx-auto px-4 py-12"
       >
         <h2 className="text-center text-3xl font-extrabold text-yellow-300 leading-tight mt-16">
-          Create your account
+          Start Your Journey
         </h2>
         <p className="mt-2 text-center text-sm text-yellow-600">
           Already have an account?{" "}
@@ -173,9 +161,8 @@ export function Signup() {
         </p>
       </motion.div>
 
-      {/* Form Container */}
       <div className="sm:mx-auto sm:w-full sm:max-w-lg">
-        <div className="bg-white/90 backdrop-blur-sm py-6 px-4 shadow-xl rounded-2xl sm:px-6">
+        <div className="bg-white/90 backdrop-blur-sm py-8 px-4 shadow-xl rounded-2xl sm:px-6 mb-8">
           <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
             {/* Role Selection */}
             <div className="space-y-2">
@@ -193,7 +180,7 @@ export function Signup() {
                   }
                   className="pl-10 w-full border border-gray-300 rounded-lg py-2 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-black"
                 >
-                  <option value="candidate">candidate</option>
+                  <option value="candidate">Candidate</option>
                   <option value="company">Company</option>
                 </select>
               </div>
@@ -216,7 +203,7 @@ export function Signup() {
                   )}
                 </div>
                 <input
-                  {...register("name", { required: "Name is required" })}
+                  {...register("name", { required: "This field is required" })}
                   className="pl-10 w-full border border-gray-300 rounded-lg py-2 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-black"
                 />
               </div>
@@ -225,7 +212,7 @@ export function Signup() {
               )}
             </div>
 
-            {/* Company Address Field (only for Company role) */}
+            {/* Company Address Field */}
             {selectedRole === "company" && (
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
@@ -253,14 +240,20 @@ export function Signup() {
             {/* Email Field */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Email address
+                Email Address
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  {...register("email", { required: "Email is required" })}
+                  {...register("email", {
+                    required: "Email is required",
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: "Invalid email address",
+                    },
+                  })}
                   type="email"
                   className="pl-10 w-full border border-gray-300 rounded-lg py-2 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-black"
                 />
@@ -296,7 +289,6 @@ export function Signup() {
                 <p className="text-red-500 text-sm">{errors.phone.message}</p>
               )}
             </div>
-
             {/* Password Field */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
@@ -311,7 +303,7 @@ export function Signup() {
                     required: "Password is required",
                     minLength: {
                       value: 8,
-                      message: "Password must be at least 8 characters",
+                      message: "Minimum 8 characters required",
                     },
                   })}
                   type="password"
@@ -325,14 +317,22 @@ export function Signup() {
               )}
             </div>
 
-            {error && <div className="text-red-500 text-sm">{error}</div>}
-
+            {error && (
+              <div className="text-red-500 text-sm text-center">{error}</div>
+            )}
             <Button
               type="submit"
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-2 rounded-lg transition-all duration-300"
               disabled={isLoading}
             >
-              {isLoading ? "Creating Account..." : "Create Account"}
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                  Creating Account...
+                </span>
+              ) : (
+                "Create Account"
+              )}
             </Button>
           </form>
         </div>
