@@ -26,7 +26,7 @@ class InterviewSession(Base):
 
 # Initialize engine and session
 engine = create_engine(settings.db_url)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)  # Add this line
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)  
 
 # Create tables
 Base.metadata.create_all(engine)
