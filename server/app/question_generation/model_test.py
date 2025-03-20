@@ -1,140 +1,237 @@
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+import os
+import random
 import torch
 import re
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+import azure.cognitiveservices.speech as speechsdk
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+class AzureSpeechService:
+    def __init__(self):
+        self.speech_key = "1JJ3FlHJyQWky4QtvopDo2MF94FXoXYryKTSglxwNg1DfAZRuJ48JQQJ99BCACYeBjFXJ3w3AAAYACOGJfEf"
+        self.service_region = "eastus"
+        
+        if not self.speech_key or not self.service_region:
+            raise ValueError("Azure credentials missing in .env file")
+            
+        self.speech_config = speechsdk.SpeechConfig(
+            subscription=self.speech_key,
+            region=self.service_region
+        )
+        self.audio_config = speechsdk.audio.AudioConfig(
+            use_default_microphone=True
+        )
+        
+    def text_to_speech(self, text):
+        """Convert text to natural sounding speech"""
+        self.speech_config.speech_synthesis_voice_name = "en-US-JennyNeural"
+        synthesizer = speechsdk.SpeechSynthesizer(
+            speech_config=self.speech_config
+        )
+        return synthesizer.speak_text_async(text).get()
+
+    def speech_to_text(self, prompt=None):
+        """Convert spoken response to text"""
+        recognizer = speechsdk.SpeechRecognizer(
+            speech_config=self.speech_config,
+            audio_config=self.audio_config
+        )
+        if prompt:
+            self.text_to_speech(prompt)
+        return recognizer.recognize_once_async().get()
 
 class TechnicalInterviewSystem:
     def __init__(self, job_description):
         self.job_desc = job_description
-        self.difficulty = "medium"
+        self.speech_service = AzureSpeechService()
         self.question_count = 0
+        self.difficulty = "medium"
         self.history = []
-        self.technical_areas = self._extract_technical_areas()
         
-        # Initialize FLAN-T5
+        # Initialize AI components
         self.tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-large")
         self.model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-large")
         if torch.cuda.is_available():
             self.model = self.model.to("cuda")
+            
+        # Technical configuration
+        self.tech_focus = self._analyze_job_description()
+        self.question_bank = self._initialize_question_bank()
 
-    def _extract_technical_areas(self):
-        """Identify key technical areas from job description"""
-        areas = []
+    def _analyze_job_description(self):
+        """Extract key technical areas from job description"""
+        focus_areas = []
         keywords = {
-            'Django': ['ORM', 'middleware', 'authentication', 'REST framework', 'migrations'],
-            'Database': ['optimization', 'indexing', 'transactions', 'scaling', 'normalization'],
-            'Python': ['decorators', 'concurrency', 'memory management', 'type hints', 'async/await']
+            'python': ['python', 'django', 'flask'],
+            'debugging': ['debug', 'troubleshoot', 'fix'],
+            'data_structures': ['algorithm', 'structure', 'optimize']
         }
-        
-        for tech in keywords:
-            if tech.lower() in self.job_desc.lower():
-                areas.extend(keywords[tech])
-        return list(set(areas))[:3]  # Keep top 3 areas
+        for area in keywords:
+            if any(kw in self.job_desc.lower() for kw in keywords[area]):
+                focus_areas.append(area)
+        return focus_areas or ['python']
+
+    def _initialize_question_bank(self):
+        """Predefined technical questions with code samples"""
+        return {
+            'python': [
+                "Explain the difference between @staticmethod and @classmethod in Python",
+                "How would you implement a context manager in Python?",
+                "What is the Global Interpreter Lock and how does it affect multithreading?"
+            ],
+            'debugging': [
+                "Debug this code: [CODE]def add(a,b):\n    return a + b\nprint(add('5', 3))[/CODE]",
+                "Identify issues in: [CODE]x = [1,2,3]\ny = x.append(4)\nprint(y)[/CODE]"
+            ],
+            'data_structures': [
+                "Implement a LRU cache in Python",
+                "How would you detect a cycle in a linked list?",
+                "Explain time complexity of DFS vs BFS"
+            ]
+        }
 
     def generate_question(self):
-        """Generate job-specific technical question"""
+        """Generate adaptive technical question"""
+        # Select question type based on focus areas
+        q_type = random.choice(self.tech_focus)
+        base_question = random.choice(self.question_bank[q_type])
+        
+        # Format code questions
+        if '[CODE]' in base_question:
+            parts = base_question.split('[CODE]')
+            question = parts[0] + "\n[Code Displayed on Screen]"
+            code = parts[1].split('[/CODE]')[0]
+            return question, code
+        return base_question, None
+
+    def analyze_answer(self, question, answer):
+        """Evaluate technical answer quality"""
         prompt = f"""
-        Generate a {self.difficulty} difficulty technical interview question for {self.job_desc}.
-        Focus specifically on {self.technical_areas}.
-        The question should test practical implementation knowledge.
-        Include scenario-based problem solving.
-        Require understanding of best practices in {self.job_desc.split(' ')[0]} development.
+        Analyze this technical interview response:
+        Question: {question}
+        Answer: {answer}
+        
+        Provide:
+        1. Technical accuracy score (0-10)
+        2. Key missing concepts
+        3. Difficulty adjustment (easier/same/harder)
+        
+        Format: Score: X/10 | Missing: [...] | Adjustment: [...]
         """
         
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
         outputs = self.model.generate(
-            **inputs,
-            max_new_tokens=200,
-            temperature=0.7,
-            do_sample=True,
-            repetition_penalty=1.5
-        )
-        
-        question = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        self.question_count += 1
-        return question
-
-    def analyze_answer(self, question, answer):
-        """Technical answer analysis with skill gap identification"""
-        analysis_prompt = f"""
-        Analyze this technical answer for a {self.job_desc} position:
-        Question: {question}
-        Answer: {answer}
-        
-        Evaluate:
-        1. Technical accuracy (0-10)
-        2. Missing key concepts from: {self.technical_areas}
-        3. Code quality/best practices
-        4. Suggested difficulty adjustment (easier/same/harder)
-        
-        Format: 
-        Score: X/10 | Missing: [concepts] | Adjustment: [difficulty]
-        """
-        
-        inputs = self.tokenizer(analysis_prompt, return_tensors="pt").to(self.model.device)
-        outputs = self.model.generate(
-            **inputs,
+            inputs.input_ids,
             max_new_tokens=150,
             temperature=0.3
         )
-        
         return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-    def adjust_difficulty(self, analysis):
-        """More sophisticated difficulty adjustment"""
-        match = re.search(r"Adjustment: (\w+).*Missing: \[(.*?)\]", analysis)
-        if match:
-            new_diff = match.group(1).lower()
-            missing_concepts = match.group(2).split(', ')
-            
-            # Update technical areas to focus on weaknesses
-            if missing_concepts:
-                self.technical_areas = list(set(self.technical_areas + missing_concepts))[:3]
-            
-            # Adjust difficulty based on both score and missing concepts
-            if new_diff == "harder" and self.difficulty != "hard":
-                self.difficulty = "hard"
-            elif new_diff == "easier" and self.difficulty != "easy":
-                self.difficulty = "easy"
-
     def conduct_interview(self):
-        print(f"Starting technical interview for: {self.job_desc}")
-        print(f"Focus areas: {', '.join(self.technical_areas)}\n")
+        """Main interview flow with voice interaction"""
         try:
+            self.speech_service.text_to_speech(
+                f"Starting technical interview for {self.job_desc}. "
+                f"We will ask {10-self.question_count} questions. "
+                "Please wait while we initialize the system."
+            )
+            
             while self.question_count < 10:
-                question = self.generate_question()
-                print(f"\n[Q{self.question_count}] {question}")
-                answer = input("Your technical answer: ")
-                self.history.append((question, answer))
+                # Generate and ask question
+                question, code = self.generate_question()
+                self._present_question(question, code)
                 
+                # Capture and process answer
+                answer = self._get_answer()
                 analysis = self.analyze_answer(question, answer)
-                print(f"\n[Analysis] {analysis}")
-                self.adjust_difficulty(analysis)
                 
-        except KeyboardInterrupt:
-            print("\nInterview session ended early.")
-        
-        print("\nTechnical Evaluation Report:")
-        self.generate_feedback()
+                # Update interview state
+                self._update_difficulty(analysis)
+                self.question_count += 1
+                self.history.append((question, answer, analysis))
+                
+                # Provide feedback
+                self._give_feedback(analysis)
+                
+            self._generate_final_report()
+            
+        except Exception as e:
+            self.speech_service.text_to_speech("Interview session encountered an error")
+            print(f"Error: {str(e)}")
 
-    def generate_feedback(self):
-        """Detailed technical feedback report"""
-        feedback_prompt = f"""
-        Generate detailed technical feedback for a {self.job_desc} candidate:
-        Interview History: {self.history}
-        Technical Focus Areas: {self.technical_areas}
+    def _present_question(self, question, code):
+        """Present question through voice and visual channels"""
+        # Voice presentation
+        self.speech_service.text_to_speech(f"Question {self.question_count+1}: {question}")
         
-        Include:
-        1. Technical strengths/weaknesses
-        2. Skill gaps in {', '.join(self.technical_areas)}
-        3. Recommended learning resources
-        4. Overall technical competency score (0-100)
-        """
+        # Visual presentation
+        print(f"\n{'='*40}")
+        print(f"Question {self.question_count+1}: {question}")
+        if code:
+            print(f"\nCode:\n{code}")
+        print("Waiting for your answer...")
+
+    def _get_answer(self):
+        """Capture spoken answer with retry logic"""
+        for _ in range(3):
+            result = self.speech_service.speech_to_text("Please speak your answer now")
+            
+            if result.reason == speechsdk.ResultReason.RecognizedSpeech:
+                return result.text
+            elif result.reason == speechsdk.ResultReason.NoMatch:
+                self.speech_service.text_to_speech("I didn't hear your response. Please try again")
+            else:
+                self.speech_service.text_to_speech("There was an error with the microphone. Please try again")
+        return "No answer recorded"
+
+    def _update_difficulty(self, analysis):
+        """Adjust question difficulty dynamically"""
+        if "Adjustment: harder" in analysis:
+            self.difficulty = "hard"
+        elif "Adjustment: easier" in analysis:
+            self.difficulty = "easy"
+
+    def _give_feedback(self, analysis):
+        """Provide immediate verbal feedback"""
+        if "Score: 8" in analysis or "Score: 9" in analysis or "Score: 10" in analysis:
+            self.speech_service.text_to_speech("Excellent answer!")
+        elif "Score: 5" in analysis or "Score: 6" in analysis or "Score: 7" in analysis:
+            self.speech_service.text_to_speech("Good attempt, but could use more detail")
+        else:
+            self.speech_service.text_to_speech("Let's try another question on this topic")
+
+    def _generate_final_report(self):
+        """Generate comprehensive evaluation report"""
+        report = ["Technical Interview Report:", f"Position: {self.job_desc}"]
         
-        inputs = self.tokenizer(feedback_prompt, return_tensors="pt").to(self.model.device)
-        outputs = self.model.generate(**inputs, max_new_tokens=400)
-        print(self.tokenizer.decode(outputs[0], skip_special_tokens=True))
+        # Calculate scores
+        scores = [int(re.search(r"Score: (\d+)", a).group(1)) for _,_,a in self.history]
+        report.append(f"Average Score: {sum(scores)/len(scores):.1f}/10")
+        
+        # Identify weaknesses
+        weaknesses = set()
+        for _,_,a in self.history:
+            if missing := re.search(r"Missing: \[(.*?)\]", a):
+                weaknesses.update(missing.group(1).split(', '))
+        if weaknesses:
+            report.append("Key Areas for Improvement:\n- " + "\n- ".join(weaknesses))
+        
+        # Print and speak summary
+        print("\n".join(report))
+        self.speech_service.text_to_speech(
+            f"Interview complete. Your average score was {sum(scores)/len(scores):.1f} out of 10. "
+            "A detailed report has been generated."
+        )
 
 if __name__ == "__main__":
-    job_description = "Python Developer with Django and Database optimization experience"
-    interview = TechnicalInterviewSystem(job_description)
-    interview.conduct_interview()
+    # Configuration
+    job_description = "Python Developer with strong debugging and data structures skills"
+    
+    try:
+        interview = TechnicalInterviewSystem(job_description)
+        interview.conduct_interview()
+    except Exception as e:
+        print(f"Failed to start interview: {str(e)}")
