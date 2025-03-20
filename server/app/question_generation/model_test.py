@@ -11,8 +11,8 @@ load_dotenv()
 
 class AzureSpeechService:
     def __init__(self):
-        self.speech_key = "1JJ3FlHJyQWky4QtvopDo2MF94FXoXYryKTSglxwNg1DfAZRuJ48JQQJ99BCACYeBjFXJ3w3AAAYACOGJfEf"
-        self.service_region = "eastus"
+        self.speech_key = os.getenv("AZURE_SPEECH_KEY")
+        self.service_region = os.getenv("AZURE_SERVICE_REGION")
         
         if not self.speech_key or not self.service_region:
             raise ValueError("Azure credentials missing in .env file")
