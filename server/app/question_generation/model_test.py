@@ -66,156 +66,170 @@ class MultiModelInterviewSystem:
             return None
 
     def _get_focus_areas(self):
-        """Extract focus areas using the question generator model"""
-        prompt = f"""Extract technical focus areas from job description:
+        """Extract focus areas with technical competencies hierarchy"""
+        prompt = f"""Analyze this job description and extract technical focus areas:
         {self.job_desc}
-        
-        Return comma-separated list of 3-5 core competencies.
-        Format: <FocusAreas>area1, area2, area3</FocusAreas>
+
+        Consider these categories with examples:
+        - Core Programming: OOP, Design Patterns, Algorithms
+        - System Design: Distributed systems, Microservices, Scaling
+        - Database: SQL vs NoSQL, Query optimization, ORM
+        - Error Handling: Debugging, Exception management, Logging
+        - Testing: Unit tests, Integration tests, TDD
+        - DevOps: CI/CD, Containerization, Cloud platforms
+        - Best Practices: Code quality, Security, Performance
+
+        Return 3-5 primary focus areas from these categories.
+        Format: <FocusAreas>category1, category2</FocusAreas>
         """
         
         response = self._generate_response(
             prompt=prompt,
             model_name='question_generator',
-            max_tokens=100
+            max_tokens=150
         )
         
         areas = re.search(r"<FocusAreas>(.*?)</FocusAreas>", response)
-        return areas.group(1).split(', ') if areas else ["Python Programming"]
-
-    def _generate_response(self, prompt, model_name='question_generator', **kwargs):
-        """Generic generation method with model selection"""
-        model_config = self.models.get(model_name)
-        if not model_config:
-            return ""
-
-        try:
-            inputs = model_config['tokenizer'](
-                prompt,
-                return_tensors="pt",
-                return_attention_mask=True,
-                padding=True,
-                truncation=True
-            ).to(model_config['model'].device)
-
-            outputs = model_config['model'].generate(
-                inputs.input_ids,
-                attention_mask=inputs.attention_mask,
-                max_new_tokens=kwargs.get('max_tokens', 256),
-                temperature=kwargs.get('temperature', 0.7),
-                top_p=kwargs.get('top_p', 0.9),
-                do_sample=True,
-                pad_token_id=model_config['tokenizer'].eos_token_id
-            )
-            return model_config['tokenizer'].decode(outputs[0], skip_special_tokens=True)
-        except Exception as e:
-            print(f"Generation error ({model_name}): {str(e)}")
-            return ""
-
-    def _extract_tag(self, text, tag_name):
-        """Helper to extract XML-like tag content"""
-        match = re.search(rf"<{tag_name}>(.*?)</{tag_name}>", text, re.DOTALL)
-        return match.group(1).strip() if match else None
-
-    def generate_question(self):
-        """Generate context-aware question"""
-        if not self.conversation_history:
-            return self._generate_opening_question()
-        return self._generate_follow_up_question()
+        if areas:
+            return [a.strip() for a in areas.group(1).split(',')]
+        return ["Core Programming", "System Design", "Database"]
 
     def _generate_opening_question(self):
         """Generate first question using primary model"""
-        prompt = f"""Generate opening technical question for {self.job_desc}.
-        Focus on: {self.current_focus_areas[0]}
+        prompt = f"""Generate a comprehensive technical interview question for {self.job_desc}.
+        Focus Area: {self.current_focus_areas[0]}
         Difficulty: {['easy','medium','hard'][self.difficulty_level]}
-        
-        Format: <Question>Your question</Question>
+
+        Include these aspects:
+        - Real-world scenario
+        - Multiple components to address
+        - Potential edge cases
+        - Technology tradeoffs
+
+        Question types could be:
+        - System design implementation
+        - Debugging a complex issue
+        - Code optimization challenge
+        - Database design problem
+        - API failure scenario
+
+        Format: <Question>Your question</Question><Type>question_type</Type>
         """
         
         response = self._generate_response(
             prompt=prompt,
-            model_name='question_generator'
+            model_name='question_generator',
+            max_tokens=400
         )
-        return self._extract_tag(response, "Question") or "Explain your approach to system design."
+        
+        question = self._extract_tag(response, "Question")
+        q_type = self._extract_tag(response, "Type")
+        
+        return question or "Design a rate-limited API service with fault tolerance"
 
     def _generate_follow_up_question(self):
-        """Generate follow-up question based on conversation history"""
+        """Generate follow-up question with technical depth"""
         last_qa = self.conversation_history[-1]
         history = "\n".join([f"Q{i+1}: {q}\nA: {a[:200]}" for i, (q, a, _) in enumerate(self.conversation_history[-3:])])
 
-        prompt = f"""Generate technical follow-up question based on:
+        prompt = f"""Generate a technical follow-up question based on this context:
         {history}
 
         Current focus: {', '.join(self.current_focus_areas)}
-        Knowledge gaps: {', '.join(self.knowledge_gaps[-3:]) or 'None'}
-        Difficulty: {['easy','medium','hard'][self.difficulty_level]}
-        
-        The question should:
-        1. Address recent answer weaknesses
-        2. Probe deeper into mentioned concepts
-        3. Maintain technical continuity
-        
-        Format: <Question>Your question</Question><Focus>Technical area</Focus>"""
+        Required aspects:
+        - Probe deeper into technical implementation
+        - Challenge design decisions
+        - Explore alternative approaches
+        - Identify potential failures
+        - Request code examples
+
+        Format: <Question>Your question</Question><Focus>Technical area</Focus><Type>question_type</Type>
+        """
         
         response = self._generate_response(
             prompt=prompt,
             model_name='question_generator',
-            max_tokens=300
+            max_tokens=400
         )
         
         question = self._extract_tag(response, "Question")
         focus = self._extract_tag(response, "Focus")
+        q_type = self._extract_tag(response, "Type")
 
         if focus and focus not in self.current_focus_areas:
             self.current_focus_areas.append(focus)
 
-        return question or "Could you elaborate on that concept in more technical detail?"
+        return question or "How would you optimize this solution for high concurrency?"
 
     def analyze_answer(self, question, answer):
-        """Analyze answer using specialized model"""
-        prompt = f"""Analyze this technical Q&A pair:
+        """Enhanced technical answer analysis"""
+        prompt = f"""Critically analyze this technical answer:
         Q: {question}
         A: {answer}
 
+        Evaluate these aspects:
+        1. Technical accuracy (1-5)
+        2. Completeness of solution (1-5)
+        3. Error handling considerations
+        4. Alternative approaches mentioned
+        5. Code quality practices
+        6. System design tradeoffs
+
         Provide:
-        1. Technical weaknesses (comma-separated)
-        2. Difficulty adjustment (-1, 0, +1)
-        3. New focus areas to explore
-        
+        - Key weaknesses (comma-separated)
+        - Difficulty adjustment (-1, 0, +1)
+        - Follow-up focus areas
+        - Conceptual gaps
+
         Format:
+        <TechnicalScore>score</TechnicalScore>
+        <Completeness>score</Completeness>
         <Weaknesses>item1, item2</Weaknesses>
         <DifficultyAdjust>number</DifficultyAdjust>
-        <NextFocus>area1, area2</NextFocus>"""
+        <NextFocus>area1, area2</NextFocus>
+        <Gaps>concept1, concept2</Gaps>
+        """
         
         response = self._generate_response(
             prompt=prompt,
             model_name='answer_analyzer',
-            temperature=0.3,
-            max_tokens=200
+            temperature=0.2,
+            max_tokens=300
         )
         
-        weaknesses = self._extract_tag(response, "Weaknesses")
-        try:
-            adj = int(self._extract_tag(response, "DifficultyAdjust") or 0)
-        except ValueError:
-            adj = 0
-        new_focus = self._extract_tag(response, "NextFocus")
-
-        # Update state
-        if weaknesses:
-            self.knowledge_gaps.extend([w.strip() for w in weaknesses.split(',')])
-        
-        self.difficulty_level = max(0, min(2, self.difficulty_level + adj))
-        
-        if new_focus:
-            self.current_focus_areas = list(set(self.current_focus_areas + new_focus.split(', ')))
-
-        return {
-            'weaknesses': weaknesses.split(', ') if weaknesses else [],
-            'difficulty': ['easy','medium','hard'][self.difficulty_level],
-            'new_focus': new_focus.split(', ') if new_focus else []
+        analysis = {
+            'weaknesses': self._extract_tag(response, "Weaknesses"),
+            'difficulty_adj': self._safe_int(self._extract_tag(response, "DifficultyAdjust")),
+            'new_focus': self._extract_tag(response, "NextFocus"),
+            'gaps': self._extract_tag(response, "Gaps"),
+            'tech_score': self._safe_int(self._extract_tag(response, "TechnicalScore")),
+            'completeness': self._safe_int(self._extract_tag(response, "Completeness"))
         }
 
+        # Update knowledge gaps
+        if analysis['gaps']:
+            self.knowledge_gaps.extend([g.strip() for g in analysis['gaps'].split(',')])
+
+        # Adjust difficulty based on scores
+        if analysis['tech_score'] < 3 or analysis['completeness'] < 3:
+            self.difficulty_level = max(0, self.difficulty_level - 1)
+        elif analysis['tech_score'] == 5 and analysis['completeness'] == 5:
+            self.difficulty_level = min(2, self.difficulty_level + 1)
+
+        return {
+            'weaknesses': analysis['weaknesses'].split(', ') if analysis['weaknesses'] else [],
+            'difficulty': ['easy','medium','hard'][self.difficulty_level],
+            'new_focus': analysis['new_focus'].split(', ') if analysis['new_focus'] else [],
+            'technical_score': analysis['tech_score'],
+            'completeness_score': analysis['completeness']
+        }
+
+    def _safe_int(self, value):
+        try:
+            return int(value) if value else 0
+        except ValueError:
+            return 0
+        
     def conduct_interview(self):
         """Execute the complete interview flow"""
         try:
