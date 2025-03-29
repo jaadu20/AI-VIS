@@ -20,12 +20,26 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'channels',
     # Third-party apps
     'rest_framework',
     'rest_framework_simplejwt',
     # My apps
     'users',
 ]
+
+# Configure ASGI application
+ASGI_APPLICATION = 'your_project.routing.application'
+
+# Channel layers (Redis for production)
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],  # Redis server
+        },
+    },
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -80,7 +94,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # DATABASE CONFIGURATION
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('ENGINE'),#'django.db.backends.postgresql',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'aivis',
         'USER': 'postgres',
         'PASSWORD': '52-IsB_24',
