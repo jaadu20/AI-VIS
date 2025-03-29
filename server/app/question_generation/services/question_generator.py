@@ -1,13 +1,20 @@
-from transformers import T5ForConditionalGeneration, T5Tokenizer
+from transformers import T5Tokenizer, AutoModelForCausalLM
 import torch
+from huggingface_hub import login
 from sqlalchemy.orm import Session
-from question_generation.models.database import JobPosting
-from question_generation.config import settings
+from models.database import JobPosting
+from config import settings
 
 class QuestionGenerator:
     def __init__(self, db: Session):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = T5ForConditionalGeneration.from_pretrained(settings.model_name)
+        login(token="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")
+        self.model = AutoModelForCausalLM.from_pretrained(
+        settings.model_name,
+        torch_dtype=torch.float16,
+        device_map="auto",
+        attn_implementation="eager"
+        )
         
         # Set explicit model_max_length to avoid warning
         self.tokenizer = T5Tokenizer.from_pretrained(settings.model_name, model_max_length=512, legacy=False)

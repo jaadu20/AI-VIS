@@ -1,17 +1,16 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-from question_generation.services.question_generator import QuestionGenerator
-from question_generation.models.database import InterviewSession, JobPosting, SessionLocal
-from question_generation.services.evaluator import AnswerEvaluator
-from question_generation.config import settings
+from services.question_generator import QuestionGenerator
+from models.database import InterviewSession, JobPosting, SessionLocal
+from services.evaluator import AnswerEvaluator
+from config import settings
 from datetime import datetime
 from pydantic import BaseModel
 import uuid
 
 app = FastAPI()
 
-
-# Database Dependency
+# Database Dependenc
 def get_db():
     db = SessionLocal()
     try:

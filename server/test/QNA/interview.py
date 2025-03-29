@@ -65,7 +65,7 @@ class TechnicalInterviewSystem:
         """Extract key technical areas from job description"""
         focus_areas = []
         keywords = {
-            'python': ['python', 'django', 'flask'],
+            'python': ['python'],
             'debugging': ['debug', 'troubleshoot', 'fix'],
             'data_structures': ['algorithm', 'structure', 'optimize']
         }

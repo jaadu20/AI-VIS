@@ -13,8 +13,8 @@ uvicorn==0.23.2
 python-dotenv==1.0.0
 
 # AI/ML
-transformers==4.34.0
-torch==2.0.1
+transformers==4.50.1
+torch==2.5.1
 spacy==3.7.2
 opencv-python==4.8.1.78
 deepface==0.0.79
@@ -28,3 +28,12 @@ redis==4.6.0
 
 # Database
 psycopg2==2.9.7
+
+----------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
+
+# PyTorch with CUDA 12.1
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# Transformers and Accelerate
+pip install transformers>=4.40.1 accelerate>=0.29.1
