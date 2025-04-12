@@ -141,8 +141,12 @@ USE_TZ = True
 # Static files and media
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 CORS_ALLOW_ALL_ORIGINS = True
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AZURE_SPEECH_KEY = '1JJ3FlHJyQWky4QtvopDo2MF94FXoXYryKTSglxwNg1DfAZRuJ48JQQJ99BCACYeBjFXJ3w3AAAYACOGJfEf'
+AZURE_SPEECH_REGION = 'eastus' 
