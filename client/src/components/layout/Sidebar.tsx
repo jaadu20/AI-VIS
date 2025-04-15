@@ -11,7 +11,7 @@ import {
   FileText,
   MessageSquare,
 } from "lucide-react";
-import { useAuthStore } from "../../pages/auth/store/authStore";
+import { useAuthStore } from "../../store/authStore";
 import { cn } from "../../lib/utils";
 
 interface SidebarItem {

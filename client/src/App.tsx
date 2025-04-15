@@ -10,9 +10,10 @@ import { Signup } from "./pages/auth/Signup";
 import { CompanyDashboard } from "./pages/company/Dashboard";
 import { CandidateDashboard } from "./pages/candidate/Dashboard";
 import { AIInterview } from "./pages/interview/AIInterview";
+import { InterviewProgress } from "./pages/interview/InterviewProgress";
 import { CandidateProfile } from "./pages/candidate/CandidateProfile";
 import { JobPostingForm } from "./pages/company/JobPostingForm";
-import { useAuthStore } from "./pages/auth/store/authStore";
+import { useAuthStore } from "./store/authStore";
 import { About } from "./pages/About";
 import { Contact } from "./pages/Contact";
 import { Forgetpass } from "./pages/auth/ForgetPassword";
@@ -117,6 +118,8 @@ function App() {
             </PrivateRoute>
           }
         />
+
+        <Route path="/complete" element={<InterviewProgress />} />
 
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/" replace />} />

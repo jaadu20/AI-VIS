@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import { Building2, Mail, Phone, Globe, MapPin } from "lucide-react";
 import { Button } from "../../components/ui/Button";
-import { useAuthStore } from "../auth/store/authStore";
+import { useAuthStore } from "../../store/authStore";
 
 interface CompanyRegistrationForm {
   companyName: string;

@@ -1,299 +1,208 @@
-import { useState, useRef } from "react";
-import { motion } from "framer-motion";
-import { Send, Video, Mic, MicOff, Upload } from "lucide-react"; // Importing Upload icon
-import { Button } from "../../components/ui/Button";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-type Message = {
-  id: string;
-  text?: string;
-  audioUrl?: string;
-  sender: "user" | "ai";
-};
+import {
+  Video,
+  VideoOff,
+  Mic,
+  MicOff,
+  Send,
+  Loader2,
+  Square,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "../../components/ui/Button";
+import { Progress } from "../../components/ui/progress";
+import aibot from "../../assets/public/images/aibot.jpg";
+import axios from "axios";
 
 export function AIInterview() {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      text: "Hello! I'm your AI interviewer. Let's begin with your introduction.",
-      sender: "ai",
-    },
-  ]);
-  const [input, setInput] = useState("");
-  const [isVideoOn, setIsVideoOn] = useState(false);
-  const [isMicOn, setIsMicOn] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const mediaStream = useRef<MediaStream | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
-  const mediaRecorder = useRef<MediaRecorder | null>(null); 
-  const fileInputRef = useRef<HTMLInputElement | null>(null); 
+  const [showPopup, setShowPopup] = useState(true);
+  const [currentQuestion, setCurrentQuestion] = useState({
+    text: "",
+    audioUrl: "",
+    id: "",
+    order: 0,
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [mediaState, setMediaState] = useState({
+    audio: true,
+    video: true,
+    recording: false,
+  });
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorder = useRef<MediaRecorder | null>(null);
+  const audioChunks = useRef<Blob[]>([]);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-    
-      if (file.type === "text/plain") {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const fileContent = reader.result as string;
-
-          
-          const newMessage: Message = {
-            id: Date.now().toString(),
-            text: fileContent,
-            sender: "user",
-          };
-
-          setMessages((prev) => [...prev, newMessage]); 
-        };
-        reader.readAsText(file);
-      } else {
-        alert("Please upload a valid .txt file.");
-      }
+  const startInterview = async () => {
+    setShowPopup(false);
+    try {
+      const response = await axios.post("/api/interviews/", {
+        job_description: "Sample job description",
+      });
+      loadNextQuestion(response.data.id);
+    } catch (error) {
+      console.error("Error starting interview:", error);
     }
   };
 
-  const toggleRecording = () => {
-    if (isRecording) {
-    
-      mediaRecorder.current?.stop();
-      setIsRecording(false);
-    } else {
-     
-      navigator.mediaDevices
-        .getUserMedia({ audio: true })
-        .then((stream) => {
-          mediaStream.current = stream;
-          const recorder = new MediaRecorder(stream);
-          mediaRecorder.current = recorder; 
-
-          recorder.ondataavailable = (e) => {
-            setAudioChunks((prev) => [...prev, e.data]);
-          };
-
-          recorder.onstop = () => {
-            const audioBlob = new Blob(audioChunks, { type: "audio/mpeg" });
-            const audioUrl = URL.createObjectURL(audioBlob);
-
-            const newMessage: Message = {
-              id: Date.now().toString(),
-              audioUrl,
-              sender: "user",
-            };
-
-            setMessages((prev) => [...prev, newMessage]);
-            setAudioChunks([]); 
-          };
-
-          recorder.start();
-          setIsRecording(true);
-        })
-        .catch((error) => {
-          console.error("Error accessing microphone:", error);
-        });
+  const loadNextQuestion = async (interviewId: string) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.post("/api/generate-question/", {
+        interview_id: interviewId,
+        current_order: currentQuestion.order,
+      });
+      setCurrentQuestion({
+        text: response.data.question,
+        audioUrl: response.data.audio_url,
+        id: response.data.id,
+        order: response.data.order,
+      });
+      playQuestionAudio(response.data.audio_url);
+    } catch (error) {
+      console.error("Error loading question:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  const playQuestionAudio = (url: string) => {
+    const audio = new Audio(url);
+    audio.play().catch((error) => console.error("Audio play failed:", error));
+  };
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text: input,
-      sender: "user",
+  const startRecording = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder.current = new MediaRecorder(stream);
+    mediaRecorder.current.ondataavailable = (e) => {
+      audioChunks.current.push(e.data);
     };
-
-    setMessages([...messages, newMessage]);
-    setInput("");
-
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: "Thank you for your response. Here's my next question...",
-        sender: "ai",
-      };
-      setMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
+    mediaRecorder.current.start();
+    setMediaState((prev) => ({ ...prev, recording: true }));
   };
 
-  const handleComplete = () => {
-    if (mediaStream.current) {
-      mediaStream.current.getTracks().forEach((track) => track.stop());
-    }
-    navigate("/student/dashboard");
-  };
+  const stopRecording = async () => {
+    if (mediaRecorder.current) {
+      mediaRecorder.current.stop();
+      const audioBlob = new Blob(audioChunks.current);
+      const formData = new FormData();
+      formData.append("audio", audioBlob, "recording.wav");
+      formData.append("question_id", currentQuestion.id);
 
-  const toggleVideo = async () => {
-    if (!isVideoOn) {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: isMicOn,
-        });
-        mediaStream.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-        setIsVideoOn(true);
-      } catch (err) {
-        console.error("Error accessing webcam:", err);
+        const response = await axios.post("/api/process-answer/", formData);
+        // Update UI with transcribed text
+      } catch (error) {
+        console.error("Error processing answer:", error);
       }
-    } else {
-      if (mediaStream.current) {
-        mediaStream.current.getTracks().forEach((track) => track.stop());
-        mediaStream.current = null;
-      }
-      setIsVideoOn(false);
-    }
-  };
 
-  const toggleMic = async () => {
-    if (mediaStream.current) {
-      const audioTracks = mediaStream.current.getAudioTracks();
-      audioTracks.forEach((track) => (track.enabled = !isMicOn));
+      setMediaState((prev) => ({ ...prev, recording: false }));
     }
-    setIsMicOn(!isMicOn);
   };
 
   return (
-    <div
-      className="min-h-screen bg-gray-50"
-      style={{
-        backgroundImage:
-          "url('https://t4.ftcdn.net/jpg/04/91/04/57/360_F_491045782_57jOG41DcPq4BxRwYqzLrhsddudrq2MM.jpg')",
-        backgroundAttachment: "fixed",
-      }}
-    >
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">AI VIS</h1>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 flex flex-col">
+      <AnimatePresence>
+        {showPopup && (
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-white shadow rounded-lg overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Video Interview
-                </h2>
-                <Button variant="outline" size="sm" onClick={toggleVideo}>
-                  <Video className="h-5 w-5 mr-2" />
-                  {isVideoOn ? "Stop Video" : "Start Video"}
-                </Button>
-              </div>
-              <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="h-full w-full rounded-lg"
-                />
-              </div>
-              <div className="mt-4 flex justify-center">
-                <Button variant="outline" size="sm" onClick={toggleMic}>
-                  {isMicOn ? (
-                    <>
-                      <Mic className="h-5 w-5 mr-2" />
-                      Unmute
-                    </>
-                  ) : (
-                    <>
-                      <MicOff className="h-5 w-5 mr-2" />
-                      Mute
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
+            {/* Popup content with animations */}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <main className="flex-1 max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <section className="space-y-6">
+          <motion.div
+            className="relative bg-gray-800 rounded-xl overflow-hidden shadow-2xl"
+            initial={{ scale: 0.95 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            {/* Video preview with animated controls */}
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-white shadow rounded-lg overflow-hidden flex flex-col"
+            className="bg-white/10 backdrop-blur-lg rounded-xl p-6 shadow-2xl"
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
           >
-            <div className="p-6 flex-1 overflow-y-auto">
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${
-                      message.sender === "user"
-                        ? "justify-end"
-                        : "justify-start"
-                    }`}
-                  >
-                    <div
-                      className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                        message.sender === "user"
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 text-gray-900"
-                      }`}
-                    >
-                      {message.audioUrl ? (
-                        <audio controls src={message.audioUrl}></audio>
-                      ) : (
-                        message.text
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="p-4 border-t">
-              <div className="flex space-x-4">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type your response..."
-                  className="flex-1 rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                  onKeyPress={(e) => e.key === "Enter" && handleSend()}
-                />
-                <Button onClick={handleSend}>
-                  <Send className="h-5 w-5" />
-                </Button>
-                <Button
-                  onClick={toggleRecording}
-                  className={`${
-                    isRecording ? "bg-red-500 text-white" : "bg-blue-600"
-                  } p-2 rounded-full`}
-                >
-                  <Mic className="h-5 w-5" />
-                </Button>
-              </div>
-              <div className="mt-4 flex justify-between items-center">
-                <div className="flex items-center">
-                  <Button
-                    className="bg-blue-600 text-white p-2 rounded-full flex items-center"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="h-5 w-5 mr-2" />
-                    Upload File
-                  </Button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept=".txt"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
+            <h3 className="text-xl font-bold text-white mb-4">
+              {currentQuestion.text}
+            </h3>
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={mediaState.recording ? stopRecording : startRecording}
+                className={`rounded-full p-4 transition-all ${
+                  mediaState.recording
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-blue-500 hover:bg-blue-600"
+                }`}
+              >
+                {mediaState.recording ? (
+                  <Square className="h-6 w-6 text-white" />
+                ) : (
+                  <Mic className="h-6 w-6 text-white" />
+                )}
+              </Button>
+              {mediaState.recording && (
+                <div className="flex items-center gap-2 text-red-400">
+                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                  <span>{recordingTime}s</span>
                 </div>
-                <Button onClick={handleComplete} variant="outline">
-                  Complete Interview
-                </Button>
+              )}
+            </div>
+          </motion.div>
+        </section>
+
+        <aside className="flex flex-col gap-6">
+          <motion.div
+            className="bg-white/5 backdrop-blur-lg rounded-xl p-6 shadow-2xl"
+            initial={{ x: 20 }}
+            animate={{ x: 0 }}
+          >
+            <div className="flex flex-col items-center">
+              <motion.img
+                src={aibot}
+                alt="AI Interviewer"
+                className="w-32 h-32 rounded-full mb-4 ring-4 ring-blue-500"
+                animate={{
+                  rotate: isLoading ? [0, 10, -10, 0] : 0,
+                  scale: isLoading ? 1.1 : 1,
+                }}
+                transition={{ duration: 0.5, loop: isLoading ? Infinity : 0 }}
+              />
+              <div className="text-center space-y-2">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  AI Interview Assistant
+                </h2>
+                <p className="text-gray-300">
+                  {isLoading
+                    ? "Analyzing your response..."
+                    : "Ready for your answer"}
+                </p>
               </div>
             </div>
           </motion.div>
-        </div>
+
+          <Button
+            onClick={() =>
+              currentQuestion.order < 14
+                ? loadNextQuestion()
+                : navigate("/complete")
+            }
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 rounded-xl transition-all"
+          >
+            {currentQuestion.order < 14
+              ? "Next Question"
+              : "Complete Interview"}
+          </Button>
+        </aside>
       </main>
     </div>
   );

@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import { Lock, Mail } from "lucide-react";
 import { Button } from "../../components/ui/Button";
-import { useAuthStore } from "./store/authStore";
+import { useAuthStore } from "../../store/authStore";
 import { Footer } from "../../components/Footer";
 import api from "../../api";
 import { toast, Toaster } from "react-hot-toast";
@@ -56,7 +56,7 @@ export function Login() {
           name: decoded.name,
           phone: decoded.phone,
           ...(decoded.role === "company" && {
-            company_name: decoded.company_name, 
+            company_name: decoded.company_name,
             company_address: decoded.company_address,
           }),
         },
