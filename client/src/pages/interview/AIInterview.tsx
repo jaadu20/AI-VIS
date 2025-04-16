@@ -323,7 +323,7 @@ export function AIInterview() {
                 {isLoading ? (
                   <Loader2 className="h-6 w-6 animate-spin mr-2" />
                 ) : (
-                  <Video className="h-6 w-6 mr-2 animate-bounce" />
+                  <Video className="h-6 w-6 mr-2" />
                 )}
                 Start Interview Now
               </Button>
@@ -355,8 +355,8 @@ export function AIInterview() {
                   onClick={() => navigate("/complete")}
                   className="relative inline-flex items-center px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl shadow-sm hover:bg-indigo-700 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
                 >
-                  <span className="absolute left-0 top-0 h-full w-full bg-indigo-700 opacity-0 group-hover:opacity-10 transition duration-300 rounded-xl" />
-                  Complete Interview
+                  <span className="absolute left-0 top-0 h-full w-full bg-indigo-700 opacity-0 group-hover:opacity-5 transition duration-300 rounded-xl" />
+                  Exit Interview
                   <svg
                     className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
                     fill="none"
@@ -501,7 +501,7 @@ export function AIInterview() {
                   ) : currentQuestionIndex < 14 ? (
                     <>
                       <Send className="h-5 w-5 mr-2" />
-                      Submit & Next Question
+                      Submit Answer
                     </>
                   ) : (
                     "Complete Interview 🎉"

@@ -31,7 +31,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     # My apps
     'users',
-    # 'interview',
+    'interview',
     'jobs',
 ]
 
