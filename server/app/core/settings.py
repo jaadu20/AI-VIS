@@ -5,8 +5,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-AZURE_SPEECH_KEY = os.getenv('AZURE_SPEECH_KEY')
-AZURE_REGION = os.getenv('AZURE_SERVICE_REGION')
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -33,7 +31,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     # My apps
     'users',
-    'interview',
+    # 'interview',
     'jobs',
 ]
 
@@ -159,3 +157,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AZURE_SPEECH_KEY = '1JJ3FlHJyQWky4QtvopDo2MF94FXoXYryKTSglxwNg1DfAZRuJ48JQQJ99BCACYeBjFXJ3w3AAAYACOGJfEf'
 AZURE_SPEECH_REGION = 'eastus' 
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
