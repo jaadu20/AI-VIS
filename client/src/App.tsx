@@ -21,6 +21,7 @@ import { ResetPassword } from "./pages/auth/ResetPassword";
 import { CandidatesResult } from "./pages/company/CandidatesResult";
 import { CompanyProfile } from "./pages/company/CompanyProfile";
 import { Getstarted } from "./pages/Getstarted";
+import { JobApplicationPage } from "./pages/candidate/JobApplicationPage";
 
 function PrivateRoute({
   children,
@@ -123,6 +124,7 @@ function App() {
 
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/jobs/:jobId/apply" element={<JobApplicationPage />} />
       </Routes>
     </Router>
   );

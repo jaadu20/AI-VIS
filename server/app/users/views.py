@@ -4,7 +4,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
 from django.utils.encoding import force_bytes, force_str
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -22,6 +22,8 @@ User = get_user_model()
 
 class SignupView(generics.CreateAPIView):
     serializer_class = SignupSerializer
+    permission_classes = [permissions.AllowAny]  # Add this line
+
 
 # Login view using SimpleJWT with a custom token serializer
 class MyTokenObtainPairView(TokenObtainPairView):

@@ -1,16 +1,24 @@
-from rest_framework import viewsets, permissions
-from .models import JobPosting
-from .serializers import JobPostingSerializer
-from django.contrib.auth import get_user_model
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from .models import Job
+from .serializers import JobSerializer
+from .permissions import IsCompanyUser
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.pagination import PageNumberPagination
 
-User = get_user_model()
+class JobCreateView(generics.CreateAPIView):
+    authentication_classes = [JWTAuthentication] 
+    permission_classes = [IsAuthenticated, IsCompanyUser]
+    queryset = Job.objects.all()
+    serializer_class = JobSerializer
+    def create(self, request, *args, **kwargs):
+        print(f"Auth User: {request.user.email}")  # Debug log
+        return super().create(request, *args, **kwargs)
 
-class JobPostingViewSet(viewsets.ModelViewSet):
-    serializer_class = JobPostingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class CompanyJobListView(generics.ListAPIView):
+    pagination_class = PageNumberPagination
+    serializer_class = JobSerializer
+    permission_classes = [IsAuthenticated, IsCompanyUser]
 
     def get_queryset(self):
-        return JobPosting.objects.filter(is_active=True)
-
-    def perform_create(self, serializer):
-        serializer.save(company=self.request.user)
+        return Job.objects.filter(company=self.request.user)

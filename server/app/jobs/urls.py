@@ -1,11 +1,10 @@
+# jobs/urls.py
 from django.urls import path
-from .views import JobPostingViewSet
+from .views import JobCreateView, CompanyJobListView
+
 
 urlpatterns = [
-    path('jobs/', JobPostingViewSet.as_view({'get': 'list', 'post': 'create'})),
-    path('jobs/<int:pk>/', JobPostingViewSet.as_view({
-        'get': 'retrieve', 
-        'put': 'update',
-        'delete': 'destroy'
-    })),
+    path('', JobCreateView.as_view(), name='job-create'),
+    path('company/', CompanyJobListView.as_view(), name='company-jobs')
+    
 ]
