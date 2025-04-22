@@ -1,4 +1,4 @@
-# job application views.py
+# job application view.py
 
 from django.shortcuts import render
 from fastapi import Response
@@ -24,7 +24,6 @@ class ApplicationCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(applicant=self.request.user)
-
 class EligibilityCheckView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = EligibilityCheckSerializer
@@ -33,19 +32,36 @@ class EligibilityCheckView(generics.GenericAPIView):
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        
         job = serializer.validated_data['job']
-        applicant = request.user
-        # Check if the applicant is eligible for the job
-        if not job.is_eligible(applicant):
+        cv_file = serializer.validated_data['cv']
+        
+        try:
+            # Create application
+            application = Application.objects.create(
+                applicant=request.user,
+                job=job,
+                cv=cv_file
+            )
+            
+            # Here you would add real eligibility check logic
+            # This is a mock implementation
+            is_eligible = True  # Replace with actual check
+            
+            if is_eligible:
+                return Response({
+                    "eligible": True,
+                    "application_id": application.id,
+                    "message": "Eligibility check passed"
+                })
+            else:
+                application.delete()
+                return Response({
+                    "eligible": False,
+                    "message": "Doesn't meet requirements"
+                }, status=400)
+
+        except Exception as e:
             return Response({
-                "eligible": False,
-                "message": "You are not eligible for this job"
-            }, status=400)
-        # If eligible, proceed with the application
-        application = Application.objects.create(job=job, applicant=applicant)
-        application.save()
-        # Return a success response
-        return Response({
-            "eligible": True,
-            "message": "Eligibility check passed"
-        })
+                "error": str(e)
+            }, status=500)
