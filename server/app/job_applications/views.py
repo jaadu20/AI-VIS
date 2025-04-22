@@ -1,3 +1,5 @@
+# job application views.py
+
 from django.shortcuts import render
 from fastapi import Response
 from rest_framework import generics
