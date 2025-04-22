@@ -115,29 +115,30 @@ export function JobApplicationPage() {
       return;
     }
 
-    try {
-      const formData = new FormData();
-      formData.append("cv", cvFile);
-      formData.append("job", job.id);
+    navigate("/interview");
+    // try {
+    //   const formData = new FormData();
+    //   formData.append("cv", cvFile);
+    //   formData.append("job", job.id);
 
-      const response = await api.post(
-        "/jobapplications/applications/check-eligibility/",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+    //   const response = await api.post(
+    //     "/jobapplications/applications/check-eligibility/",
+    //     formData,
+    //     {
+    //       headers: {
+    //         "Content-Type": "multipart/form-data",
+    //       },
+    //     }
+    //   );
 
-      if (response.data.eligible) {
-        navigate(`/interview/${response.data.application_id}`);
-      } else {
-        toast.error(response.data.message || "Not eligible for this position");
-      }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Application failed");
-    }
+    //   if (response.data.eligible) {
+    //     navigate(`/interview/${response.data.application_id}`);
+    //   } else {
+    //     toast.error(response.data.message || "Not eligible for this position");
+    //   }
+    // } catch (error: any) {
+    //   toast.error(error.response?.data?.message || "Application failed");
+    // }
   };
 
   if (isLoading) {
@@ -282,39 +283,41 @@ export function JobApplicationPage() {
                   </label>
                   <div
                     className={`relative flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl group transition-colors 
-                      ${
-                        isDragging
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-300 hover:border-blue-500"
-                      }`}
+                  ${
+                    isDragging
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-300 hover:border-blue-500"
+                  }`}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                   >
-                    <div className="space-y-1 text-center">
+                    {/* Full-screen clickable label */}
+                    <label
+                      htmlFor="cv-upload"
+                      className="absolute inset-0 cursor-pointer z-10"
+                    >
+                      <input
+                        id="cv-upload"
+                        ref={fileInputRef}
+                        type="file"
+                        accept="application/pdf"
+                        onChange={handleFileUpload}
+                        className="sr-only"
+                      />
+                    </label>
+
+                    <div className="space-y-1 text-center relative z-0">
                       <UploadCloud
                         className={`mx-auto h-12 w-12 transition-colors 
-                          ${
-                            isDragging
-                              ? "text-blue-500"
-                              : "text-gray-400 group-hover:text-blue-500"
-                          }`}
+                      ${
+                        isDragging
+                          ? "text-blue-500"
+                          : "text-gray-400 group-hover:text-blue-500"
+                      }`}
                       />
                       <div className="flex flex-col items-center text-sm text-gray-600">
-                        <label
-                          htmlFor="cv-upload"
-                          className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 transition-colors"
-                        >
-                          <span className="underline">Click to upload</span>
-                          <input
-                            id="cv-upload"
-                            ref={fileInputRef}
-                            type="file"
-                            accept="application/pdf"
-                            onChange={handleFileUpload}
-                            className="sr-only"
-                          />
-                        </label>
+                        <span className="underline">Click to upload</span>
                         <p className="mt-2">or drag and drop PDF</p>
                       </div>
                       <p className="text-xs text-gray-500 mt-2">
@@ -323,11 +326,11 @@ export function JobApplicationPage() {
                     </div>
                     <div
                       className={`absolute inset-0 rounded-xl transition-opacity 
-                      ${
-                        isDragging
-                          ? "opacity-100 bg-blue-500/10"
-                          : "opacity-0 group-hover:opacity-100 bg-blue-500/5"
-                      }`}
+                    ${
+                      isDragging
+                        ? "opacity-100 bg-blue-500/10"
+                        : "opacity-0 group-hover:opacity-100 bg-blue-500/5"
+                    }`}
                     />
                   </div>
                   {cvFile && (
@@ -346,8 +349,8 @@ export function JobApplicationPage() {
                 <Button
                   onClick={handleStartInterview}
                   className="w-full py-4 text-base font-medium shadow-lg hover:shadow-none transition-all 
-                    bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700
-                    text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700
+                text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={!cvFile}
                 >
                   Start Interview Now
