@@ -1,8 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
-import { Input } from "../../components/ui/Input";
-import { Briefcase, Building2, MapPin, DollarSign, Clock } from "lucide-react";
+import {
+  Briefcase,
+  MapPin,
+  DollarSign,
+  Clock,
+  Video,
+  FileText as FileTextIcon,
+  Zap,
+  FileBarChart,
+  CheckCircle2,
+  UploadCloud,
+} from "lucide-react";
 import api from "../../api";
 import { toast } from "react-hot-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -28,6 +38,8 @@ export function JobApplicationPage() {
   const [job, setJob] = useState<Job | null>(null);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -45,15 +57,51 @@ export function JobApplicationPage() {
     fetchJobDetails();
   }, [jobId, navigate]);
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      handleFileValidation(files[0]);
+    }
+  };
+
+  const handleFileValidation = (file: File) => {
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+    if (!file.type.includes("pdf")) {
+      toast.error("Please upload a PDF file");
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("File size exceeds 5MB limit");
+      return;
+    }
+
+    setCvFile(file);
+    toast.success("CV uploaded successfully");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.type === "application/pdf") {
-        setCvFile(file);
-        toast.success("CV uploaded successfully");
-      } else {
-        toast.error("Please upload a PDF file");
-      }
+      handleFileValidation(file);
     }
   };
 
@@ -72,7 +120,6 @@ export function JobApplicationPage() {
       formData.append("cv", cvFile);
       formData.append("job", job.id);
 
-      // Create application and check eligibility
       const response = await api.post(
         "/jobapplications/applications/check-eligibility/",
         formData,
@@ -112,114 +159,279 @@ export function JobApplicationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <h1 className="text-3xl font-bold mb-6 text-gray-900">{job.title}</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/20">
+      <nav className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center h-16">
+            <div className="flex items-center">
+              <Briefcase className="h-8 w-8 text-blue-600 mr-2" />
+              <span className="text-xl font-bold text-gray-900">
+                AI-VIS Jobs
+              </span>
+            </div>
+          </div>
+        </div>
+      </nav>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <Building2 className="h-6 w-6 mr-2 text-blue-600" />
-                  <span className="text-lg text-gray-700">
-                    {job.company_name}
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <MapPin className="h-6 w-6 mr-2 text-blue-600" />
-                  <span className="text-lg text-gray-700">{job.location}</span>
-                </div>
-                <div className="flex items-center">
-                  <DollarSign className="h-6 w-6 mr-2 text-blue-600" />
-                  <span className="text-lg text-gray-700">{job.salary}</span>
-                </div>
-                <div className="flex items-center">
-                  <Briefcase className="h-6 w-6 mr-2 text-blue-600" />
-                  <span className="text-lg text-gray-700">
-                    {formatEmploymentType(job.employment_type)}
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <Clock className="h-6 w-6 mr-2 text-blue-600" />
-                  <span className="text-sm text-gray-500">
-                    Posted {formatDistanceToNow(new Date(job.created_at))} ago
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Job Description
-                </h2>
-                <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">
-                  {job.description}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Job Details Column */}
+          <div className="lg:w-2/3 space-y-8">
+            <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+              <div className="mb-6">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2 animate-fade-in-up">
+                  {job.title}
+                </h1>
+                <p className="text-xl font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                  {job.company_name}
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Requirements
-                </h2>
-                <ul className="list-disc list-inside space-y-2">
-                  {job.requirements.split("\n").map((req, index) => (
-                    <li key={index} className="text-gray-600">
-                      {req}
-                    </li>
-                  ))}
-                </ul>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                {[
+                  {
+                    icon: MapPin,
+                    title: "Location",
+                    value: job.location,
+                    color: "bg-purple-100",
+                  },
+                  {
+                    icon: Briefcase,
+                    title: "Employment Type",
+                    value: formatEmploymentType(job.employment_type),
+                    color: "bg-orange-100",
+                  },
+                  {
+                    icon: DollarSign,
+                    title: "Salary",
+                    value: job.salary,
+                    color: "bg-green-100",
+                  },
+                  {
+                    icon: Clock,
+                    title: "Posted",
+                    value: `${formatDistanceToNow(
+                      new Date(job.created_at)
+                    )} ago`,
+                    color: "bg-pink-100",
+                  },
+                ].map((item, index) => (
+                  <div
+                    key={index}
+                    className={`flex items-center space-x-3 p-3 ${item.color} rounded-lg transition-transform hover:scale-[1.02]`}
+                  >
+                    <item.icon className="h-5 w-5 text-gray-700 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm text-gray-500">{item.title}</p>
+                      <p className="font-medium text-gray-900">{item.value}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-6">
+                <Section title="Job Description">
+                  <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+                    {job.description}
+                  </p>
+                </Section>
+
+                <Section title="Requirements">
+                  <ul className="space-y-3">
+                    {job.requirements.split("\n").map((req, index) => (
+                      <li key={index} className="flex items-start">
+                        <div className="flex-shrink-0 mt-1">
+                          <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
+                        </div>
+                        <p className="ml-3 text-gray-600">{req}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </Section>
+
+                {job.benefits && (
+                  <Section title="Benefits & Perks">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {job.benefits.split("\n").map((benefit, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg animate-pop-in"
+                        >
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                          <span className="text-gray-700">{benefit}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </Section>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Application Column */}
+          <div className="lg:w-1/3 space-y-8">
+            <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 animate-fade-in-up">
+                Apply for this Position
+              </h2>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Upload CV (PDF only)
+                  </label>
+                  <div
+                    className={`relative flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl group transition-colors 
+                      ${
+                        isDragging
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-300 hover:border-blue-500"
+                      }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <div className="space-y-1 text-center">
+                      <UploadCloud
+                        className={`mx-auto h-12 w-12 transition-colors 
+                          ${
+                            isDragging
+                              ? "text-blue-500"
+                              : "text-gray-400 group-hover:text-blue-500"
+                          }`}
+                      />
+                      <div className="flex flex-col items-center text-sm text-gray-600">
+                        <label
+                          htmlFor="cv-upload"
+                          className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 transition-colors"
+                        >
+                          <span className="underline">Click to upload</span>
+                          <input
+                            id="cv-upload"
+                            ref={fileInputRef}
+                            type="file"
+                            accept="application/pdf"
+                            onChange={handleFileUpload}
+                            className="sr-only"
+                          />
+                        </label>
+                        <p className="mt-2">or drag and drop PDF</p>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Max file size: 5MB
+                      </p>
+                    </div>
+                    <div
+                      className={`absolute inset-0 rounded-xl transition-opacity 
+                      ${
+                        isDragging
+                          ? "opacity-100 bg-blue-500/10"
+                          : "opacity-0 group-hover:opacity-100 bg-blue-500/5"
+                      }`}
+                    />
+                  </div>
+                  {cvFile && (
+                    <div className="mt-3 flex items-center justify-between p-3 bg-blue-50 rounded-lg animate-pop-in">
+                      <div className="flex items-center space-x-2">
+                        <FileTextIcon className="h-5 w-5 text-blue-600 animate-spin-once" />
+                        <span className="text-sm font-medium text-gray-700">
+                          {cvFile.name}
+                        </span>
+                      </div>
+                      <CheckCircle2 className="h-5 w-5 text-green-500 animate-pulse" />
+                    </div>
+                  )}
+                </div>
+
+                <Button
+                  onClick={handleStartInterview}
+                  className="w-full py-4 text-base font-medium shadow-lg hover:shadow-none transition-all 
+                    bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700
+                    text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!cvFile}
+                >
+                  Start Interview Now
+                </Button>
               </div>
             </div>
 
-            <div className="space-y-8">
-              <div className="bg-blue-50 rounded-lg p-6">
-                <h2 className="text-xl font-semibold mb-4 text-gray-900">
-                  Apply for this Position
-                </h2>
-
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-700">
-                      Upload Your CV (PDF only)
-                    </label>
-                    <Input
-                      type="file"
-                      accept="application/pdf"
-                      onChange={handleFileUpload}
-                      className="border-gray-300 rounded-lg"
-                    />
-                    {cvFile && (
-                      <p className="mt-2 text-sm text-green-600">
-                        {cvFile.name} uploaded
-                      </p>
-                    )}
-                  </div>
-
-                  <Button
-                    onClick={handleStartInterview}
-                    className="w-full bg-blue-600 hover:bg-blue-700 py-3 text-lg"
-                  >
-                    Start Interview
-                  </Button>
-                </div>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <h3 className="text-lg font-semibold mb-3 text-gray-900">
-                  Interview Process
-                </h3>
-                <ul className="list-disc list-inside space-y-2 text-gray-600">
-                  <li>15 questions total</li>
-                  <li>First 2 questions are introductory</li>
-                  <li>AI-powered real-time analysis</li>
-                  <li>Behavioral and technical questions</li>
-                  <li>Instant feedback report</li>
+            <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Interview Process
+              </h3>
+              <div className="flow-root">
+                <ul className="-mb-8">
+                  {[
+                    {
+                      icon: FileTextIcon,
+                      title: "CV Screening",
+                      description: "Instant eligibility check",
+                      color: "bg-purple-100",
+                    },
+                    {
+                      icon: Video,
+                      title: "Video Interview",
+                      description: "15 AI-powered questions",
+                      color: "bg-blue-100",
+                    },
+                    {
+                      icon: Zap,
+                      title: "Real-time Analysis",
+                      description: "Behavioral & technical evaluation",
+                      color: "bg-green-100",
+                    },
+                    {
+                      icon: FileBarChart,
+                      title: "Feedback Report",
+                      description: "Detailed performance insights",
+                      color: "bg-pink-100",
+                    },
+                  ].map((step, index) => (
+                    <li
+                      key={index}
+                      className="pb-8 animate-staggered-fade-in"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <div className="flex items-center space-x-4 group">
+                        <div className="flex-shrink-0">
+                          <div
+                            className={`flex items-center justify-center h-8 w-8 ${step.color} rounded-full transition-transform group-hover:scale-110`}
+                          >
+                            <step.icon className="h-4 w-4 text-gray-700" />
+                          </div>
+                        </div>
+                        <div className="transition-transform group-hover:translate-x-2">
+                          <p className="text-sm font-medium text-gray-900">
+                            {step.title}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {step.description}
+                          </p>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="border-t border-gray-100 pt-6">
+      <h3 className="text-xl font-semibold text-gray-900 mb-4">{title}</h3>
+      {children}
     </div>
   );
 }
