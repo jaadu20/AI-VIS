@@ -1,22 +1,29 @@
 // JobApplicationPage.tsx (New Page)
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
-import { Briefcase, Building2, Clock, MapPin, DollarSign } from "lucide-react";
+import { Briefcase, Building2, MapPin, DollarSign } from "lucide-react";
 import axios from "axios";
+import api from "../../api";
 import { toast } from "react-hot-toast";
 
 interface Job {
+  type: ReactNode;
+  salaryRange: any;
+  company: ReactNode;
   id: string;
   title: string;
-  company: string;
+  company_name: string;
   location: string;
-  type: string;
-  postedDate: string;
+  employment_type: string;
+  experience_level: string;
+  salary: string;
   description: string;
-  salaryRange?: string;
-  requirements?: string[];
+  requirements: string[];
+  department: string;
+  benefits: string;
+  created_at: string;
 }
 
 export function JobApplicationPage() {
@@ -53,27 +60,44 @@ export function JobApplicationPage() {
     }
   };
 
+  // src/pages/candidate/JobApplicationPage.tsx
   const handleStartInterview = async () => {
-    if (!cvFile) {
+    if (!cvFile || !job) {
       toast.error("Please upload your CV");
       return;
     }
 
     try {
+      // Create application
+      const applicationResponse = await api.post("/jobs/applications/", {
+        job: job.id,
+        status: "applied",
+      });
+
+      // Check eligibility
       const formData = new FormData();
       formData.append("cv", cvFile);
-      formData.append("jobId", jobId!);
+      formData.append("job", job.id);
 
-      const response = await axios.post("/api/check-eligibility", formData);
+      const eligibilityResponse = await api.post(
+        "/jobs/applications/check-eligibility/",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-      if (response.data.eligible) {
-        // Navigate to interview page with job ID in URL
-        navigate(`/interview/${jobId}`);
+      if (eligibilityResponse.data.eligible) {
+        navigate(`/interview/${applicationResponse.data.id}`);
       } else {
-        toast.error("Your CV does not meet the requirements for this position");
+        toast.error(
+          eligibilityResponse.data.message || "Not eligible for this position"
+        );
       }
-    } catch (error) {
-      toast.error("Error processing your application");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Application failed");
     }
   };
 
