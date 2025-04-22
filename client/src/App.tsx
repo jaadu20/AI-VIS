@@ -124,6 +124,7 @@ function App() {
 
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/" replace />} />
+        {/* <Route path="/jobs/:jobId/apply" element={<JobApplicationPage />} /> */}
         <Route path="/jobs/:jobId/apply" element={<JobApplicationPage />} />
       </Routes>
     </Router>

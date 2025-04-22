@@ -67,6 +67,7 @@ export function JobApplicationPage() {
       const response = await axios.post("/api/check-eligibility", formData);
 
       if (response.data.eligible) {
+        // Navigate to interview page with job ID in URL
         navigate(`/interview/${jobId}`);
       } else {
         toast.error("Your CV does not meet the requirements for this position");
@@ -164,8 +165,7 @@ export function JobApplicationPage() {
                   </div>
 
                   <Button
-                    // onClick={handleStartInterview}
-                    onClick={() => navigate("/interview")}
+                    onClick={handleStartInterview}
                     className="w-full bg-blue-600 hover:bg-blue-700"
                   >
                     Start Interview

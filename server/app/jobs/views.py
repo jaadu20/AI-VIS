@@ -3,6 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Job
 from .serializers import JobSerializer
 from .permissions import IsCompanyUser
+from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.pagination import PageNumberPagination
 
@@ -22,3 +23,13 @@ class CompanyJobListView(generics.ListAPIView):
 
     def get_queryset(self):
         return Job.objects.filter(company=self.request.user)
+
+class JobListView(generics.ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = JobSerializer
+    pagination_class = None  
+    
+    def get_queryset(self):
+        return Job.objects.all() \
+            .order_by('-created_at') \
+            .select_related('company__company_profile')
