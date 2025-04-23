@@ -205,6 +205,7 @@ export function CandidateDashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow flex flex-col h-92"
+                //className="bg-[url('C:\Users\muham\OneDrive\Desktop\AI-VIS\client\src\assets\public\images\se2.png')] bg-cover bg-center rounded-xl z-0 shadow-md hover:shadow-lg transition-shadow flex flex-col h-92"
               >
                 <div className="p-6 space-y-4 flex flex-col h-full">
                   <div className="flex items-start justify-between">
