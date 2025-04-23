@@ -26,8 +26,8 @@ class GrokAIService:
         # Simulated Grok API call (replace with actual API call)
         prompt = prompts[difficulty_level]
         response = requests.post(
-            "https://api.groq.ai/v1/generate",
-            headers={"Authorization": f"Bearer {settings.GROK_API_KEY}"},
+            "https://groq.com/",
+            headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}"},
             json={
                 "prompt": prompt,
                 "max_tokens": 100
@@ -39,8 +39,8 @@ class GrokAIService:
     def analyze_answer(question, answer, job_description):
         # Simulated analysis API call
         response = requests.post(
-            "https://api.grok.ai/v1/analyze",
-            headers={"Authorization": f"Bearer {settings.GROK_API_KEY}"},
+            "https://groq.com/",
+            headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}"},
             json={
                 "question": question,
                 "answer": answer,
