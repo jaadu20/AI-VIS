@@ -93,3 +93,28 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class ForgotPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
+
+#--------------------------------------------------
+# serializers.py
+
+class CandidateProfileSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='user.name', read_only=True)
+    email = serializers.EmailField(source='user.email', read_only=True)
+    phone = serializers.CharField(source='user.phone', read_only=True)
+
+    class Meta:
+        model = CandidateProfile
+        fields = [
+            'name', 'email', 'phone', 'education', 'skills',
+            'experience', 'cv', 'about_me', 'image'
+        ]
+        read_only_fields = ('user',)
+
+class CandidateProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CandidateProfile
+        fields = '__all__'
+        extra_kwargs = {
+            'cv': {'required': False},
+            'image': {'required': False}
+        }

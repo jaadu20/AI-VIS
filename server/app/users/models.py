@@ -2,7 +2,6 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
-
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 
 class UserManager(BaseUserManager):
@@ -41,10 +40,18 @@ class CompanyProfile(models.Model):
     company_name = models.CharField(max_length=255)
     company_address = models.TextField()
 
+# class CandidateProfile(models.Model):
+#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='candidate_profile')
+#     # resume = models.FileField(upload_to='resumes/', null=True, blank=True)
 class CandidateProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='candidate_profile')
-    # resume = models.FileField(upload_to='resumes/', null=True, blank=True)
-
+    education = models.JSONField(default=list)
+    skills = models.TextField(blank=True)
+    experience = models.TextField(blank=True)
+    cv = models.FileField(upload_to='cvs/', null=True, blank=True)
+    about_me = models.TextField(blank=True)
+    image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
+#----------------------------------------------------------------------------------
 class PasswordReset(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="password_resets")
     code = models.CharField(max_length=6) 

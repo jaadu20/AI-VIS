@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'interview',
     'jobs',
     'job_applications',
+    # 'profiles',
 ]
 
 # Configure ASGI application

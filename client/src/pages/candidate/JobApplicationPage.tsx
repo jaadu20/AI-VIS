@@ -12,6 +12,7 @@ import {
   FileBarChart,
   CheckCircle2,
   UploadCloud,
+  Camera,
 } from "lucide-react";
 import api from "../../api";
 import { toast } from "react-hot-toast";
@@ -165,9 +166,9 @@ export function JobApplicationPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center h-16">
             <div className="flex items-center">
-              <Briefcase className="h-8 w-8 text-blue-600 mr-2" />
+              <Camera className="h-8 w-8 text-blue-600 mr-2" />
               <span className="text-xl font-bold text-gray-900">
-                AI-VIS Jobs
+                AI-VIS
               </span>
             </div>
           </div>
@@ -206,7 +207,7 @@ export function JobApplicationPage() {
                     icon: DollarSign,
                     title: "Salary",
                     value: job.salary,
-                    color: "bg-green-100",
+                    color: "bg-blue-100",
                   },
                   {
                     icon: Clock,

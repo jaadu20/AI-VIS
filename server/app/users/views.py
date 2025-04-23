@@ -8,17 +8,56 @@ from rest_framework import generics, status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
-
-
+from .models import CandidateProfile, PasswordReset
+from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import (
     SignupSerializer,
     MyTokenObtainPairSerializer,
     ForgotPasswordSerializer,
+    CandidateProfileSerializer, 
+    CandidateProfileUpdateSerializer
 )
-from .models import PasswordReset
-
 User = get_user_model()
+class CandidateProfileView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [permissions.IsAuthenticated]
 
+    def get(self, request):
+        try:
+            profile = request.user.candidate_profile
+            serializer = CandidateProfileSerializer(profile)
+            return Response(serializer.data)
+        except CandidateProfile.DoesNotExist:
+            return Response(
+                {"detail": "Candidate profile not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    def patch(self, request):
+        try:
+            data = request.data.copy()
+            data.pop('name', None)
+            data.pop('email', None)
+            data.pop('phone', None)
+            
+            profile = request.user.candidate_profile
+            serializer = CandidateProfileUpdateSerializer(
+                profile, 
+                data=data,
+                partial=True
+            )
+            
+            if serializer.is_valid():
+                serializer.save()
+                return Response(CandidateProfileSerializer(profile).data)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        except CandidateProfile.DoesNotExist:
+            return Response(
+                {"detail": "Candidate profile not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+ #--------------------------------------------------
 
 class SignupView(generics.CreateAPIView):
     serializer_class = SignupSerializer
