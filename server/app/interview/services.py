@@ -26,7 +26,7 @@ class GrokAIService:
         # Simulated Grok API call (replace with actual API call)
         prompt = prompts[difficulty_level]
         response = requests.post(
-            "https://api.grok.ai/v1/generate",
+            "https://api.groq.ai/v1/generate",
             headers={"Authorization": f"Bearer {settings.GROK_API_KEY}"},
             json={
                 "prompt": prompt,
