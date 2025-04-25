@@ -1,22 +1,47 @@
+# interviews/models.py
 from django.db import models
 from users.models import User
-from jobs.models import Job  
+from job_applications.models import Application  # From job application backend
 
+# interviews/models.py
 class Interview(models.Model):
-    DIFFICULTY_LEVELS = (
+    DIFFICULTY_CHOICES = [
         ('easy', 'Easy'),
         ('medium', 'Medium'),
         ('hard', 'Hard'),
+    ]
+    
+    # Field is explicitly named "difficulty"
+    difficulty = models.CharField(
+        max_length=10, 
+        choices=DIFFICULTY_CHOICES, 
+        default='medium'
     )
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    job_posting = models.ForeignKey(Job, on_delete=models.CASCADE)
-    questions = models.JSONField(default=list)  
-    answers = models.JSONField(default=list)    
-    results = models.JSONField(default=dict)  
-    difficulty_level = models.CharField(max_length=10, choices=DIFFICULTY_LEVELS, default='medium')
+    
+    application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='interviews')
+    interview_id = models.UUIDField(unique=True)
+    current_question = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     completed = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.user.email} - {self.job_posting.title}"
+        return f"{self.application.applicant.email} - {self.interview_id}"
+
+class Question(models.Model):
+    interview = models.ForeignKey(Interview, on_delete=models.CASCADE, related_name='questions')
+    text = models.TextField()
+    order = models.PositiveIntegerField()
+    is_predefined = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order']
+        unique_together = ['interview', 'order']
+
+class Answer(models.Model):
+    question = models.OneToOneField(Question, on_delete=models.CASCADE, related_name='answer')
+    text = models.TextField()
+    audio = models.FileField(upload_to='answers/audio/', null=True, blank=True)
+    video = models.FileField(upload_to='answers/video/', null=True, blank=True)
+    analysis = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)

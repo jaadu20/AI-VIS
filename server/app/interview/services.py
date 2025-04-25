@@ -1,50 +1,96 @@
-import requests
+# interviews/services.py
 import json
+import requests
+import tempfile,os
+from typing import Dict, Any, Optional
 from django.conf import settings
+from azure.cognitiveservices.speech import (
+    SpeechConfig,
+    SpeechSynthesizer,
+    SpeechRecognizer,
+    AudioConfig,
+    ResultReason
+)
 
-class GrokAIService:
-    @staticmethod
-    def generate_question(job_description, previous_answer, difficulty_level):
-        prompts = {
-            'easy': [
-                f"Based on the job description: {job_description}, ask a basic question about required skills.",
-                f"Considering the candidate's previous answer: {previous_answer}, ask a fundamental follow-up question.",
-                f"Ask a straightforward question related to {job_description} for a junior level candidate."
+class AzureSpeechService:
+    def __init__(self):
+        self.speech_config = SpeechConfig(
+            subscription=os.environ.get("AZURE_SPEECH_KEY", settings.AZURE_SPEECH_KEY),
+            region=os.environ.get("AZURE_SPEECH_REGION", settings.AZURE_SPEECH_REGION)
+        )
+        self.speech_config.speech_recognition_language = "en-US"
+        self.speech_config.speech_synthesis_language = "en-US"
+        self.speech_config.speech_synthesis_voice_name = "en-US-JennyNeural"
+
+    def text_to_speech(self, text: str) -> Optional[bytes]:
+        try:
+            with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
+                audio_config = AudioConfig(filename=tmpfile.name)
+                synthesizer = SpeechSynthesizer(
+                    speech_config=self.speech_config, 
+                    audio_config=audio_config
+                )
+                result = synthesizer.speak_text_async(text).get()
+                
+                if result.reason == ResultReason.SynthesizingAudioCompleted:
+                    with open(tmpfile.name, 'rb') as audio_file:
+                        return audio_file.read()
+        except Exception as e:
+            print(f"TTS Error: {str(e)}")
+        return None
+
+    def speech_to_text(self, audio_data: bytes) -> Optional[str]:
+        try:
+            with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
+                tmpfile.write(audio_data)
+                tmpfile.flush()
+                
+                audio_config = AudioConfig(filename=tmpfile.name)
+                recognizer = SpeechRecognizer(
+                    speech_config=self.speech_config, 
+                    audio_config=audio_config
+                )
+                result = recognizer.recognize_once_async().get()
+                
+                if result.reason == ResultReason.RecognizedSpeech:
+                    return result.text
+        except Exception as e:
+            print(f"STT Error: {str(e)}")
+        return None
+
+class GroqQuestionGenerator:
+    # ... (keep existing implementation but add difficulty handling)
+    def generate_question(self, context: str, previous_answers: list, difficulty: str) -> Dict[str, Any]:
+        prompt = f"""
+        Generate a {difficulty} difficulty interview question based on:
+        Job Description: {context}
+        
+        Previous Q&A:
+        {json.dumps(previous_answers, indent=2)}
+        
+        Requirements:
+        - Relevant to job description
+        - Difficulty level: {difficulty}
+        - Open-ended for detailed responses
+        - Professional formatting
+        
+        Return JSON format with 'text' and 'difficulty' fields.
+        """
+        
+        payload = {
+            "model": "llama3-70b-8192",
+            "messages": [
+                {"role": "system", "content": "You are a professional interview coach generating technical questions."},
+                {"role": "user", "content": prompt}
             ],
-            'medium': [
-                f"Generate a scenario-based question related to {job_description}",
-                f"Ask a technical question that requires problem-solving skills for {job_description}",
-                f"Create a behavioral question based on the job requirements: {job_description}"
-            ],
-            'hard': [
-                f"Generate a complex technical challenge specific to {job_description}",
-                f"Ask a high-pressure scenario question for a senior candidate applying for {job_description}",
-                f"Create a critical thinking question that tests deep knowledge of {job_description}"
-            ]
+            "temperature": 0.7,
+            "max_tokens": 200
         }
         
-        # Simulated Grok API call (replace with actual API call)
-        prompt = prompts[difficulty_level]
-        response = requests.post(
-            "https://groq.com/",
-            headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}"},
-            json={
-                "prompt": prompt,
-                "max_tokens": 100
-            }
-        )
-        return response.json().get('text', 'Could not generate question')
-
-    @staticmethod
-    def analyze_answer(question, answer, job_description):
-        # Simulated analysis API call
-        response = requests.post(
-            "https://groq.com/",
-            headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}"},
-            json={
-                "question": question,
-                "answer": answer,
-                "context": job_description
-            }
-        )
-        return response.json()
+        try:
+            response = requests.post(self.api_url, headers=self.headers, json=payload)
+            response.raise_for_status()
+            return json.loads(response.json()["choices"][0]["message"]["content"])
+        except Exception as e:
+            return {"text": f"Question generation failed: {str(e)}", "difficulty": difficulty}
+        

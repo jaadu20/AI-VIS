@@ -1,155 +1,152 @@
+# interviews/views.py (updated)
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Interview
-from .services import GrokAIService
-from jobs.models import Job
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, JSONParser
 import uuid
-from django.http import JsonResponse
-from django.views import View
-from azure.cognitiveservices.speech import SpeechConfig, SpeechSynthesizer, SpeechRecognizer
-import azure.cognitiveservices.speech as speechsdk
-import tempfile
-import os
+from .models import Interview, Question, Answer
+from .services import GroqQuestionGenerator, AzureSpeechService
+from jobs.models import JobPosting
+from django.core.files.base import ContentFile
 
+class StartInterviewView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [JSONParser]
 
-class GenerateQuestionView(APIView):
     def post(self, request):
-        user = request.user
         job_id = request.data.get('job_id')
-        previous_answer = request.data.get('previous_answer', '')
-        
+        if not job_id:
+            return Response({'error': 'Missing job_id'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            job = Job.objects.get(id=job_id)
-            interview, created = Interview.objects.get_or_create(
-                user=user,
+            job = JobPosting.objects.get(id=job_id)
+            interview = Interview.objects.create(
+                user=request.user,
                 job_posting=job,
-                completed=False
+                interview_id=uuid.uuid4(),
+                difficulty=request.data.get('difficulty', 'medium')
             )
+
+            # Create initial questions
+            predefined = [
+                {"text": "Tell me about yourself", "difficulty": "easy"},
+                {"text": "Why are you interested in this position?", "difficulty": "easy"}
+            ]
             
-            if created or len(interview.questions) == 0:
-                # First two predefined questions
-                questions = [
-                    "Tell me about yourself",
-                    "Why are you applying for this position at our company?"
-                ]
-                interview.questions = questions
-                interview.save()
-                return Response({'question': questions[0]})
-            
-            current_index = len(interview.answers)
-            if current_index < 2:
-                return Response({'question': interview.questions[current_index]})
-            
-            # Generate new question based on difficulty
-            analysis = GrokAIService.analyze_answer(
-                interview.questions[-1],
-                previous_answer,
-                job.description
-            )
-            
-            # Update difficulty based on analysis
-            score = analysis.get('score', 50)
-            if score > 70:
-                new_difficulty = 'hard'
-            elif score > 40:
-                new_difficulty = 'medium'
-            else:
-                new_difficulty = 'easy'
-                
-            interview.difficulty_level = new_difficulty
-            new_question = GrokAIService.generate_question(
-                job.description,
-                previous_answer,
-                new_difficulty
-            )
-            
-            interview.questions.append(new_question)
-            interview.save()
-            
-            return Response({'question': new_question})
-        
-        except Job.DoesNotExist:
+            for idx, q in enumerate(predefined):
+                Question.objects.create(
+                    interview=interview,
+                    **q,
+                    order=idx,
+                    is_predefined=True
+                )
+
+            return Response({
+                'interview_id': interview.interview_id,
+                'current_question': 0,
+                'questions': [q.text for q in interview.questions.all()],
+                'difficulty': interview.difficulty
+            }, status=status.HTTP_201_CREATED)
+
+        except JobPosting.DoesNotExist:
             return Response({'error': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
 
 class SubmitAnswerView(APIView):
-    def post(self, request):
-        user = request.user
-        interview_id = request.data.get('interview_id')
-        answer = request.data.get('answer')
-        
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, JSONParser]
+
+    def post(self, request, interview_id):
         try:
-            interview = Interview.objects.get(id=interview_id, user=user)
-            current_index = len(interview.answers)
-            
-            if current_index >= 15:
-                return Response({'error': 'Interview completed'}, status=400)
-            
-            # Analyze answer
-            analysis = GrokAIService.analyze_answer(
-                interview.questions[current_index],
-                answer,
-                interview.job_posting.description
+            interview = Interview.objects.get(interview_id=interview_id, user=request.user)
+            if interview.completed:
+                return Response({'error': 'Interview completed'}, status=status.HTTP_400_BAD_REQUEST)
+
+            current_question = interview.questions.get(order=interview.current_question)
+            answer_data = {
+                'text': request.data.get('answer', ''),
+                'analysis': {}
+            }
+
+            # Handle audio/video files
+            if 'audio' in request.FILES:
+                audio_file = request.FILES['audio']
+                answer_data['audio'] = ContentFile(audio_file.read(), name=f"audio_q{interview.current_question}.webm")
+                
+            if 'video' in request.FILES:
+                video_file = request.FILES['video']
+                answer_data['video'] = ContentFile(video_file.read(), name=f"video_q{interview.current_question}.webm")
+
+            Answer.objects.update_or_create(
+                question=current_question,
+                defaults=answer_data
             )
-            
-            # Store answer and analysis
-            interview.answers.append({
-                'text': answer,
-                'analysis': analysis,
-                'difficulty': interview.difficulty_level
-            })
-            
-            if current_index == 14:
+
+            # Generate next question if needed
+            if 2 <= interview.current_question < 14:
+                generator = GroqQuestionGenerator()
+                prev_answers = list(interview.questions.filter(order__lt=interview.current_question))
+                previous_data = [{
+                    'text': q.text,
+                    'answer': q.answer.text if hasattr(q, 'answer') else '',
+                    'difficulty': q.difficulty
+                } for q in prev_answers]
+
+                new_q = generator.generate_question(
+                    context=interview.job_posting.description,
+                    previous_answers=previous_data,
+                    difficulty=interview.difficulty
+                )
+                
+                Question.objects.create(
+                    interview=interview,
+                    text=new_q['text'],
+                    difficulty=new_q['difficulty'],
+                    order=interview.current_question + 1
+                )
+
+            # Update progress
+            interview.current_question += 1
+            if interview.current_question >= 15:
                 interview.completed = True
-                
             interview.save()
-            
+
             return Response({
-                'analysis': analysis,
-                'next_question': interview.questions[current_index + 1] if current_index < 14 else None
+                'current_question': interview.current_question,
+                'is_completed': interview.completed,
+                'next_question': interview.questions.get(order=interview.current_question).text if not interview.completed else None
             })
-        
+
         except Interview.DoesNotExist:
-            return Response({'error': 'Interview not found'}, status=404)
-        
-# azure view --------------------------------------------------------------------
+            return Response({'error': 'Interview not found'}, status=status.HTTP_404_NOT_FOUND)
 
-class TextToSpeechView(View):
+class AzureTTSView(APIView):
+    permission_classes = [IsAuthenticated]
+    
     def post(self, request):
-        text = request.POST.get('text', '')
+        text = request.data.get('text')
+        if not text:
+            return Response({'error': 'Missing text'}, status=400)
         
-        speech_config = SpeechConfig(
-            subscription=os.environ.get('AZURE_SPEECH_KEY'),
-            region=os.environ.get('AZURE_SPEECH_REGION')
-        )
+        speech_service = AzureSpeechService()
+        audio_data = speech_service.text_to_speech(text)
         
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as f:
-            synthesizer = SpeechSynthesizer(speech_config, audio_config=speechsdk.AudioConfig(filename=f.name))
-            result = synthesizer.speak_text(text)
-            
-            if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-                return JsonResponse({'audio_url': f.name})
-            
-        return JsonResponse({'error': 'TTS failed'}, status=500)
+        if audio_data:
+            return Response(audio_data, content_type='audio/wav')
+        return Response({'error': 'TTS failed'}, status=500)
 
-class SpeechToTextView(View):
+class AzureSTTView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser]
+
     def post(self, request):
-        audio_file = request.FILES.get('audio')
+        if 'audio' not in request.FILES:
+            return Response({'error': 'No audio file'}, status=400)
         
-        speech_config = SpeechConfig(
-            subscription=os.environ.get('AZURE_SPEECH_KEY'),
-            region=os.environ.get('AZURE_SPEECH_REGION')
-        )
+        speech_service = AzureSpeechService()
+        audio_file = request.FILES['audio']
+        text = speech_service.speech_to_text(audio_file.read())
         
-        with tempfile.NamedTemporaryFile(delete=False) as f:
-            for chunk in audio_file.chunks():
-                f.write(chunk)
-                
-            audio_input = speechsdk.AudioConfig(filename=f.name)
-            recognizer = speechsdk.SpeechRecognizer(speech_config, audio_input)
-            
-            result = recognizer.recognize_once()
-            if result.reason == speechsdk.ResultReason.RecognizedSpeech:
-                return JsonResponse({'text': result.text})
-            
-        return JsonResponse({'error': 'STT failed'}, status=500)
+        if text:
+            return Response({'text': text})
+        return Response({'error': 'STT failed'}, status=500)
