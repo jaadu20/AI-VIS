@@ -1,9 +1,7 @@
 # interviews/models.py
 from django.db import models
 from users.models import User
-from job_applications.models import Application  # From job application backend
-
-# interviews/models.py
+from job_applications.models import Application 
 class Interview(models.Model):
     DIFFICULTY_CHOICES = [
         ('easy', 'Easy'),
@@ -11,7 +9,6 @@ class Interview(models.Model):
         ('hard', 'Hard'),
     ]
     
-    # Field is explicitly named "difficulty"
     difficulty = models.CharField(
         max_length=10, 
         choices=DIFFICULTY_CHOICES, 
