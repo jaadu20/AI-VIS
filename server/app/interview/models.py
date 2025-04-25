@@ -1,7 +1,8 @@
 # interviews/models.py
 from django.db import models
+from job_applications.models import Application
 from users.models import User
-from job_applications.models import Application 
+
 class Interview(models.Model):
     DIFFICULTY_CHOICES = [
         ('easy', 'Easy'),
@@ -9,15 +10,10 @@ class Interview(models.Model):
         ('hard', 'Hard'),
     ]
     
-    difficulty = models.CharField(
-        max_length=10, 
-        choices=DIFFICULTY_CHOICES, 
-        default='medium'
-    )
-    
-    application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='interviews')
+    application = models.ForeignKey(Application, on_delete=models.CASCADE)
     interview_id = models.UUIDField(unique=True)
     current_question = models.PositiveIntegerField(default=0)
+    difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
     completed = models.BooleanField(default=False)
 

@@ -183,7 +183,7 @@ CSRF_TRUSTED_ORIGINS = [
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AZURE_SPEECH_KEY = '1JJ3FlHJyQWky4QtvopDo2MF94FXoXYryKTSglxwNg1DfAZRuJ48JQQJ99BCACYeBjFXJ3w3AAAYACOGJfEf'
+AZURE_SPEECH_KEY =  os.getenv('AZURE_SPEECH_KEY')
 AZURE_SPEECH_REGION = 'eastus' 
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
