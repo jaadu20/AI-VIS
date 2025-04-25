@@ -1,10 +1,10 @@
-# interviews/urls.py (updated)
+# interviews/urls.py
 from django.urls import path
 from .views import (
     StartInterviewView,
     SubmitAnswerView,
     AzureTTSView,
-    AzureSTTView,
+    AzureSTTView
 )
 
 urlpatterns = [
