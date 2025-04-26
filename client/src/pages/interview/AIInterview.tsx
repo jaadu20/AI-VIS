@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Video,
@@ -15,6 +15,8 @@ import {
 import { Button } from "../../components/ui/Button";
 import { Progress } from "../../components/ui/progress";
 import aibot from "../../assets/public/images/aibot.jpg";
+import api from "../../api";
+import toast from "react-hot-toast";
 
 interface QuestionData {
   text: string;
@@ -38,6 +40,7 @@ const contentVariants = {
 };
 
 export function AIInterview() {
+  const { applicationId } = useParams();
   const navigate = useNavigate();
   const [showPopup, setShowPopup] = useState(true);
   const [answer, setAnswer] = useState("");
@@ -59,27 +62,27 @@ export function AIInterview() {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
   );
-  const [videoRecorder, setVideoRecorder] = useState<MediaRecorder | null>(
-    null
-  );
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
-  const [videoChunks, setVideoChunks] = useState<Blob[]>([]);
 
   // Start interview
   const startInterview = async () => {
+    setShowPopup(false);
+
     try {
-      const response = await fetch("/api/interview/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await api.post("/interview/start", {
+        application_id: applicationId,
       });
-      setShowPopup(false);
-      const data = await response.json();
-      setInterviewId(data.interviewId);
-      setQuestions(data.questions);
-      playQuestionAudio(data.questions[0].text);
+
+      const { interview_id, questions, current_question } = response.data;
+
+      setInterviewId(interview_id);
+      setQuestions(questions);
+      setCurrentQuestionIndex(current_question);
+      playQuestionAudio(questions[current_question].text);
       startVideoRecording();
     } catch (error) {
       console.error("Error starting interview:", error);
+      toast.error("Failed to start interview");
     }
   };
 
@@ -115,29 +118,8 @@ export function AIInterview() {
   const startVideoRecording = () => {
     if (mediaStream) {
       const recorder = new MediaRecorder(mediaStream);
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) setVideoChunks((prev) => [...prev, e.data]);
-      };
       recorder.start();
-      setVideoRecorder(recorder);
-    }
-  };
-
-  const stopVideoRecording = async () => {
-    if (videoRecorder) {
-      videoRecorder.stop();
-      const videoBlob = new Blob(videoChunks, { type: "video/webm" });
-      const formData = new FormData();
-      formData.append(
-        "video",
-        videoBlob,
-        `${interviewId}_question_${currentQuestionIndex}.webm`
-      );
-      await fetch(`/api/interview/${interviewId}/video`, {
-        method: "POST",
-        body: formData,
-      });
-      setVideoChunks([]);
+      setMediaRecorder(recorder);
     }
   };
 
@@ -145,13 +127,15 @@ export function AIInterview() {
   const playQuestionAudio = async (questionText: string) => {
     try {
       setIsSpeaking(true);
-      const response = await fetch("/api/azure/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: questionText }),
-      });
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
+      const response = await api.post(
+        "/azure/tts",
+        { text: questionText },
+        {
+          responseType: "blob",
+        }
+      );
+
+      const audioUrl = URL.createObjectURL(response.data);
       const audio = new Audio(audioUrl);
       audio.onended = () => setIsSpeaking(false);
       audio.play();
@@ -174,12 +158,8 @@ export function AIInterview() {
         formData.append("audio", audioBlob);
 
         try {
-          const sttResponse = await fetch("/api/azure/stt", {
-            method: "POST",
-            body: formData,
-          });
-          const { text } = await sttResponse.json();
-          setAnswer(text);
+          const sttResponse = await api.post("/azure/stt", formData);
+          setAnswer(sttResponse.data.text);
         } catch (error) {
           console.error("STT error:", error);
         }
@@ -204,35 +184,49 @@ export function AIInterview() {
     setIsLoading(true);
 
     try {
-      // Submit answer
-      await fetch(`/api/interview/${interviewId}/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          questionIndex: currentQuestionIndex,
-          answerText: answer,
-          difficulty: questions[currentQuestionIndex].difficulty,
-        }),
-      });
+      const formData = new FormData();
+      formData.append("audio", new Blob(recordedChunks));
+      if (mediaStream) {
+        const videoTrack = mediaStream.getVideoTracks()[0];
+        if (videoTrack) {
+          const videoRecorder = new MediaRecorder(
+            new MediaStream([videoTrack])
+          );
+          const videoChunks: Blob[] = [];
 
-      // Stop current video recording
-      await stopVideoRecording();
+          videoRecorder.ondataavailable = (e) => {
+            videoChunks.push(e.data);
+          };
 
-      // Get next question
-      if (currentQuestionIndex < 14) {
-        const response = await fetch(
-          `/api/interview/${interviewId}/next-question`
-        );
-        const nextQuestion = await response.json();
-        setQuestions((prev) => [...prev, nextQuestion]);
-        setCurrentQuestionIndex((prev) => prev + 1);
-        playQuestionAudio(nextQuestion.text);
+          videoRecorder.start();
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          videoRecorder.stop();
+
+          const videoBlob = new Blob(videoChunks, { type: "video/webm" });
+          formData.append("video", videoBlob);
+        }
+      }
+
+      const response = await api.post(
+        `/interviews/${interviewId}/submit`,
+        formData
+      );
+
+      const { current_question, is_completed, next_question } = response.data;
+
+      setCurrentQuestionIndex(current_question);
+
+      if (is_completed) {
+        navigate("/complete");
+      } else {
+        playQuestionAudio(next_question);
         startVideoRecording();
       }
 
       setAnswer("");
     } catch (error) {
       console.error("Submission error:", error);
+      toast.error("Failed to submit answer");
     } finally {
       setIsLoading(false);
     }
