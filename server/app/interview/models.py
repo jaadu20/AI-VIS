@@ -1,7 +1,6 @@
 # interviews/models.py
 from django.db import models
 from job_applications.models import Application
-from users.models import User
 
 class Interview(models.Model):
     DIFFICULTY_CHOICES = [

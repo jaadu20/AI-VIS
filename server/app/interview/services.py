@@ -20,7 +20,7 @@ class AzureSpeechService:
 
     def text_to_speech(self, text: str) -> bytes:
         try:
-            with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
+            with tempfile.NamedTemporaryFile() as tmpfile:
                 audio_config = AudioConfig(filename=tmpfile.name)
                 synthesizer = SpeechSynthesizer(
                     speech_config=self.speech_config,
@@ -35,7 +35,7 @@ class AzureSpeechService:
 
     def speech_to_text(self, audio_data: bytes) -> str:
         try:
-            with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
+            with tempfile.NamedTemporaryFile() as tmpfile:
                 tmpfile.write(audio_data)
                 audio_config = AudioConfig(filename=tmpfile.name)
                 recognizer = SpeechRecognizer(
@@ -59,7 +59,7 @@ class GroqQuestionGenerator:
         }
 
     def generate_question(self, context: str, previous_answers: list, difficulty: str) -> Dict[str, Any]:
-        prompt = f"""Generate {difficulty} technical interview question based on:
+        prompt = f"""Generate a {difficulty} difficulty technical interview question based on:
         {context}
         Previous answers: {json.dumps(previous_answers)}
         Return JSON with 'question' and 'difficulty' fields."""
