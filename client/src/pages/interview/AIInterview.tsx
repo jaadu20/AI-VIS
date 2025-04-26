@@ -66,23 +66,81 @@ export function AIInterview() {
 
   // Start interview
   const startInterview = async () => {
-    setShowPopup(false);
 
+    setShowPopup(false);
+    
     try {
-      const response = await api.post("/interview/start", {
-        application_id: applicationId,
+      const token = localStorage.getItem("accessToken");
+
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch("/interview/start", {
+        // Added /api/ prefix
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          application_id: "your_application_id", // Should come from props/state
+        }),
       });
 
-      const { interview_id, questions, current_question } = response.data;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to start interview");
+      }
 
-      setInterviewId(interview_id);
+      const data = await response.json(); // Parse JSON response
+
+      // Destructure after validation
+      const {
+        interview_id: interviewId,
+        questions,
+        current_question: currentQuestion,
+      } = data;
+
+      if (!questions || !questions.length) {
+        throw new Error("No questions received");
+      }
+
+      setInterviewId(interviewId);
       setQuestions(questions);
-      setCurrentQuestionIndex(current_question);
-      playQuestionAudio(questions[current_question].text);
+      setCurrentQuestionIndex(currentQuestion);
+
+      // Initialize media first
+      await initializeMediaStream();
+
+      playQuestionAudio(questions[currentQuestion].text);
       startVideoRecording();
     } catch (error) {
-      console.error("Error starting interview:", error);
-      toast.error("Failed to start interview");
+      console.error("Interview start error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to start interview"
+      );
+
+      // Reset state on error
+      // setShowPopup(true);
+      setInterviewId("");
+      setQuestions([]);
+    }
+  };
+
+  // Add media initialization function
+  const initializeMediaStream = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+      setMediaStream(stream);
+      const videoStream = new MediaStream(stream.getVideoTracks());
+      setVideoStream(videoStream);
+    } catch (error) {
+      console.error("Media initialization failed:", error);
+      throw new Error("Camera/microphone access required");
     }
   };
 
@@ -128,7 +186,7 @@ export function AIInterview() {
     try {
       setIsSpeaking(true);
       const response = await api.post(
-        "/azure/tts",
+        "/azure/tts/",
         { text: questionText },
         {
           responseType: "blob",
@@ -158,7 +216,7 @@ export function AIInterview() {
         formData.append("audio", audioBlob);
 
         try {
-          const sttResponse = await api.post("/azure/stt", formData);
+          const sttResponse = await api.post("/azure/stt/", formData);
           setAnswer(sttResponse.data.text);
         } catch (error) {
           console.error("STT error:", error);
@@ -208,7 +266,7 @@ export function AIInterview() {
       }
 
       const response = await api.post(
-        `/interviews/${interviewId}/submit`,
+        `/interview/${interviewId}/submit`,
         formData
       );
 

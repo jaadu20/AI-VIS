@@ -10,8 +10,10 @@ import json
 from .models import Interview, Question, Answer
 from .services import GroqQuestionGenerator, AzureSpeechService
 from job_applications.models import Application
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 class StartInterviewView(APIView):
+    authentication_classes = [JWTAuthentication]  
     permission_classes = [IsAuthenticated]
     parser_classes = [JSONParser]
 
