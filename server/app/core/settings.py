@@ -5,18 +5,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-it_2m43mu0777&ih*wsjj(^c#^0h@cm8xsh75=3h+lv)2pxn)$'
-
 DEBUG = True
 
 ALLOWED_HOSTS = []
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -33,7 +29,6 @@ INSTALLED_APPS = [
     'interview',
     'jobs',
     'job_applications',
-    # 'profiles',
 ]
 
 # Configure ASGI application
@@ -144,37 +139,31 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 # Static files and media
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
-# MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# MEDIA_ROOT = BASE_DIR / 'media'
 
-CORS_ALLOW_ALL_ORIGINS = True
 
 # CORS_ALLOWED_ORIGINS = [
 #     "http://localhost:5173",
 #     "http://127.0.0.1:5173",
 # ]
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'authorization',
     'content-type',
 ]
 
-# settings.py
 CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_HTTPONLY = False
-
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -188,3 +177,5 @@ AZURE_SPEECH_REGION = 'eastus'
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
+
+GROQ_API_KEY = os.getenv('GROQ_API_KEY')
