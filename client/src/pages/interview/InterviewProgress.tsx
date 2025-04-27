@@ -57,6 +57,7 @@ export function InterviewProgress() {
   const [userFeedback, setUserFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -185,7 +186,7 @@ export function InterviewProgress() {
             </div>
             <Button
               onClick={() => navigate("/candidate/dashboard")}
-              variant="secondary"
+              variant="outline"
               className="flex items-center bg-white hover:bg-gray-50 border border-gray-200 text-indigo-700"
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
@@ -844,13 +845,26 @@ export function InterviewProgress() {
                   {[1, 2, 3, 4, 5].map((rating) => (
                     <button
                       key={rating}
+                      onClick={() => setSelectedRating(rating)}
                       className={`w-12 h-12 rounded-full flex items-center justify-center transition-all
-                ${
-                  rating <= 3
-                    ? "bg-white hover:bg-indigo-100 text-indigo-600 border border-indigo-200"
-                    : "bg-indigo-600 text-white shadow-md"
-                }
-              `}
+          ${
+            rating === 1
+              ? "bg-indigo-100 hover:bg-indigo-200"
+              : rating === 2
+              ? "bg-indigo-200 hover:bg-indigo-300"
+              : rating === 3
+              ? "bg-indigo-300 hover:bg-indigo-400"
+              : rating === 4
+              ? "bg-indigo-400 hover:bg-indigo-600"
+              : "bg-indigo-500 hover:bg-indigo-800"
+          }
+          ${rating <= 3 ? "text-indigo-700" : "text-white"}
+          ${
+            selectedRating === rating
+              ? "ring-2 ring-indigo-800 ring-offset-2"
+              : ""
+          }
+          shadow-md hover:shadow-lg`}
                     >
                       {rating}
                     </button>
@@ -1002,7 +1016,7 @@ export function InterviewProgress() {
                 <Button
                   variant="outline"
                   className="text-indigo-600 border border-indigo-200 hover:bg-indigo-50"
-                  onClick={() => navigate("/resources/interview-prep")}
+                  onClick={() => navigate("/candidate/dashboard")}
                 >
                   View All Interview Resources
                 </Button>

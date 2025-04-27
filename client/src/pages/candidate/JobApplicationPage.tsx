@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   UploadCloud,
   Camera,
+  ChevronLeft,
 } from "lucide-react";
 import api from "../../api";
 import { toast } from "react-hot-toast";
@@ -167,9 +168,7 @@ export function JobApplicationPage() {
           <div className="flex items-center justify-center h-16">
             <div className="flex items-center">
               <Camera className="h-8 w-8 text-blue-600 mr-2" />
-              <span className="text-xl font-bold text-gray-900">
-                AI-VIS
-              </span>
+              <span className="text-xl font-bold text-gray-900">AI-VIS</span>
             </div>
           </div>
         </div>

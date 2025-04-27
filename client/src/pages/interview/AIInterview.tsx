@@ -337,7 +337,7 @@ export function AIInterview() {
           <motion.div
             key="popup"
             className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            variants={popupVariants}
+            // variants={popupVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
