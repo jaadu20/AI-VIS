@@ -65,66 +65,95 @@ export function AIInterview() {
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
 
   // Start interview
-  const startInterview = async () => {
+  // const startInterview = async () => {
 
+  //   setShowPopup(false);
+
+  //   try {
+  //     const token = localStorage.getItem("accessToken");
+
+  //     if (!token) {
+  //       throw new Error("No authentication token found");
+  //     }
+
+  //     const response = await fetch("/interview/start", {
+  //       // Added /api/ prefix
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify({
+  //         application_id: "your_application_id", // Should come from props/state
+  //       }),
+  //     });
+
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       throw new Error(errorData.error || "Failed to start interview");
+  //     }
+
+  //     const data = await response.json(); // Parse JSON response
+
+  //     // Destructure after validation
+  //     const {
+  //       interview_id: interviewId,
+  //       questions,
+  //       current_question: currentQuestion,
+  //     } = data;
+
+  //     if (!questions || !questions.length) {
+  //       throw new Error("No questions received");
+  //     }
+
+  //     setInterviewId(interviewId);
+  //     setQuestions(questions);
+  //     setCurrentQuestionIndex(currentQuestion);
+
+  //     // Initialize media first
+  //     await initializeMediaStream();
+
+  //     playQuestionAudio(questions[currentQuestion].text);
+  //     startVideoRecording();
+  //   } catch (error) {
+  //     console.error("Interview start error:", error);
+  //     toast.error(
+  //       error instanceof Error ? error.message : "Failed to start interview"
+  //     );
+
+  //     // Reset state on error
+  //     // setShowPopup(true);
+  //     setInterviewId("");
+  //     setQuestions([]);
+  //   }
+  // };
+
+  const startInterview = async () => {
     setShowPopup(false);
-    
+
     try {
       const token = localStorage.getItem("accessToken");
+      if (!token) throw new Error("No authentication token found");
 
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      const response = await fetch("/interview/start", {
-        // Added /api/ prefix
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          application_id: "your_application_id", // Should come from props/state
-        }),
+      const response = await api.post("/interview/start", {
+        application_id: applicationId,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to start interview");
-      }
+      const data = response.data;
 
-      const data = await response.json(); // Parse JSON response
+      setInterviewId(data.interview_id);
+      setQuestions(data.questions);
+      setCurrentQuestionIndex(data.current_question);
 
-      // Destructure after validation
-      const {
-        interview_id: interviewId,
-        questions,
-        current_question: currentQuestion,
-      } = data;
-
-      if (!questions || !questions.length) {
-        throw new Error("No questions received");
-      }
-
-      setInterviewId(interviewId);
-      setQuestions(questions);
-      setCurrentQuestionIndex(currentQuestion);
-
-      // Initialize media first
       await initializeMediaStream();
-
-      playQuestionAudio(questions[currentQuestion].text);
+      playQuestionAudio(data.questions[data.current_question].text);
       startVideoRecording();
     } catch (error) {
       console.error("Interview start error:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to start interview"
       );
-
-      // Reset state on error
       // setShowPopup(true);
-      setInterviewId("");
-      setQuestions([]);
     }
   };
 

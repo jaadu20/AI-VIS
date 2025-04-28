@@ -1,5 +1,4 @@
 # job application urls.py
-
 from django.urls import path
 from .views import JobDetailView, ApplicationCreateView, EligibilityCheckView
 

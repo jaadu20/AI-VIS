@@ -111,13 +111,13 @@ export function JobApplicationPage() {
     return type.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   };
 
-  const handleStartInterview = async () => {
-    if (!cvFile || !job) {
-      toast.error("Please upload your CV");
-      return;
-    }
+  // const handleStartInterview = async () => {
+  //   if (!cvFile || !job) {
+  //     toast.error("Please upload your CV");
+  //     return;
+  //   }
 
-    navigate("/interview");
+  //   navigate("/interview");
     // try {
     //   const formData = new FormData();
     //   formData.append("cv", cvFile);
@@ -133,6 +133,38 @@ export function JobApplicationPage() {
     //     }
     //   );
 
+    //   if (response.data.eligible) {
+    //     navigate(`/interview/${response.data.application_id}`);
+    //   } else {
+    //     toast.error(response.data.message || "Not eligible for this position");
+    //   }
+    // } catch (error: any) {
+    //   toast.error(error.response?.data?.message || "Application failed");
+    // }
+  // };
+  const handleStartInterview = async () => {
+
+    navigate("/interview");
+    // if (!cvFile || !job) {
+    //   toast.error("Please upload your CV");
+    //   return;
+    // }
+  
+    // try {
+    //   const formData = new FormData();
+    //   formData.append("cv", cvFile);
+    //   formData.append("job", job.id);
+  
+    //   const response = await api.post(
+    //     "/applications/check-eligibility/",
+    //     formData,
+    //     {
+    //       headers: {
+    //         "Content-Type": "multipart/form-data",
+    //       },
+    //     }
+    //   );
+  
     //   if (response.data.eligible) {
     //     navigate(`/interview/${response.data.application_id}`);
     //   } else {
@@ -165,8 +197,19 @@ export function JobApplicationPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/20">
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center h-16">
-            <div className="flex items-center">
+          <div className="flex items-center justify-between h-16">
+            {/* Dashboard Button (Left-aligned) */}
+            <Button
+              onClick={() => navigate("/candidate/dashboard")}
+              variant="outline"
+              className="flex items-center bg-white hover:bg-gray-50 border border-gray-200 text-indigo-700"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Dashboard
+            </Button>
+
+            {/* Centered Logo */}
+            <div className="flex items-center absolute left-1/2 transform -translate-x-1/2">
               <Camera className="h-8 w-8 text-blue-600 mr-2" />
               <span className="text-xl font-bold text-gray-900">AI-VIS</span>
             </div>
