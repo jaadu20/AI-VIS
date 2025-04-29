@@ -9,6 +9,75 @@ from azure.cognitiveservices.speech import (
     AudioConfig, ResultReason
 )
 
+class InterviewManager:
+    def __init__(self, interview):
+        self.interview = interview
+        self.speech_service = AzureSpeechService()
+        self.question_generator = GroqQuestionGenerator()
+        self.answer_analyzer = GroqAnswerAnalyzer()
+
+    def generate_questions(self):
+        # Generate initial questions
+        questions = []
+        
+        # AI Introduction
+        intro = (
+            f"Welcome to your interview for {self.interview.application.job.title} at "
+            f"{self.interview.application.job.company_name}. Let's begin!"
+        )
+        questions.append({
+            'text': intro,
+            'order': 0,
+            'is_predefined': True,
+            'difficulty': 'easy'
+        })
+
+        # First predefined question
+        questions.append({
+            'text': "Tell me about your relevant experience for this role",
+            'order': 1,
+            'is_predefined': True,
+            'difficulty': 'easy'
+        })
+
+        # Generate dynamic questions
+        for i in range(2, 15):
+            prev_answers = self.interview.questions.filter(order__lt=i)
+            context = self._build_context()
+            difficulty = self._calculate_difficulty(prev_answers)
+            
+            question = self.question_generator.generate_question(
+                context=context,
+                previous_answers=prev_answers,
+                difficulty=difficulty
+            )
+            
+            questions.append({
+                'text': question['text'],
+                'order': i,
+                'difficulty': difficulty,
+                'is_predefined': False
+            })
+
+        return questions
+
+    def _build_context(self):
+        job = self.interview.application.job
+        return (
+            f"Job Title: {job.title}\n"
+            f"Requirements: {job.requirements}\n"
+            f"Description: {job.description}\n"
+            f"Required Skills: {self.interview.application.skills_matched}"
+        )
+
+    def _calculate_difficulty(self, prev_answers):
+        avg_score = sum([q.answer_score for q in prev_answers if q.answer_score]) / len(prev_answers) if prev_answers else 0
+        if avg_score > 7:
+            return 'hard'
+        elif avg_score > 5:
+            return 'medium'
+        return 'easy'
+    
 class AzureSpeechService:
     def __init__(self):
         self.speech_config = SpeechConfig(
@@ -83,3 +152,46 @@ class GroqQuestionGenerator:
             return json.loads(response.json()["choices"][0]["message"]["content"])
         except Exception as e:
             return {"question": f"Question generation failed: {str(e)}", "difficulty": difficulty}
+        
+class GroqAnswerAnalyzer:
+    def __init__(self):
+        self.api_key = settings.GROQ_API_KEY
+        self.api_url = "https://api.groq.com/openai/v1/chat/completions"
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+
+    def analyze_answer(self, question: str, answer: str) -> float:
+        prompt = f"""Analyze this interview answer and give a score 0-10:
+        Question: {question}
+        Answer: {answer}
+        
+        Consider:
+        - Relevance to question
+        - Technical accuracy
+        - Communication clarity
+        - Depth of knowledge
+        
+        Return JSON with 'score' and 'feedback' fields."""
+        
+        payload = {
+            "model": "llama3-70b-8192",
+            "messages": [{
+                "role": "system",
+                "content": "You are an expert interview answer evaluator."
+            }, {
+                "role": "user",
+                "content": prompt
+            }],
+            "temperature": 0.5,
+            "max_tokens": 200
+        }
+        
+        try:
+            response = requests.post(self.api_url, headers=self.headers, json=payload)
+            response.raise_for_status()
+            result = json.loads(response.json()["choices"][0]["message"]["content"])
+            return float(result['score'])
+        except Exception as e:
+            return 5.0  # Default average score on error

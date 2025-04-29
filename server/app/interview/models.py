@@ -1,8 +1,8 @@
 # interviews/models.py
+import uuid
 from django.db import models
 from job_applications.models import Application
 
-# interviews/models.py
 class Interview(models.Model):
     DIFFICULTY_CHOICES = [
         ('easy', 'Easy'),
@@ -11,22 +11,24 @@ class Interview(models.Model):
     ]
     
     application = models.ForeignKey(Application, on_delete=models.CASCADE)
-    interview_id = models.UUIDField(unique=True, editable=False)
+    interview_id = models.UUIDField(unique=True, default=uuid.uuid4)
     current_question = models.PositiveIntegerField(default=0)
-    difficulty = models.CharField(
-        max_length=10, 
-        choices=DIFFICULTY_CHOICES, 
-        default='medium' 
-    )
+    difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='medium')
     created_at = models.DateTimeField(auto_now_add=True)
     completed = models.BooleanField(default=False)
+    total_score = models.FloatField(default=0)
+
+    def __str__(self):
+        return f"{self.application.applicant.email} - {self.interview_id}"
 
 class Question(models.Model):
     interview = models.ForeignKey(Interview, on_delete=models.CASCADE, related_name='questions')
     text = models.TextField()
     order = models.PositiveIntegerField()
     is_predefined = models.BooleanField(default=False)
+    difficulty = models.CharField(max_length=10, choices=Interview.DIFFICULTY_CHOICES, default='medium')
     created_at = models.DateTimeField(auto_now_add=True)
+    answer_score = models.FloatField(null=True, blank=True)
 
     class Meta:
         ordering = ['order']

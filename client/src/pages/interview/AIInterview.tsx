@@ -21,6 +21,7 @@ import toast from "react-hot-toast";
 interface QuestionData {
   text: string;
   difficulty: string;
+  is_predefined?: boolean;
 }
 
 const popupVariants = {
@@ -64,96 +65,28 @@ export function AIInterview() {
   );
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
 
-  // Start interview
-  // const startInterview = async () => {
-
-  //   setShowPopup(false);
-
-  //   try {
-  //     const token = localStorage.getItem("accessToken");
-
-  //     if (!token) {
-  //       throw new Error("No authentication token found");
-  //     }
-
-  //     const response = await fetch("/interview/start", {
-  //       // Added /api/ prefix
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       body: JSON.stringify({
-  //         application_id: "your_application_id", // Should come from props/state
-  //       }),
-  //     });
-
-  //     if (!response.ok) {
-  //       const errorData = await response.json();
-  //       throw new Error(errorData.error || "Failed to start interview");
-  //     }
-
-  //     const data = await response.json(); // Parse JSON response
-
-  //     // Destructure after validation
-  //     const {
-  //       interview_id: interviewId,
-  //       questions,
-  //       current_question: currentQuestion,
-  //     } = data;
-
-  //     if (!questions || !questions.length) {
-  //       throw new Error("No questions received");
-  //     }
-
-  //     setInterviewId(interviewId);
-  //     setQuestions(questions);
-  //     setCurrentQuestionIndex(currentQuestion);
-
-  //     // Initialize media first
-  //     await initializeMediaStream();
-
-  //     playQuestionAudio(questions[currentQuestion].text);
-  //     startVideoRecording();
-  //   } catch (error) {
-  //     console.error("Interview start error:", error);
-  //     toast.error(
-  //       error instanceof Error ? error.message : "Failed to start interview"
-  //     );
-
-  //     // Reset state on error
-  //     // setShowPopup(true);
-  //     setInterviewId("");
-  //     setQuestions([]);
-  //   }
-  // };
-
   const startInterview = async () => {
     setShowPopup(false);
-
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) throw new Error("No authentication token found");
-
       const response = await api.post("/interview/start", {
         application_id: applicationId,
       });
 
-      const data = response.data;
+      const { interview_id, questions, current_question } = response.data;
 
-      setInterviewId(data.interview_id);
-      setQuestions(data.questions);
-      setCurrentQuestionIndex(data.current_question);
+      setInterviewId(interview_id);
+      setQuestions(questions);
+      setCurrentQuestionIndex(current_question);
 
       await initializeMediaStream();
-      playQuestionAudio(data.questions[data.current_question].text);
+
+      // Play AI introduction automatically
+      playQuestionAudio(questions[0].text);
       startVideoRecording();
     } catch (error) {
-      console.error("Interview start error:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to start interview"
       );
-      // setShowPopup(true);
     }
   };
 
@@ -272,31 +205,19 @@ export function AIInterview() {
 
     try {
       const formData = new FormData();
-      formData.append("audio", new Blob(recordedChunks));
-      if (mediaStream) {
-        const videoTrack = mediaStream.getVideoTracks()[0];
-        if (videoTrack) {
-          const videoRecorder = new MediaRecorder(
-            new MediaStream([videoTrack])
-          );
-          const videoChunks: Blob[] = [];
+      formData.append("text", answer);
 
-          videoRecorder.ondataavailable = (e) => {
-            videoChunks.push(e.data);
-          };
-
-          videoRecorder.start();
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          videoRecorder.stop();
-
-          const videoBlob = new Blob(videoChunks, { type: "video/webm" });
-          formData.append("video", videoBlob);
-        }
+      if (recordedChunks.length > 0) {
+        formData.append(
+          "audio",
+          new Blob(recordedChunks, { type: "audio/webm" })
+        );
       }
 
       const response = await api.post(
         `/interview/${interviewId}/submit`,
-        formData
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
 
       const { current_question, is_completed, next_question } = response.data;
@@ -304,15 +225,20 @@ export function AIInterview() {
       setCurrentQuestionIndex(current_question);
 
       if (is_completed) {
-        navigate("/complete");
+        navigate(`/interview-result/${interviewId}`);
       } else {
+        // Add new question to state if dynamically generated
+        setQuestions((prev) => [
+          ...prev,
+          { text: next_question, difficulty: "medium" },
+        ]);
         playQuestionAudio(next_question);
         startVideoRecording();
       }
 
       setAnswer("");
+      setRecordedChunks([]);
     } catch (error) {
-      console.error("Submission error:", error);
       toast.error("Failed to submit answer");
     } finally {
       setIsLoading(false);
@@ -381,7 +307,7 @@ export function AIInterview() {
                   <p>Estimated duration: 20-30 minutes ⏱️</p>
                   <div className="my-4">
                     <Progress
-                      value={(currentQuestionIndex / 15) * 100}
+                      value={(currentQuestionIndex / 14) * 100} // 0-14 for 15 questions
                       className="h-2 rounded-full bg-green-200"
                     />
                   </div>
@@ -521,6 +447,11 @@ export function AIInterview() {
                     <h3 className="text-xl font-semibold text-gray-800">
                       {questions[currentQuestionIndex]?.text ||
                         "Loading question..."}
+                      {currentQuestionIndex > 1 && (
+                        <span className="ml-2 text-sm text-gray-500">
+                          ({questions[currentQuestionIndex]?.difficulty})
+                        </span>
+                      )}
                     </h3>
                     <div className="relative">
                       <textarea
