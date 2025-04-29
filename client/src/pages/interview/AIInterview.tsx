@@ -433,7 +433,7 @@ export function AIInterview() {
             exit="exit"
             className="flex-1"
           >
-            <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 py-4 shadow-sm">
+            <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 py-3 shadow-sm">
               <div className="max-w-7xl mx-auto flex items-center justify-between px-6">
                 <div className="w-1/3" />
                 <div className="flex items-center justify-center w-1/3 gap-2 text-indigo-700">
@@ -469,7 +469,7 @@ export function AIInterview() {
               </div>
             </nav>
 
-            <main className="flex-grow max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <main className="flex-grow max-w-7xl mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
               <section className="space-y-6">
                 <div className="relative bg-gray-200 rounded-2xl overflow-hidden shadow-xl aspect-video">
                   {cameraEnabled && videoStream ? (
@@ -513,7 +513,7 @@ export function AIInterview() {
                 </div>
 
                 <motion.div
-                  className="bg-white rounded-2xl shadow-2xl p-6 relative"
+                  className="bg-violet-50 rounded-2xl shadow-2xl p-6 relative"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                 >
@@ -526,8 +526,8 @@ export function AIInterview() {
                       <textarea
                         value={answer}
                         onChange={(e) => setAnswer(e.target.value)}
-                        className="w-full h-48 p-4 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-                        placeholder="Type or edit your answer here..."
+                        className="w-full h-44 p-4 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                        placeholder="Edit your answer here..."
                         disabled={isLoading}
                       />
                       <button

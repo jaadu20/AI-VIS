@@ -1,3 +1,4 @@
+from fastapi import logger
 from transformers import pipeline
 import PyPDF2
 import re
@@ -10,11 +11,15 @@ class CVAnalyzer:
         self.vectorizer = TfidfVectorizer(stop_words='english')
 
     def extract_text_from_pdf(self, file):
-        pdf_reader = PyPDF2.PdfReader(file)
-        text = ""
-        for page in pdf_reader.pages:
-            text += page.extract_text()
-        return text
+        try:
+            pdf_reader = PyPDF2.PdfReader(file)
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text() or ""  # Handle empty pages
+            return text
+        except Exception as e:
+            logger.error(f"PDF extraction error: {str(e)}")
+            raise ValueError("Invalid PDF file")
 
     def extract_entities(self, text):
         results = self.ner_model(text)
@@ -22,30 +27,32 @@ class CVAnalyzer:
             'SKILLS': set(),
             'EXPERIENCE': set(),
             'EDUCATION': set(),
-            'ORGANIZATION': set()
+            'ORGANIZATION': set(),
+            'MISC': set()  # Add MISC category
         }
-
+        
         current_entity = ''
         current_text = ''
         for res in results:
             entity_type = res['entity']
             if entity_type.startswith('B-'):
-                if current_entity and current_entity in entities:
+                entity_category = entity_type[2:]
+                if entity_category not in entities:
+                    entity_category = 'MISC'  # Handle unknown categories
+                if current_entity:
                     entities[current_entity].add(current_text.strip())
-                current_entity = entity_type[2:]
+                current_entity = entity_category
                 current_text = res['word']
             elif entity_type.startswith('I-'):
                 current_text += ' ' + res['word']
             else:
-                if current_entity and current_entity in entities:
+                if current_entity:
                     entities[current_entity].add(current_text.strip())
                 current_entity = ''
                 current_text = ''
-
-        # Ensure the last entity is added
-        if current_entity and current_entity in entities:
+        # Add any remaining text
+        if current_entity:
             entities[current_entity].add(current_text.strip())
-
         return entities
 
     def calculate_match_score(self, cv_text, job_description):

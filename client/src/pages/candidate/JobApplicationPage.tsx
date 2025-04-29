@@ -14,10 +14,12 @@ import {
   UploadCloud,
   Camera,
   ChevronLeft,
+  XCircle,
 } from "lucide-react";
 import api from "../../api";
 import { toast } from "react-hot-toast";
 import { formatDistanceToNow } from "date-fns";
+import { EligibilityResultModal } from "../../components/EligibilityResultModal";
 
 interface Job {
   id: string;
@@ -34,6 +36,13 @@ interface Job {
   created_at: string;
 }
 
+interface EligibilityResult {
+  eligible: boolean;
+  message?: string;
+  match_score?: number;
+  missing_skills?: string[];
+}
+
 export function JobApplicationPage() {
   const { jobId } = useParams();
   const navigate = useNavigate();
@@ -41,6 +50,7 @@ export function JobApplicationPage() {
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
+  const [eligibilityResult, setEligibilityResult] = useState<EligibilityResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -80,10 +90,15 @@ export function JobApplicationPage() {
   };
 
   const handleFileValidation = (file: File) => {
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
 
-    if (!file.type.includes("pdf")) {
-      toast.error("Please upload a PDF file");
+    if (!allowedTypes.includes(file.type) ){
+      toast.error("Please upload a PDF, DOC, or DOCX file");
       return;
     }
 
@@ -94,17 +109,12 @@ export function JobApplicationPage() {
 
     setCvFile(file);
     toast.success("CV uploaded successfully");
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      handleFileValidation(file);
-    }
+    if (file) handleFileValidation(file);
   };
 
   const formatEmploymentType = (type: string) => {
@@ -113,8 +123,8 @@ export function JobApplicationPage() {
 
   const handleStartInterview = async () => {
 
-    navigate("/interview");
-    // if (!cvFile || !job) {
+    navigate(`/interview`);
+    // if (!cvFile || !jobId) {
     //   toast.error("Please upload your CV");
     //   return;
     // }
@@ -122,25 +132,26 @@ export function JobApplicationPage() {
     // try {
     //   const formData = new FormData();
     //   formData.append("cv", cvFile);
-    //   formData.append("job", job.id);
+    //   formData.append("job", jobId);
 
     //   const response = await api.post(
     //     "/applications/check-eligibility/",
     //     formData,
-    //     {
-    //       headers: {
-    //         "Content-Type": "multipart/form-data",
-    //       },
-    //     }
+    //     { headers: { "Content-Type": "multipart/form-data" } }
     //   );
 
     //   if (response.data.eligible) {
     //     navigate(`/interview/${response.data.interview_id}`);
     //   } else {
-    //     toast.error(response.data.message || "Not eligible for this position");
+    //     setEligibilityResult({
+    //       eligible: false,
+    //       message: response.data.message,
+    //       match_score: response.data.match_score,
+    //       missing_skills: response.data.missing_skills
+    //     });
     //   }
     // } catch (error: any) {
-    //   toast.error(error.response?.data?.message || "Application failed");
+    //   toast.error(error.response?.data?.error || "Application failed");
     // }
   };
 
@@ -167,7 +178,6 @@ export function JobApplicationPage() {
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Dashboard Button (Left-aligned) */}
             <Button
               onClick={() => navigate("/candidate/dashboard")}
               variant="outline"
@@ -177,7 +187,6 @@ export function JobApplicationPage() {
               Dashboard
             </Button>
 
-            {/* Centered Logo */}
             <div className="flex items-center absolute left-1/2 transform -translate-x-1/2">
               <Camera className="h-8 w-8 text-blue-600 mr-2" />
               <span className="text-xl font-bold text-gray-900">AI-VIS</span>
@@ -188,7 +197,6 @@ export function JobApplicationPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Job Details Column */}
           <div className="lg:w-2/3 space-y-8">
             <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
               <div className="mb-6">
@@ -202,32 +210,10 @@ export function JobApplicationPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 {[
-                  {
-                    icon: MapPin,
-                    title: "Location",
-                    value: job.location,
-                    color: "bg-purple-100",
-                  },
-                  {
-                    icon: Briefcase,
-                    title: "Employment Type",
-                    value: formatEmploymentType(job.employment_type),
-                    color: "bg-orange-100",
-                  },
-                  {
-                    icon: DollarSign,
-                    title: "Salary",
-                    value: job.salary,
-                    color: "bg-blue-100",
-                  },
-                  {
-                    icon: Clock,
-                    title: "Posted",
-                    value: `${formatDistanceToNow(
-                      new Date(job.created_at)
-                    )} ago`,
-                    color: "bg-pink-100",
-                  },
+                  { icon: MapPin, title: "Location", value: job.location, color: "bg-purple-100" },
+                  { icon: Briefcase, title: "Employment Type", value: formatEmploymentType(job.employment_type), color: "bg-orange-100" },
+                  { icon: DollarSign, title: "Salary", value: job.salary, color: "bg-blue-100" },
+                  { icon: Clock, title: "Posted", value: `${formatDistanceToNow(new Date(job.created_at))} ago`, color: "bg-pink-100" },
                 ].map((item, index) => (
                   <div
                     key={index}
@@ -281,7 +267,6 @@ export function JobApplicationPage() {
             </div>
           </div>
 
-          {/* Application Column */}
           <div className="lg:w-1/3 space-y-8">
             <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 animate-fade-in-up">
@@ -291,20 +276,15 @@ export function JobApplicationPage() {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Upload CV (PDF only)
+                    Upload CV (PDF, DOC, DOCX)
                   </label>
                   <div
                     className={`relative flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl group transition-colors 
-                  ${
-                    isDragging
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-300 hover:border-blue-500"
-                  }`}
+                    ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-blue-500"}`}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                   >
-                    {/* Full-screen clickable label */}
                     <label
                       htmlFor="cv-upload"
                       className="absolute inset-0 cursor-pointer z-10"
@@ -313,7 +293,7 @@ export function JobApplicationPage() {
                         id="cv-upload"
                         ref={fileInputRef}
                         type="file"
-                        accept="application/pdf"
+                        accept=".pdf,.doc,.docx"
                         onChange={handleFileUpload}
                         className="sr-only"
                       />
@@ -322,15 +302,11 @@ export function JobApplicationPage() {
                     <div className="space-y-1 text-center relative z-0">
                       <UploadCloud
                         className={`mx-auto h-12 w-12 transition-colors 
-                      ${
-                        isDragging
-                          ? "text-blue-500"
-                          : "text-gray-400 group-hover:text-blue-500"
-                      }`}
+                        ${isDragging ? "text-blue-500" : "text-gray-400 group-hover:text-blue-500"}`}
                       />
                       <div className="flex flex-col items-center text-sm text-gray-600">
                         <span className="underline">Click to upload</span>
-                        <p className="mt-2">or drag and drop PDF</p>
+                        <p className="mt-2">or drag and drop files</p>
                       </div>
                       <p className="text-xs text-gray-500 mt-2">
                         Max file size: 5MB
@@ -338,11 +314,7 @@ export function JobApplicationPage() {
                     </div>
                     <div
                       className={`absolute inset-0 rounded-xl transition-opacity 
-                    ${
-                      isDragging
-                        ? "opacity-100 bg-blue-500/10"
-                        : "opacity-0 group-hover:opacity-100 bg-blue-500/5"
-                    }`}
+                      ${isDragging ? "opacity-100 bg-blue-500/10" : "opacity-0 group-hover:opacity-100 bg-blue-500/5"}`}
                     />
                   </div>
                   {cvFile && (
@@ -361,8 +333,8 @@ export function JobApplicationPage() {
                 <Button
                   onClick={handleStartInterview}
                   className="w-full py-4 text-base font-medium shadow-lg hover:shadow-none transition-all 
-                bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700
-                text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700
+                  text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={!cvFile}
                 >
                   Start Interview Now
@@ -377,30 +349,10 @@ export function JobApplicationPage() {
               <div className="flow-root">
                 <ul className="-mb-8">
                   {[
-                    {
-                      icon: FileTextIcon,
-                      title: "CV Screening",
-                      description: "Instant eligibility check",
-                      color: "bg-purple-100",
-                    },
-                    {
-                      icon: Video,
-                      title: "Video Interview",
-                      description: "15 AI-powered questions",
-                      color: "bg-blue-100",
-                    },
-                    {
-                      icon: Zap,
-                      title: "Real-time Analysis",
-                      description: "Behavioral & technical evaluation",
-                      color: "bg-green-100",
-                    },
-                    {
-                      icon: FileBarChart,
-                      title: "Feedback Report",
-                      description: "Detailed performance insights",
-                      color: "bg-pink-100",
-                    },
+                    { icon: FileTextIcon, title: "CV Screening", description: "Instant eligibility check", color: "bg-purple-100" },
+                    { icon: Video, title: "Video Interview", description: "15 AI-powered questions", color: "bg-blue-100" },
+                    { icon: Zap, title: "Real-time Analysis", description: "Behavioral & technical evaluation", color: "bg-green-100" },
+                    { icon: FileBarChart, title: "Feedback Report", description: "Detailed performance insights", color: "bg-pink-100" },
                   ].map((step, index) => (
                     <li
                       key={index}
@@ -416,12 +368,8 @@ export function JobApplicationPage() {
                           </div>
                         </div>
                         <div className="transition-transform group-hover:translate-x-2">
-                          <p className="text-sm font-medium text-gray-900">
-                            {step.title}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {step.description}
-                          </p>
+                          <p className="text-sm font-medium text-gray-900">{step.title}</p>
+                          <p className="text-sm text-gray-500">{step.description}</p>
                         </div>
                       </div>
                     </li>
@@ -432,17 +380,17 @@ export function JobApplicationPage() {
           </div>
         </div>
       </div>
+
+      <EligibilityResultModal
+        result={eligibilityResult}
+        onClose={() => setEligibilityResult(null)}
+        onRetry={() => setCvFile(null)}
+      />
     </div>
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border-t border-gray-100 pt-6">
       <h3 className="text-xl font-semibold text-gray-900 mb-4">{title}</h3>
