@@ -118,61 +118,92 @@ export function JobApplicationPage() {
   //   }
 
   //   navigate("/interview");
-    // try {
-    //   const formData = new FormData();
-    //   formData.append("cv", cvFile);
-    //   formData.append("job", job.id);
+  // try {
+  //   const formData = new FormData();
+  //   formData.append("cv", cvFile);
+  //   formData.append("job", job.id);
 
-    //   const response = await api.post(
-    //     "/jobapplications/applications/check-eligibility/",
-    //     formData,
-    //     {
-    //       headers: {
-    //         "Content-Type": "multipart/form-data",
-    //       },
-    //     }
-    //   );
+  //   const response = await api.post(
+  //     "/jobapplications/applications/check-eligibility/",
+  //     formData,
+  //     {
+  //       headers: {
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //     }
+  //   );
 
-    //   if (response.data.eligible) {
-    //     navigate(`/interview/${response.data.application_id}`);
-    //   } else {
-    //     toast.error(response.data.message || "Not eligible for this position");
-    //   }
-    // } catch (error: any) {
-    //   toast.error(error.response?.data?.message || "Application failed");
-    // }
+  //   if (response.data.eligible) {
+  //     navigate(`/interview/${response.data.application_id}`);
+  //   } else {
+  //     toast.error(response.data.message || "Not eligible for this position");
+  //   }
+  // } catch (error: any) {
+  //   toast.error(error.response?.data?.message || "Application failed");
+  // }
   // };
-  const handleStartInterview = async () => {
+  // const handleStartInterview = async () => {
 
-    navigate("/interview");
-    // if (!cvFile || !job) {
-    //   toast.error("Please upload your CV");
-    //   return;
-    // }
-  
-    // try {
-    //   const formData = new FormData();
-    //   formData.append("cv", cvFile);
-    //   formData.append("job", job.id);
-  
-    //   const response = await api.post(
-    //     "/applications/check-eligibility/",
-    //     formData,
-    //     {
-    //       headers: {
-    //         "Content-Type": "multipart/form-data",
-    //       },
-    //     }
-    //   );
-  
-    //   if (response.data.eligible) {
-    //     navigate(`/interview/${response.data.application_id}`);
-    //   } else {
-    //     toast.error(response.data.message || "Not eligible for this position");
-    //   }
-    // } catch (error: any) {
-    //   toast.error(error.response?.data?.message || "Application failed");
-    // }
+  //   navigate("/interview");
+  //   // if (!cvFile || !job) {
+  //   //   toast.error("Please upload your CV");
+  //   //   return;
+  //   // }
+
+  //   // try {
+  //   //   const formData = new FormData();
+  //   //   formData.append("cv", cvFile);
+  //   //   formData.append("job", job.id);
+
+  //   //   const response = await api.post(
+  //   //     "/applications/check-eligibility/",
+  //   //     formData,
+  //   //     {
+  //   //       headers: {
+  //   //         "Content-Type": "multipart/form-data",
+  //   //       },
+  //   //     }
+  //   //   );
+
+  //   //   if (response.data.eligible) {
+  //   //     navigate(`/interview/${response.data.application_id}`);
+  //   //   } else {
+  //   //     toast.error(response.data.message || "Not eligible for this position");
+  //   //   }
+  //   // } catch (error: any) {
+  //   //   toast.error(error.response?.data?.message || "Application failed");
+  //   // }
+  // };
+
+  const handleStartInterview = async () => {
+    if (!cvFile || !job) {
+      toast.error("Please upload your CV");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("cv", cvFile);
+      formData.append("job", job.id);
+
+      const response = await api.post(
+        "/applications/check-eligibility/",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.eligible) {
+        navigate(`/interview/${response.data.interview_id}`);
+      } else {
+        toast.error(response.data.message || "Not eligible for this position");
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Application failed");
+    }
   };
 
   if (isLoading) {
