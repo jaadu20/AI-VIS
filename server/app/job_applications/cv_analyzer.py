@@ -24,23 +24,28 @@ class CVAnalyzer:
             'EDUCATION': set(),
             'ORGANIZATION': set()
         }
-        
+
         current_entity = ''
         current_text = ''
         for res in results:
             entity_type = res['entity']
             if entity_type.startswith('B-'):
-                if current_entity:
+                if current_entity and current_entity in entities:
                     entities[current_entity].add(current_text.strip())
                 current_entity = entity_type[2:]
                 current_text = res['word']
             elif entity_type.startswith('I-'):
                 current_text += ' ' + res['word']
             else:
-                if current_entity:
+                if current_entity and current_entity in entities:
                     entities[current_entity].add(current_text.strip())
                 current_entity = ''
                 current_text = ''
+
+        # Ensure the last entity is added
+        if current_entity and current_entity in entities:
+            entities[current_entity].add(current_text.strip())
+
         return entities
 
     def calculate_match_score(self, cv_text, job_description):

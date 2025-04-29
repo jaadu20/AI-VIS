@@ -1,5 +1,6 @@
 # job application view.py
 
+import logging
 from django.shortcuts import render
 from fastapi import Response
 from rest_framework import generics
@@ -17,6 +18,10 @@ import uuid
 from .cv_analyzer import CVAnalyzer
 from rest_framework.response import Response
 from rest_framework import status
+
+# Configure logger
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.ERROR)
 
 class EligibilityCheckView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
