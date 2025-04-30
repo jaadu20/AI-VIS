@@ -11,7 +11,7 @@ class Interview(models.Model):
     ]
     
     application = models.ForeignKey(Application, on_delete=models.CASCADE)
-    interview_id = models.UUIDField(unique=True, default=uuid.uuid4)
+    interview_id = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     current_question = models.PositiveIntegerField(default=0)
     difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='medium')
     created_at = models.DateTimeField(auto_now_add=True)

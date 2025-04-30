@@ -1,91 +1,21 @@
 # interviews/services.py
 import json
-import requests
 import tempfile
-from typing import Dict, Any
 from django.conf import settings
 from azure.cognitiveservices.speech import (
-    SpeechConfig, SpeechSynthesizer, SpeechRecognizer,
-    AudioConfig, ResultReason
+    AudioConfig, SpeechConfig, SpeechSynthesizer, SpeechRecognizer,
+    ResultReason, CancellationReason
 )
-
-class InterviewManager:
-    def __init__(self, interview):
-        self.interview = interview
-        self.speech_service = AzureSpeechService()
-        self.question_generator = GroqQuestionGenerator()
-        self.answer_analyzer = GroqAnswerAnalyzer()
-
-    def generate_questions(self):
-        # Generate initial questions
-        questions = []
-        
-        # AI Introduction
-        intro = (
-            f"Welcome to your interview for {self.interview.application.job.title} at "
-            f"{self.interview.application.job.company_name}. Let's begin!"
-        )
-        questions.append({
-            'text': intro,
-            'order': 0,
-            'is_predefined': True,
-            'difficulty': 'easy'
-        })
-
-        # First predefined question
-        questions.append({
-            'text': "Tell me about your relevant experience for this role",
-            'order': 1,
-            'is_predefined': True,
-            'difficulty': 'easy'
-        })
-
-        # Generate dynamic questions
-        for i in range(2, 15):
-            prev_answers = self.interview.questions.filter(order__lt=i)
-            context = self._build_context()
-            difficulty = self._calculate_difficulty(prev_answers)
-            
-            question = self.question_generator.generate_question(
-                context=context,
-                previous_answers=prev_answers,
-                difficulty=difficulty
-            )
-            
-            questions.append({
-                'text': question['text'],
-                'order': i,
-                'difficulty': difficulty,
-                'is_predefined': False
-            })
-
-        return questions
-
-    def _build_context(self):
-        job = self.interview.application.job
-        return (
-            f"Job Title: {job.title}\n"
-            f"Requirements: {job.requirements}\n"
-            f"Description: {job.description}\n"
-            f"Required Skills: {self.interview.application.skills_matched}"
-        )
-
-    def _calculate_difficulty(self, prev_answers):
-        avg_score = sum([q.answer_score for q in prev_answers if q.answer_score]) / len(prev_answers) if prev_answers else 0
-        if avg_score > 7:
-            return 'hard'
-        elif avg_score > 5:
-            return 'medium'
-        return 'easy'
-    
+from groq import Groq
+from .models import Answer, Question
 class AzureSpeechService:
     def __init__(self):
         self.speech_config = SpeechConfig(
             subscription=settings.AZURE_SPEECH_KEY,
             region=settings.AZURE_SPEECH_REGION
         )
-        self.speech_config.speech_recognition_language = "en-US"
         self.speech_config.speech_synthesis_voice_name = "en-US-JennyNeural"
+        self.speech_config.speech_recognition_language = "en-US"
 
     def text_to_speech(self, text: str) -> bytes:
         try:
@@ -96,11 +26,12 @@ class AzureSpeechService:
                     audio_config=audio_config
                 )
                 result = synthesizer.speak_text_async(text).get()
+                
                 if result.reason == ResultReason.SynthesizingAudioCompleted:
                     return tmpfile.read()
+                return None
         except Exception as e:
-            print(f"TTS Error: {str(e)}")
-        return None
+            raise RuntimeError(f"TTS failed: {str(e)}")
 
     def speech_to_text(self, audio_data: bytes) -> str:
         try:
@@ -112,86 +43,123 @@ class AzureSpeechService:
                     audio_config=audio_config
                 )
                 result = recognizer.recognize_once_async().get()
+                
                 if result.reason == ResultReason.RecognizedSpeech:
                     return result.text
+                elif result.reason == ResultReason.NoMatch:
+                    raise RuntimeError("No speech detected")
+                elif result.reason == ResultReason.Canceled:
+                    cancellation = result.cancellation_details
+                    raise RuntimeError(f"Recognition canceled: {cancellation.reason}")
+                return ""
         except Exception as e:
-            print(f"STT Error: {str(e)}")
-        return None
+            raise RuntimeError(f"STT failed: {str(e)}")
 
 class GroqQuestionGenerator:
     def __init__(self):
-        self.api_key = settings.GROQ_API_KEY
-        self.api_url = "https://api.groq.com/openai/v1/chat/completions"
-        self.headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
+        self.client = Groq(api_key=settings.GROQ_API_KEY)
+        self.system_prompt = """You are an expert technical interviewer. Generate relevant interview questions based on:
+        - Job description and requirements
+        - Candidate's previous answers
+        - Current interview difficulty level
+        
+        Return JSON format: {"question": "...", "difficulty": "easy|medium|hard"}"""
 
-    def generate_question(self, context: str, previous_answers: list, difficulty: str) -> Dict[str, Any]:
-        prompt = f"""Generate a {difficulty} difficulty technical interview question based on:
-        {context}
-        Previous answers: {json.dumps(previous_answers)}
-        Return JSON with 'question' and 'difficulty' fields."""
-        
-        payload = {
-            "model": "llama3-70b-8192",
-            "messages": [{
-                "role": "system",
-                "content": "You are a technical interviewer generating job-specific questions."
-            }, {
-                "role": "user",
-                "content": prompt
-            }],
-            "temperature": 0.7,
-            "max_tokens": 300
-        }
-        
+    def generate_question(self, context: str, difficulty: str) -> dict:
         try:
-            response = requests.post(self.api_url, headers=self.headers, json=payload)
-            response.raise_for_status()
-            return json.loads(response.json()["choices"][0]["message"]["content"])
+            response = self.client.chat.completions.create(
+                model="llama3-70b-8192",
+                messages=[
+                    {"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": f"Context:\n{context}\nGenerate a {difficulty} difficulty question:"}
+                ],
+                temperature=0.7,
+                max_tokens=256,
+                response_format={"type": "json_object"}
+            )
+            return json.loads(response.choices[0].message.content)
         except Exception as e:
-            return {"question": f"Question generation failed: {str(e)}", "difficulty": difficulty}
-        
+            return {"question": f"Could not generate question: {str(e)}", "difficulty": difficulty}
+
 class GroqAnswerAnalyzer:
     def __init__(self):
-        self.api_key = settings.GROQ_API_KEY
-        self.api_url = "https://api.groq.com/openai/v1/chat/completions"
-        self.headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-
-    def analyze_answer(self, question: str, answer: str) -> float:
-        prompt = f"""Analyze this interview answer and give a score 0-10:
-        Question: {question}
-        Answer: {answer}
-        
-        Consider:
-        - Relevance to question
+        self.client = Groq(api_key=settings.GROQ_API_KEY)
+        self.system_prompt = """Analyze interview answers based on:
         - Technical accuracy
+        - Relevance to question
         - Communication clarity
-        - Depth of knowledge
-        
-        Return JSON with 'score' and 'feedback' fields."""
-        
-        payload = {
-            "model": "llama3-70b-8192",
-            "messages": [{
-                "role": "system",
-                "content": "You are an expert interview answer evaluator."
-            }, {
-                "role": "user",
-                "content": prompt
-            }],
-            "temperature": 0.5,
-            "max_tokens": 200
-        }
-        
+        - Problem-solving approach
+        Return JSON format: {"score": 0-10, "feedback": "..."}"""
+
+    def analyze_answer(self, question: str, answer: str) -> dict:
         try:
-            response = requests.post(self.api_url, headers=self.headers, json=payload)
-            response.raise_for_status()
-            result = json.loads(response.json()["choices"][0]["message"]["content"])
-            return float(result['score'])
+            response = self.client.chat.completions.create(
+                model="llama3-70b-8192",
+                messages=[
+                    {"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": f"Question: {question}\nAnswer: {answer}"}
+                ],
+                temperature=0.5,
+                max_tokens=200,
+                response_format={"type": "json_object"}
+            )
+            return json.loads(response.choices[0].message.content)
         except Exception as e:
-            return 5.0  # Default average score on error
+            return {"score": 5.0, "feedback": f"Analysis failed: {str(e)}"}
+
+class InterviewManager:
+    def __init__(self, interview):
+        self.interview = interview
+        self.question_generator = GroqQuestionGenerator()
+        self.answer_analyzer = GroqAnswerAnalyzer()
+
+    def generate_initial_questions(self) -> list:
+        job = self.interview.application.job
+        return [
+            {
+                "text": f"Welcome to your interview for {job.title} at {job.company_name}. "
+                        "We'll begin with some general questions before moving to technical ones.",
+                "difficulty": "easy",
+                "order": 0,
+                "is_predefined": True
+            },
+            {
+                "text": "Walk us through your resume and highlight relevant experience for this role.",
+                "difficulty": "easy",
+                "order": 1,
+                "is_predefined": True
+            }
+        ]
+
+    def generate_next_question(self) -> dict:
+        context = self._build_context()
+        difficulty = self._calculate_difficulty()
+        return self.question_generator.generate_question(context, difficulty)
+
+    def analyze_answer(self, question: Question, answer: str) -> dict:
+        analysis = self.answer_analyzer.analyze_answer(question.text, answer)
+        question.answer_score = analysis['score']
+        question.save()
+        self.interview.total_score += analysis['score']
+        self.interview.save()
+        return analysis
+
+    def _build_context(self) -> str:
+        job = self.interview.application.job
+        answers = Answer.objects.filter(question__interview=self.interview)
+        return f"""
+        Job Title: {job.title}
+        Company: {job.company_name}
+        Requirements: {job.requirements}
+        Description: {job.description}
+        Previous Answers: {[a.text for a in answers]}
+        Current Difficulty: {self.interview.difficulty}
+        """
+
+    def _calculate_difficulty(self) -> str:
+        avg_score = self.interview.total_score / (self.interview.current_question or 1)
+        if avg_score > 8.0:
+            return 'hard'
+        elif avg_score > 6.0:
+            return 'medium'
+        return 'easy'

@@ -68,19 +68,16 @@ export function AIInterview() {
   const startInterview = async () => {
     setShowPopup(false);
     try {
-      const response = await api.post("/interview/start", {
-        application_id: applicationId,
+      const response = await api.post("/interviews/start/", {
+        application_id: applicationId || null,
       });
 
-      const { interview_id, questions, current_question } = response.data;
-
+      const { interview_id, questions } = response.data;
       setInterviewId(interview_id);
       setQuestions(questions);
-      setCurrentQuestionIndex(current_question);
+      setCurrentQuestionIndex(0);
 
       await initializeMediaStream();
-
-      // Play AI introduction automatically
       playQuestionAudio(questions[0].text);
       startVideoRecording();
     } catch (error) {
@@ -90,7 +87,6 @@ export function AIInterview() {
     }
   };
 
-  // Add media initialization function
   const initializeMediaStream = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -102,31 +98,23 @@ export function AIInterview() {
       setVideoStream(videoStream);
     } catch (error) {
       console.error("Media initialization failed:", error);
-      throw new Error("Camera/microphone access required");
+      toast.error("Using text-only mode. Media features disabled.");
+      setShowPopup(false);
+      setQuestions([
+        {
+          text: "Welcome to text-based interview mode. Please type your answers.",
+          difficulty: "easy",
+        },
+      ]);
     }
   };
 
-  // Initialize media streams
   useEffect(() => {
-    if (!showPopup) {
-      const initializeMedia = async () => {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: true,
-          });
-          setMediaStream(stream);
-          const videoStream = new MediaStream(stream.getVideoTracks());
-          setVideoStream(videoStream);
-        } catch (error) {
-          console.error("Error accessing media devices:", error);
-        }
-      };
-      initializeMedia();
+    if (!showPopup && !mediaStream) {
+      initializeMediaStream();
     }
   }, [showPopup]);
 
-  // Set video element source
   useEffect(() => {
     if (videoRef.current && videoStream) {
       videoRef.current.srcObject = videoStream;
@@ -134,7 +122,6 @@ export function AIInterview() {
     }
   }, [videoStream]);
 
-  // Video recording handling
   const startVideoRecording = () => {
     if (mediaStream) {
       const recorder = new MediaRecorder(mediaStream);
@@ -143,16 +130,13 @@ export function AIInterview() {
     }
   };
 
-  // Question audio handling
   const playQuestionAudio = async (questionText: string) => {
     try {
       setIsSpeaking(true);
       const response = await api.post(
-        "/azure/tts/",
+        "/interviews/tts/",
         { text: questionText },
-        {
-          responseType: "blob",
-        }
+        { responseType: "blob" }
       );
 
       const audioUrl = URL.createObjectURL(response.data);
@@ -165,7 +149,6 @@ export function AIInterview() {
     }
   };
 
-  // Answer recording handling
   const handleStartRecording = () => {
     if (mediaStream) {
       const recorder = new MediaRecorder(mediaStream);
@@ -178,7 +161,7 @@ export function AIInterview() {
         formData.append("audio", audioBlob);
 
         try {
-          const sttResponse = await api.post("/azure/stt/", formData);
+          const sttResponse = await api.post("/interviews/stt/", formData);
           setAnswer(sttResponse.data.text);
         } catch (error) {
           console.error("STT error:", error);
@@ -198,7 +181,6 @@ export function AIInterview() {
     }
   };
 
-  // Submit answer and get next question
   const handleAnswerSubmit = async () => {
     if (!answer.trim()) return;
     setIsLoading(true);
@@ -215,24 +197,23 @@ export function AIInterview() {
       }
 
       const response = await api.post(
-        `/interview/${interviewId}/submit`,
+        `/interviews/${interviewId}/submit/`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      const { current_question, is_completed, next_question } = response.data;
-
-      setCurrentQuestionIndex(current_question);
-
-      if (is_completed) {
+      if (response.data.completed) {
         navigate(`/interview-result/${interviewId}`);
       } else {
-        // Add new question to state if dynamically generated
+        setCurrentQuestionIndex((prev) => prev + 1);
         setQuestions((prev) => [
           ...prev,
-          { text: next_question, difficulty: "medium" },
+          {
+            text: response.data.question.text,
+            difficulty: response.data.question.difficulty,
+          },
         ]);
-        playQuestionAudio(next_question);
+        playQuestionAudio(response.data.question.text);
         startVideoRecording();
       }
 
@@ -245,7 +226,6 @@ export function AIInterview() {
     }
   };
 
-  // Toggle media controls
   const toggleAudio = () => {
     mediaStream?.getAudioTracks().forEach((track) => {
       track.enabled = !track.enabled;
@@ -275,7 +255,6 @@ export function AIInterview() {
     }
   };
 
-  // Cleanup media streams
   useEffect(() => {
     return () => {
       mediaStream?.getTracks().forEach((track) => track.stop());

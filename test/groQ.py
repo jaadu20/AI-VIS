@@ -122,7 +122,7 @@ if __name__ == "__main__":
     print("Generated Question:", question)
     
     # Generate a quiz
-    print("\nGenerating a quiz on Python programming...")
+    print("\nGenerating...")
     quiz = generator.generate_quiz(topic="Python programming", num_questions=3)
     
     # Print the quiz
