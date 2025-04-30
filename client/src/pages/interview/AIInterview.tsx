@@ -65,25 +65,34 @@ export function AIInterview() {
   );
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
 
+  // Update the startInterview function
   const startInterview = async () => {
     setShowPopup(false);
     try {
-      const response = await api.post("/interviews/start/", {
-        application_id: applicationId || null,
-      });
+      const requestPayload = applicationId
+        ? { application_id: applicationId }
+        : {};
 
-      const { interview_id, questions } = response.data;
-      setInterviewId(interview_id);
-      setQuestions(questions);
+      const response = await api.post("/interviews/start/", requestPayload);
+
+      if (!response.data?.interview_id || !response.data?.questions) {
+        throw new Error("Invalid interview initialization response");
+      }
+
+      setInterviewId(response.data.interview_id);
+      setQuestions(response.data.questions);
       setCurrentQuestionIndex(0);
 
       await initializeMediaStream();
-      playQuestionAudio(questions[0].text);
+      playQuestionAudio(response.data.questions[0].text);
       startVideoRecording();
     } catch (error) {
+      console.error("Interview start error:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to start interview"
       );
+      // setShowPopup(true);
+      setQuestions([]);
     }
   };
 
@@ -199,7 +208,13 @@ export function AIInterview() {
       const response = await api.post(
         `/interviews/${interviewId}/submit/`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            // Add authorization header if needed
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
       );
 
       if (response.data.completed) {
@@ -220,7 +235,7 @@ export function AIInterview() {
       setAnswer("");
       setRecordedChunks([]);
     } catch (error) {
-      toast.error("Failed to submit answer");
+      toast.error("Failed to submit answer. Please try again.");
     } finally {
       setIsLoading(false);
     }
