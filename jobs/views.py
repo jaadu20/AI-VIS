@@ -31,5 +31,4 @@ class JobListView(generics.ListAPIView):
     
     def get_queryset(self):
         return Job.objects.all() \
-            .order_by('-created_at') \
-            .prefetch_related('company')
+            .order_by('-created_at')

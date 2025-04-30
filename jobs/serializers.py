@@ -1,10 +1,8 @@
 # jobs/serializers.py
 from rest_framework import serializers
 from .models import Job
-from users.models import User
 
 class JobSerializer(serializers.ModelSerializer):
-    
     employment_type = serializers.ChoiceField(choices=Job.EMPLOYMENT_TYPES)
     experience_level = serializers.ChoiceField(choices=Job.EXPERIENCE_LEVELS)
     company_name = serializers.SerializerMethodField()
@@ -23,11 +21,8 @@ class JobSerializer(serializers.ModelSerializer):
         }
 
     def get_company_name(self, obj):
-            try:
-                return obj.company.company_profile.company_name
-            except User.company_profile.RelatedObjectDoesNotExist:
-                return "Company"   
-             
+        return obj.company.company_profile.company_name if obj.company.company_profile else "Company"
+    
     def validate_employment_type(self, value):
         return value.lower()
 
