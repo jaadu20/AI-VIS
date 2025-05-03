@@ -33,3 +33,25 @@ class JobListView(generics.ListAPIView):
         return Job.objects.all() \
             .order_by('-created_at') \
             .prefetch_related('company')
+    
+class JobUpdateView(generics.UpdateAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsCompanyUser]
+    queryset = Job.objects.all()
+    serializer_class = JobSerializer
+
+    def get_queryset(self):
+        return self.queryset.filter(company=self.request.user)
+
+class JobDeleteView(generics.DestroyAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsCompanyUser]
+    queryset = Job.objects.all()
+    
+    def get_queryset(self):
+        return self.queryset.filter(company=self.request.user)
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'message': 'Job deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
