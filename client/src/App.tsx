@@ -22,6 +22,8 @@ import { CandidatesResult } from "./pages/company/CandidatesResult";
 import { CompanyProfile } from "./pages/company/CompanyProfile";
 import { Getstarted } from "./pages/Getstarted";
 import { JobApplicationPage } from "./pages/candidate/JobApplicationPage";
+// import ProtectedRoute from "./components/ProtectedRoute";
+import CompanyJobList from "./pages/company/CompanyJobList";
 
 function PrivateRoute({
   children,
@@ -123,6 +125,14 @@ function App() {
         <Route path="/complete" element={<InterviewProgress />} />
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/jobs/:jobId/apply" element={<JobApplicationPage />} />
+        <Route
+          path="/company/jobs"
+          element={
+            <PrivateRoute allowedRoles={["company"]}>
+              <CompanyJobList />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </Router>
   );

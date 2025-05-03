@@ -1,12 +1,13 @@
 import axios from "axios";
 import { useAuthStore } from "../store/authStore";
+import { jwtDecode } from "jwt-decode";
 
 const api = axios.create({
   baseURL: "http://127.0.0.1:8000",
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true,  // Add this line
+  withCredentials: true, // Add this line
 });
 
 api.interceptors.request.use(
@@ -64,5 +65,31 @@ api.interceptors.response.use(
     });
   }
 );
+
+api.interceptors.request.use(async (config) => {
+  const token = localStorage.getItem("accessToken");
+
+  if (token) {
+    const decoded: { exp: number } = jwtDecode(token);
+    if (Date.now() >= decoded.exp * 1000) {
+      try {
+        const { data } = await axios.post(
+          "/auth/refresh/",
+          {},
+          {
+            withCredentials: true,
+          }
+        );
+        localStorage.setItem("accessToken", data.access);
+      } catch (error) {
+        localStorage.removeItem("accessToken");
+        throw error;
+      }
+    }
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
 
 export default api;

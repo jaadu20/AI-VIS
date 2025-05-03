@@ -42,6 +42,8 @@ export function Sidebar() {
         href: "/company/candidatesresults",
       },
       { icon: Building2, label: "Profile", href: "/company/profile" },
+      { icon: MessageSquare, label: "Interviews", href: "/company/interviews" },
+      { icon: FileText, label: "Job postings", href: "/company/jobs" },
     ],
     admin: [
       { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
