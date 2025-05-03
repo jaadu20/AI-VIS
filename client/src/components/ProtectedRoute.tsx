@@ -1,15 +1,15 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { isAuthenticated } from '../utils/auth';
+// components/ProtectedRoute.tsx
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from './AuthContext';
 
-export default function ProtectedRoute({ children }: { children: JSX.Element }) {
-  const navigate = useNavigate();
+const ProtectedRoute = ({ allowedRoles }: { allowedRoles: string[] }) => {
+  const { user, loading } = useAuth();
 
-  useEffect(() => {
-    if (!isAuthenticated()) {
-      navigate('/login');
-    }
-  }, [navigate]);
+  if (loading) return <div className="p-4 text-center">Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!allowedRoles.includes(user.role)) return <Navigate to="/" replace />;
 
-  return children;
-}
+  return <Outlet />;
+};
+
+export default ProtectedRoute;
