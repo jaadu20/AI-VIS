@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useForceUpdate } from "framer-motion";
 import {
   LayoutDashboard,
   Users,
@@ -10,6 +10,7 @@ import {
   GraduationCap,
   FileText,
   MessageSquare,
+  Upload,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { cn } from "../../lib/utils";
@@ -42,8 +43,8 @@ export function Sidebar() {
         href: "/company/candidatesresults",
       },
       { icon: Building2, label: "Profile", href: "/company/profile" },
-      { icon: MessageSquare, label: "Interviews", href: "/company/interviews" },
       { icon: FileText, label: "Job postings", href: "/company/jobs" },
+      { icon: Upload, label: "Interviews", href: "/job/update" },
     ],
     admin: [
       { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
