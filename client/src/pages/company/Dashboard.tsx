@@ -1,3 +1,5 @@
+// component: CompanyDashboard
+
 import { motion } from "framer-motion";
 import { Users, Briefcase, MessageSquare, TrendingUp } from "lucide-react";
 import { DashboardLayout } from "../../components/layout/DashboardLayout";

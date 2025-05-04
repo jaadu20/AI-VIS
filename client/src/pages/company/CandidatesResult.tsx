@@ -1,3 +1,4 @@
+// All candidates results are displayed here
 import { motion } from "framer-motion";
 import { DashboardLayout } from "../../components/layout/DashboardLayout";
 import { Card } from "../../components/ui/Card";

@@ -1,3 +1,5 @@
+// company registration page
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -35,6 +37,7 @@ export function CompanyRegistration() {
         email: data.email,
         role: "company",
         name: data.companyName,
+        phone: ""
       });
       navigate("/company/dashboard");
     } catch (err) {

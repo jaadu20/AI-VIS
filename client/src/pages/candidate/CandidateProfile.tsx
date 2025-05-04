@@ -1,3 +1,5 @@
+// candidate/CandidateProfile.tsx
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useForm, useFieldArray } from "react-hook-form";
