@@ -97,19 +97,6 @@ class JobDetailView(generics.RetrieveAPIView):
     queryset = Job.objects.all().select_related('company__company_profile')
     serializer_class = JobSerializer
 
-
-# class JobDetailView(generics.RetrieveAPIView):
-#     permission_classes = [AllowAny]
-#     serializer_class = JobSerializer
-#     lookup_field = 'id'  # Explicitly specify the lookup field
-#     lookup_url_kwarg = 'id'  # Match the URL parameter name
-#     pagination_class = None
-
-#     def get_queryset(self):
-#         return Job.objects.all() \
-#             .select_related('company') \
-#             .prefetch_related('applications') 
-
 class ApplicationCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ApplicationSerializer
