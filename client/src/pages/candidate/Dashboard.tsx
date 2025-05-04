@@ -1,3 +1,5 @@
+// candidate dashboard page
+
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -7,7 +9,7 @@ import {
   MapPin,
   Search,
   User,
-  // DollarSign,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
