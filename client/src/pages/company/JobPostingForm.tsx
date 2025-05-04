@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 import { useState } from "react";
 import api from "../../api";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../store/authStore";
 interface JobPostingForm {
   title: string;
   department: string;
@@ -37,6 +38,7 @@ const employmentTypes = [
 
 export function JobPostingForm() {
   const navigate = useNavigate();
+  const { user } = useAuthStore(); 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     register,
@@ -60,7 +62,7 @@ export function JobPostingForm() {
         });
         reset();
         setTimeout(() => {
-          navigate("/company/dashboard");
+          navigate(`/company/${user?.id}/dashboard`);
         }, 500);
       }
     } catch (error: any) {
