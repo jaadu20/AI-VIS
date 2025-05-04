@@ -64,7 +64,7 @@ function App() {
 
         {/* Company Routes */}
         <Route
-          path="/company/dashboard"
+          path="/company/:Id/dashboard"
           element={
             <PrivateRoute allowedRoles={["company"]}>
               <CompanyDashboard />
@@ -80,7 +80,7 @@ function App() {
           }
         />
         <Route
-          path="/company/profile"
+          path="/company/profile/:userId"
           element={
             <PrivateRoute allowedRoles={["company"]}>
               <CompanyProfile />
@@ -98,7 +98,7 @@ function App() {
 
         {/* Candidate Routes */}
         <Route
-          path="/candidate/dashboard"
+          path="/candidate/:Id/dashboard"
           element={
             <PrivateRoute allowedRoles={["candidate"]}>
               <CandidateDashboard />
@@ -106,7 +106,7 @@ function App() {
           }
         />
         <Route
-          path="/candidate/profile"
+          path="/candidate/profile/:userId"
           element={
             <PrivateRoute allowedRoles={["candidate"]}>
               <CandidateProfile />

@@ -20,7 +20,7 @@ import api from "../../api";
 import { toast } from "react-hot-toast";
 import { formatDistanceToNow } from "date-fns";
 import { EligibilityResultModal } from "../../components/EligibilityResultModal";
-
+import { useAuthStore } from "../../store/authStore";
 interface Job {
   id: string;
   title: string;
@@ -46,6 +46,7 @@ interface EligibilityResult {
 export function JobApplicationPage() {
   const { jobId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [job, setJob] = useState<Job | null>(null);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,7 +61,7 @@ export function JobApplicationPage() {
         setJob(response.data);
       } catch (error) {
         toast.error("Failed to load job details");
-        navigate("/candidate/dashboard");
+        navigate(`/candidate/${user?.id}/dashboard`);
       } finally {
         setIsLoading(false);
       }
@@ -179,7 +180,7 @@ export function JobApplicationPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Button
-              onClick={() => navigate("/candidate/dashboard")}
+              onClick={() => navigate(`/candidate/${user?.id}/dashboard`)}
               variant="outline"
               className="flex items-center bg-white hover:bg-gray-50 border border-gray-200 text-indigo-700"
             >

@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import api from "../../api";
 import { toast } from "react-hot-toast";
+import { useAuthStore } from "../../store/authStore";
 
 interface Job {
   id: string;
@@ -30,11 +31,22 @@ interface Job {
 }
 
 export function CandidateDashboard() {
+  const { user } = useAuthStore();
   const navigate = useNavigate();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // useEffect(() => {
+  //   if (!user) {
+  //     navigate("/login");
+  //     toast.error("Please login to access dashboard");
+  //   } else if (user?.role !== "candidate") {
+  //     navigate("/");
+  //     toast.error("Unauthorized access");
+  //   }
+  // }, [user, navigate]);
 
   const fetchJobs = async () => {
     try {
@@ -111,7 +123,7 @@ export function CandidateDashboard() {
               <Button
                 variant="ghost"
                 className="flex items-center space-x-2"
-                onClick={() => navigate("/candidate/profile")}
+                onClick={() => navigate(`/candidate/profile/${user?.id}`)}
               >
                 <User className="h-5 w-5" />
                 <span className="hidden sm:inline">Profile</span>
@@ -153,7 +165,7 @@ export function CandidateDashboard() {
             <Button
               variant="ghost"
               className="flex items-center space-x-2"
-              onClick={() => navigate("/candidate/profile")}
+              onClick={() => navigate(`/candidate/profile/${user?.id}`)}
             >
               <User className="h-5 w-5" />
               <span className="hidden sm:inline">Profile</span>

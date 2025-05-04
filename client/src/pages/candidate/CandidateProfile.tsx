@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/Button";
 import { Plus, Trash, User } from "lucide-react";
 import api from "../../api";
 import { toast } from "react-hot-toast";
+import { useParams } from "react-router-dom";
 
 interface EducationEntry {
   degree: string;
@@ -27,6 +28,7 @@ interface ProfileForm {
 }
 
 export function CandidateProfile() {
+  const { userId } = useParams<{ userId: string }>();
   const [isEditing, setIsEditing] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [cvFile, setCvFile] = useState<File | null>(null);

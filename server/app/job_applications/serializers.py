@@ -1,3 +1,5 @@
+# job_applications/serializers.py
+
 from rest_framework import serializers
 from django.core.validators import FileExtensionValidator
 from .models import Application

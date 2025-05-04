@@ -1,4 +1,4 @@
-# job application view.py
+# job_applications/views.py
 
 import logging
 from django.shortcuts import render
@@ -92,9 +92,23 @@ class EligibilityCheckView(generics.GenericAPIView):
         return difficulty_map.get(experience_level.lower(), 'medium')
     
 class JobDetailView(generics.RetrieveAPIView):
-    permission_classes = [AllowAny]
+    # authentication_classes = [] 
+    permission_classes = [AllowAny] 
     queryset = Job.objects.all().select_related('company__company_profile')
     serializer_class = JobSerializer
+
+
+# class JobDetailView(generics.RetrieveAPIView):
+#     permission_classes = [AllowAny]
+#     serializer_class = JobSerializer
+#     lookup_field = 'id'  # Explicitly specify the lookup field
+#     lookup_url_kwarg = 'id'  # Match the URL parameter name
+#     pagination_class = None
+
+#     def get_queryset(self):
+#         return Job.objects.all() \
+#             .select_related('company') \
+#             .prefetch_related('applications') 
 
 class ApplicationCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]

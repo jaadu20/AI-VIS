@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { DashboardLayout } from "../../components/layout/DashboardLayout";
 import { Button } from "../../components/ui/Button";
+import { useParams } from "react-router-dom";
 
 export function CompanyProfile() {
+  const { userId } = useParams<{ userId: string }>();
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
     companyName: "Tech Innovators Ltd.",

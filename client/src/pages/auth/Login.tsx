@@ -1,3 +1,4 @@
+// Login.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -64,15 +65,20 @@ export function Login() {
       );
       // Redirect based on role
       const dashboardPaths = {
-        candidate: "/candidate/dashboard",
-        company: "/company/dashboard",
+        candidate: "/candidate",
+        company: "/company",
       };
 
-      navigate(dashboardPaths[decoded.role], {
-        replace: true,
-        state: { fromLogin: true }, // Optional: Add state if needed
-      });
+      // navigate(dashboardPaths[decoded.role], {
+      //   replace: true,
+      //   state: { fromLogin: true }, // Optional: Add state if needed
+      // });
 
+      navigate(`${dashboardPaths[decoded.role]}/${decoded.id}/dashboard`, {
+        replace: true,
+        state: { fromLogin: true },
+      });
+      
       toast.success("Login successful!");
     } catch (err) {
       let errorMessage = "Login failed. Please check your credentials.";
