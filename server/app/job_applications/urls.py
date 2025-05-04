@@ -4,7 +4,6 @@ from .views import JobDetailView, ApplicationCreateView, EligibilityCheckView
 
 urlpatterns = [
     path('jobs/<int:pk>/', JobDetailView.as_view(), name='job-detail'),
-    # path('jobs/<int:id>/', JobDetailView.as_view(), name='job-detail'),  # Changed pk to id
     path('applications/', ApplicationCreateView.as_view(), name='application-create'),
     path('applications/check-eligibility/', EligibilityCheckView.as_view(), name='check-eligibility'),
 ]
