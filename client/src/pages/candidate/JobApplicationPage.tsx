@@ -1,3 +1,5 @@
+// job application page for candidates to apply for jobs
+
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
