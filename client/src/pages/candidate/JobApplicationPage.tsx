@@ -59,8 +59,9 @@ export function JobApplicationPage() {
   useEffect(() => {
     const fetchJobDetails = async () => {
       try {
-        const response = await api.get(`/jobs/${jobId}/`);
-        setJob(response.data);
+        const response = await api.get(`/jobs/all/${jobId}`);
+        const responseData = response.data.results || response.data;
+        setJob(responseData);
       } catch (error) {
         toast.error("Failed to load job details");
         navigate(`/candidate/${user?.id}/dashboard`);

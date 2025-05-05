@@ -91,11 +91,6 @@ class EligibilityCheckView(generics.GenericAPIView):
         }
         return difficulty_map.get(experience_level.lower(), 'medium')
     
-class JobDetailView(generics.RetrieveAPIView):
-    # authentication_classes = [] 
-    permission_classes = [AllowAny] 
-    queryset = Job.objects.all().select_related('company__company_profile')
-    serializer_class = JobSerializer
 
 class ApplicationCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]

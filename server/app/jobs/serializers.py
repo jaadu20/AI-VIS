@@ -7,8 +7,8 @@ class JobSerializer(serializers.ModelSerializer):
     
     employment_type = serializers.ChoiceField(choices=Job.EMPLOYMENT_TYPES)
     experience_level = serializers.ChoiceField(choices=Job.EXPERIENCE_LEVELS)
-    company_name = serializers.SerializerMethodField()
-    # company_name = serializers.CharField(source="company.company_profile.name", default="Company")
+    # company_name = serializers.SerializerMethodField()
+    company_name = serializers.CharField(source="company.company_profile.name", default="Company")
 
     class Meta:
         model = Job

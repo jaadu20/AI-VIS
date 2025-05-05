@@ -34,6 +34,11 @@ class JobListView(generics.ListAPIView):
             .order_by('-created_at') \
             .prefetch_related('company')
     
+class JobDetailView(generics.RetrieveAPIView):
+    permission_classes = [AllowAny]
+    queryset = Job.objects.all()
+    serializer_class = JobSerializer
+    lookup_field = 'pk' 
 class JobUpdateView(generics.UpdateAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsCompanyUser]
