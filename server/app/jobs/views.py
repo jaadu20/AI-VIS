@@ -40,8 +40,8 @@ class JobDetailView(generics.RetrieveAPIView):
     serializer_class = JobSerializer
     lookup_field = 'pk' 
 class JobUpdateView(generics.UpdateAPIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, IsCompanyUser]
+    # authentication_classes = [JWTAuthentication]
+    permission_classes = [AllowAny]
     queryset = Job.objects.all()
     serializer_class = JobSerializer
 
@@ -49,8 +49,9 @@ class JobUpdateView(generics.UpdateAPIView):
         return self.queryset.filter(company=self.request.user)
 
 class JobDeleteView(generics.DestroyAPIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, IsCompanyUser]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated, IsCompanyUser]
+    permission_classes = [AllowAny]
     queryset = Job.objects.all()
     
     def get_queryset(self):

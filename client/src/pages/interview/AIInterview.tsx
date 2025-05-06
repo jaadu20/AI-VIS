@@ -65,7 +65,6 @@ export function AIInterview() {
   );
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
 
-  // Update the startInterview function
   const startInterview = async () => {
     setShowPopup(false);
     try {
@@ -91,7 +90,6 @@ export function AIInterview() {
       toast.error(
         error instanceof Error ? error.message : "Failed to start interview"
       );
-      // setShowPopup(true);
       setQuestions([]);
     }
   };
@@ -211,7 +209,6 @@ export function AIInterview() {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            // Add authorization header if needed
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         }
@@ -286,10 +283,10 @@ export function AIInterview() {
           <motion.div
             key="popup"
             className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            // variants={popupVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
+            variants={popupVariants}
           >
             <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
               <div className="text-center space-y-6">
@@ -301,7 +298,7 @@ export function AIInterview() {
                   <p>Estimated duration: 20-30 minutes ⏱️</p>
                   <div className="my-4">
                     <Progress
-                      value={(currentQuestionIndex / 14) * 100} // 0-14 for 15 questions
+                      value={(currentQuestionIndex / 14) * 100}
                       className="h-2 rounded-full bg-green-200"
                     />
                   </div>
@@ -389,7 +386,7 @@ export function AIInterview() {
               </div>
             </nav>
 
-            <main className="flex-grow max-w-7xl mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <main className="flex-grow max-w-7xl mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-2 gap-8">
               <section className="space-y-6">
                 <div className="relative bg-gray-200 rounded-2xl overflow-hidden shadow-xl aspect-video">
                   {cameraEnabled && videoStream ? (
@@ -433,12 +430,12 @@ export function AIInterview() {
                 </div>
 
                 <motion.div
-                  className="bg-violet-50 rounded-2xl shadow-2xl p-6 relative"
+                  className="bg-violet-50 rounded-2xl shadow-2xl p-4 relative"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                 >
                   <div className="space-y-4 relative">
-                    <h3 className="text-xl font-semibold text-gray-800">
+                    <h3 className="text-xl font-semibold text-gray-800 ml-2">
                       {questions[currentQuestionIndex]?.text ||
                         "Loading question..."}
                       {currentQuestionIndex > 1 && (
@@ -471,6 +468,25 @@ export function AIInterview() {
                         )}
                       </button>
                     </div>
+                    <Button
+                      onClick={handleAnswerSubmit}
+                      disabled={!answer.trim() || isLoading}
+                      className="w-full py-3 flex items-center justify-center bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white transition-colors rounded-xl"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                          Processing...
+                        </>
+                      ) : currentQuestionIndex < 14 ? (
+                        <>
+                          <Send className="h-5 w-5 mr-2" />
+                          Submit Answer
+                        </>
+                      ) : (
+                        "Complete Interview 🎉"
+                      )}
+                    </Button>
                   </div>
                 </motion.div>
               </section>
@@ -482,7 +498,7 @@ export function AIInterview() {
                   animate={{ scale: 1 }}
                 >
                   <div
-                    className={`mx-auto w-48 h-48 rounded-full p-1 mb-4 transition-all ${
+                    className={`mx-auto w-52 h-56 rounded-full p-1 mb-4 transition-all ${
                       isSpeaking
                         ? "animate-pulse-wave"
                         : "border border-gray-300"
@@ -509,49 +525,17 @@ export function AIInterview() {
                       Question {currentQuestionIndex + 1} of 15
                     </span>
                   </div>
-                </motion.div>
-
-                <div className="flex gap-4">
                   <Button
                     onClick={() =>
                       playQuestionAudio(questions[currentQuestionIndex]?.text)
                     }
                     disabled={isLoading}
-                    className="w-full py-3 flex items-center justify-center bg-gray-500 hover:bg-gray-600 text-white transition-colors"
+                    className="mt-4 py-2 px-4 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white rounded-full transition-colors"
                   >
-                    <Repeat className="h-5 w-5 mr-2" />
+                    <Repeat className="h-4 w-4 mr-2" />
                     Repeat Question
                   </Button>
-                  <Button
-                    onClick={handleAnswerSubmit}
-                    disabled={!answer.trim() || isLoading}
-                    className="w-full py-3 flex items-center justify-center bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white transition-colors"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                        Processing...
-                      </>
-                    ) : currentQuestionIndex < 14 ? (
-                      <>
-                        <Send className="h-5 w-5 mr-2" />
-                        Submit Answer
-                      </>
-                    ) : (
-                      "Complete Interview 🎉"
-                    )}
-                  </Button>
-                </div>
-
-                {cameraEnabled && (
-                  <motion.div
-                    className="px-4 py-4 bg-green-100 border border-green-300 text-green-800 rounded-md shadow text-sm font-medium text-center"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                  >
-                    🎥 Interview in Progress - Stay focused and shine! ✨
-                  </motion.div>
-                )}
+                </motion.div>
 
                 {showWarning && (
                   <motion.div
@@ -564,13 +548,15 @@ export function AIInterview() {
                   </motion.div>
                 )}
 
-                <Button
-                  onClick={() => navigate("/complete")}
-                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white transition-colors shadow-xl rounded-full"
-                  disabled={currentQuestionIndex < 14}
-                >
-                  Complete Interview 🚀
-                </Button>
+                {cameraEnabled && (
+                  <motion.div
+                    className="px-4 py-4 bg-green-100 border border-green-300 text-green-800 rounded-md shadow text-sm font-medium text-center"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    🎥 Interview in Progress - Stay focused and shine! ✨
+                  </motion.div>
+                )}
               </aside>
             </main>
           </motion.div>

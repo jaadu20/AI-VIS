@@ -16,7 +16,6 @@ import {
   UploadCloud,
   Camera,
   ChevronLeft,
-  XCircle,
 } from "lucide-react";
 import api from "../../api";
 import { toast } from "react-hot-toast";
@@ -59,7 +58,7 @@ export function JobApplicationPage() {
   useEffect(() => {
     const fetchJobDetails = async () => {
       try {
-        const response = await api.get(`/jobs/all/${jobId}`);
+        const response = await api.get(`/jobs/current/${jobId}`);
         const responseData = response.data.results || response.data;
         setJob(responseData);
       } catch (error) {

@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import toast from "react-hot-toast";
+import { useAuthStore } from "../../store/authStore";
 
 interface ResultData {
   scores: {
@@ -50,6 +51,7 @@ const dummyResults: ResultData = {
 
 export function InterviewProgress() {
   const { interviewId } = useParams();
+  const { user } = useAuthStore((state) => state);
   const navigate = useNavigate();
   const [results, setResults] = useState<ResultData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -185,7 +187,7 @@ export function InterviewProgress() {
               </div>
             </div>
             <Button
-              onClick={() => navigate("/candidate/dashboard")}
+              onClick={() => navigate(`/candidate/${user?.id}/dashboard`)}
               variant="outline"
               className="flex items-center bg-white hover:bg-gray-50 border border-gray-200 text-indigo-700"
             >
