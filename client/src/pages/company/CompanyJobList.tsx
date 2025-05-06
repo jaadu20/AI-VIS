@@ -1,23 +1,57 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Briefcase, Edit, Trash } from 'lucide-react';
-import api from '../../api';
-import { Job } from '../../types';
-import EditJobModal from './EditJobModal';
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Briefcase, Edit, Trash, AlertTriangle } from "lucide-react";
+import api from "../../api";
+import { Job } from "../../types";
+import { EditJobModal } from "./EditJobModal";
 import { useAuthStore } from "../../store/authStore";
 import { DashboardLayout } from "../../components/layout/DashboardLayout";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Skeleton } from "../../components/ui/Skeleton";
 
+const DeleteConfirmationModal = ({
+  onConfirm,
+  onCancel,
+}: {
+  onConfirm: () => void;
+  onCancel: () => void;
+}) => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <Card className="p-6 max-w-md w-full mx-4">
+      <div className="flex flex-col items-center text-center">
+        <AlertTriangle className="w-12 h-12 text-red-500 mb-4" />
+        <h3 className="text-xl font-semibold mb-2">Delete Job Posting</h3>
+        <p className="text-gray-600 mb-6">
+          Are you sure you want to delete this job posting? This action cannot
+          be undone.
+        </p>
+        <div className="flex gap-4 w-full">
+          <Button variant="outline" onClick={onCancel} className="flex-1">
+            Cancel
+          </Button>
+          <Button variant="outline" onClick={onConfirm} className="flex-1">
+            Confirm Delete
+          </Button>
+        </div>
+      </div>
+    </Card>
+  </motion.div>
+);
+
 const CompanyJobList: React.FC = () => {
   const { companyId } = useParams();
-  const { user } = useAuthStore(state => state);
+  const { user } = useAuthStore((state) => state);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
-  const [companyName, setCompanyName] = useState('');
+  const [companyName, setCompanyName] = useState("");
+  const [deletingJobId, setDeletingJobId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchCompanyJobs = async () => {
@@ -29,41 +63,39 @@ const CompanyJobList: React.FC = () => {
           setCompanyName(response.data[0].company_name);
         }
       } catch (error) {
-        console.error('Error fetching company jobs:', error);
+        console.error("Error fetching company jobs:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchCompanyJobs();
-  }, [companyId]);
+  }, [companyId, user?.id]);
 
   const handleDelete = async (jobId: number) => {
-    if (window.confirm('Are you sure you want to delete this job?')) {
-      try {
-        await api.delete(`/jobs/${jobId}/delete/`);
-        setJobs(jobs.filter(job => job.id !== jobId));
-      } catch (error) {
-        console.error('Error deleting job:', error);
-      }
+    try {
+      await api.delete(`/jobs/${jobId}/delete/`),
+        setJobs(jobs.filter((job) => job.id !== jobId));
+    } catch (error) {
+      console.error("Error deleting job:", error);
+    } finally {
+      setDeletingJobId(null);
     }
   };
 
   const handleUpdate = async (updatedJob: Job) => {
     try {
-      await api.put(`/jobs/${updatedJob.id}/`, updatedJob);
-      setJobs(jobs.map(job => job.id === updatedJob.id ? updatedJob : job));
+      await api.put(`/jobs/update/${updatedJob.id}/`, updatedJob);
+      setJobs(jobs.map((job) => (job.id === updatedJob.id ? updatedJob : job)));
       setSelectedJob(null);
     } catch (error) {
-      console.error('Error updating job:', error);
+      console.error("Error updating job:", error);
     }
   };
 
   return (
     <DashboardLayout>
-       <header
-        className="top-0 left-64 w-full bg-black bg-opacity-80 py-3 z-10 shadow-md"
-      >
+      <header className="top-0 left-64 w-full bg-black bg-opacity-80 py-3 z-10 shadow-md">
         <div className="max-w-7xl mx-auto px-4 flex justify-center">
           <h1 className="text-3xl font-extrabold text-yellow-300 tracking-wide">
             AI VIS
@@ -84,10 +116,12 @@ const CompanyJobList: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             className="text-3xl font-bold text-yellow-400"
           >
-            {companyName || 'Company'} Job Postings
+            {companyName || "Company"} Job Postings
           </motion.h1>
           {user?.id?.toString() === companyId && (
-            <Button onClick={() => window.location.href = '/company/post-job'}>
+            <Button
+              onClick={() => (window.location.href = "/company/post-job")}
+            >
               <Briefcase className="w-4 h-4 mr-2" />
               Post New Job
             </Button>
@@ -108,7 +142,7 @@ const CompanyJobList: React.FC = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="grid gap-4"
+            className="grid grid-cols-1 gap-4"
           >
             {jobs.map((job, index) => (
               <motion.div
@@ -117,23 +151,40 @@ const CompanyJobList: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="p-6 hover:shadow-lg transition-shadow">
+                <Card className="p-6 hover:shadow-lg transition-shadow h-80 w-full flex flex-col justify-between">
                   <div className="flex justify-between items-start">
                     <div className="space-y-2">
                       <h3 className="text-xl font-semibold text-gray-900">
                         {job.title}
                       </h3>
                       <div className="flex gap-4 text-sm text-gray-600">
-                        <p><span className="font-medium">Department:</span> {job.department}</p>
-                        <p><span className="font-medium">Location:</span> {job.location}</p>
-                        <p><span className="font-medium">Type:</span> {job.employment_type}</p>
+                        <p>
+                          <span className="font-medium">Department:</span>{" "}
+                          {job.department}
+                        </p>
+                        <p>
+                          <span className="font-medium">Location:</span>{" "}
+                          {job.location}
+                        </p>
+                        <p>
+                          <span className="font-medium">Type:</span>{" "}
+                          {job.employment_type}
+                        </p>
                       </div>
                       <div className="flex gap-4 text-sm text-gray-600">
-                        <p><span className="font-medium">Experience:</span> {job.experience_level}</p>
-                        {job.salary && <p><span className="font-medium">Salary:</span> {job.salary}</p>}
+                        <p>
+                          <span className="font-medium">Experience:</span>{" "}
+                          {job.experience_level}
+                        </p>
+                        {job.salary && (
+                          <p>
+                            <span className="font-medium">Salary:</span>{" "}
+                            {job.salary}
+                          </p>
+                        )}
                       </div>
                     </div>
-                    
+
                     {user?.id?.toString() === companyId && (
                       <div className="flex gap-2">
                         <Button
@@ -146,7 +197,7 @@ const CompanyJobList: React.FC = () => {
                         </Button>
                         <Button
                           variant="ghost"
-                          onClick={() => handleDelete(job.id)}
+                          onClick={() => setDeletingJobId(job.id)}
                           className="text-red-600 hover:bg-red-50"
                         >
                           <Trash className="w-4 h-4 mr-2" />
@@ -156,9 +207,13 @@ const CompanyJobList: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <h4 className="font-semibold text-gray-900 mb-2">Job Description</h4>
-                    <p className="text-gray-600 text-sm">{job.description}</p>
+                  <div className="mt-4 pt-4 border-t border-gray-100 overflow-y-auto max-h-32 pr-2">
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      Job Description
+                    </h4>
+                    <p className="text-gray-600 text-sm whitespace-pre-line">
+                      {job.description}
+                    </p>
                   </div>
                 </Card>
               </motion.div>
@@ -171,6 +226,13 @@ const CompanyJobList: React.FC = () => {
             job={selectedJob}
             onClose={() => setSelectedJob(null)}
             onSave={handleUpdate}
+          />
+        )}
+
+        {deletingJobId && (
+          <DeleteConfirmationModal
+            onConfirm={() => handleDelete(deletingJobId)}
+            onCancel={() => setDeletingJobId(null)}
           />
         )}
       </div>

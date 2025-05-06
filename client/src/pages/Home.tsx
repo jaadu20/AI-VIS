@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Briefcase, GraduationCap, ShieldCheck } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { About } from "./About";
+import home2png from "../assets/public/images/home2.png";
 
 export function Home() {
   const navigate = useNavigate();
@@ -16,10 +17,10 @@ export function Home() {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center text-white"
+      className="min-h-screen bg-cover bg-center text-white "
       style={{
         backgroundImage:
-          "url('https://t4.ftcdn.net/jpg/04/91/04/57/360_F_491045782_57jOG41DcPq4BxRwYqzLrhsddudrq2MM.jpg')",
+        "url('https://t4.ftcdn.net/jpg/04/91/04/57/360_F_491045782_57jOG41DcPq4BxRwYqzLrhsddudrq2MM.jpg')",
         backgroundAttachment: "fixed",
       }}
     >
@@ -73,9 +74,9 @@ export function Home() {
         <div className="md:w-1/2 text-center md:text-left mt-10">
           <h1 className="text-6xl font-bold text-yellow-300 leading-tight mb-6">
             Revolutionize Hiring with{" "}
-            <span className="text-indigo-400">AI VIS</span>
+            <span className="text-blue-200">AI VIS</span>
           </h1>
-          <div className="bg-black/50 rounded-lg p-4 mb-4">
+          <div className="bg-black/30 rounded-lg p-4 mb-4">
             <p className="text-xl text-gray-300 mb-4 leading-relaxed">
               AI-VIS is your ultimate recruitment partner, designed to simplify
               hiring and empower careers. For HR professionals, it identifies
@@ -94,9 +95,9 @@ export function Home() {
         </div>
         <div className="md:w-1/2 flex justify-center">
           <img
-            src="https://img.freepik.com/premium-photo/cute-robot-with-headset-notebook-exemplifies-automation-customer-service_795881-12769.jpg?w=900"
+            src ={home2png}
             alt="Cute robot with headset and notebook"
-            className="w-full max-w-md md:max-w-lg drop-shadow-2xl rounded-lg"
+            className="w-full l-full drop-shadow-2xl rounded-lg"
           />
         </div>
       </motion.div>

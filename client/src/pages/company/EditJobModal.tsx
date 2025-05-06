@@ -1,92 +1,209 @@
-// components/EditJobModal.tsx
-import React, { useState, useEffect } from 'react';
-import { Job } from '../../types';
+import { useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
+import { Job } from "../../types";
+import api from "../../api";
+import { Button } from "../../components/ui/Button";
+import { CustomModal } from "../../components/ui/CustomModal";
 
-interface EditJobModalProps {
+const experienceOptions = [
+  { label: "Entry Level", value: "entry" },
+  { label: "Mid Level", value: "mid" },
+  { label: "Senior Level", value: "senior" },
+  { label: "Lead", value: "lead" },
+  { label: "Director", value: "director" },
+];
+
+const employmentTypes = [
+  "Full-time",
+  "Part-time",
+  "Contract",
+  "Internship",
+  "Temporary",
+];
+
+export const EditJobModal = ({
+  job,
+  onClose,
+  onSave,
+}: {
   job: Job;
   onClose: () => void;
   onSave: (updatedJob: Job) => void;
-}
+}) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<Job>({
+    defaultValues: {
+      ...job,
+      employment_type: job.employment_type
+        .split("-")
+        .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+        .join(" "),
+    },
+  });
 
-const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSave }) => {
-  const [formData, setFormData] = useState<Job>(job);
-
-  useEffect(() => {
-    setFormData(job);
-  }, [job]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
+  const onSubmit = async (data: Job) => {
+    try {
+      const formattedData = {
+        ...data,
+        employment_type: data.employment_type.toLowerCase().replace(" ", "-"),
+      };
+      const response = await api.put(`/jobs/update/${job.id}/`, formattedData);
+      onSave(response.data);
+      toast.success("Job updated successfully!");
+      onClose();
+    } catch (error) {
+      toast.error("Failed to update job");
+      console.error("Update error:", error);
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg w-full max-w-lg">
-        <h3 className="text-xl font-bold mb-4">Edit Job Posting</h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Job Title</label>
+    <CustomModal isOpen={true} onClose={onClose}>
+      <h2 className="text-2xl font-bold mb-6">Edit Job Posting</h2>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Title */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Title *</label>
             <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
+              {...register("title", { required: "Title is required" })}
+              className={`input ${errors.title ? "input-error" : ""}`}
             />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Department</label>
-            <input
-              type="text"
-              name="department"
-              value={formData.department}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
+            {errors.title && (
+              <p className="text-red-500 text-sm">{errors.title.message}</p>
+            )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Location</label>
+          {/* Department */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Department *</label>
             <input
-              type="text"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
+              {...register("department", {
+                required: "Department is required",
+              })}
+              className={`input ${errors.department ? "input-error" : ""}`}
             />
+            {errors.department && (
+              <p className="text-red-500 text-sm">
+                {errors.department.message}
+              </p>
+            )}
           </div>
 
-          <div className="flex gap-4 justify-end mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Save Changes
-            </button>
+          {/* Location */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Location *</label>
+            <input
+              {...register("location", {
+                required: "Location is required",
+              })}
+              className={`input ${errors.location ? "input-error" : ""}`}
+            />
+            {errors.location && (
+              <p className="text-red-500 text-sm">{errors.location.message}</p>
+            )}
           </div>
-        </form>
-      </div>
-    </div>
+
+          {/* Employment Type */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">
+              Employment Type *
+            </label>
+            <select
+              {...register("employment_type", {
+                required: "Type is required",
+              })}
+              className={`input ${errors.employment_type ? "input-error" : ""}`}
+            >
+              {employmentTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Experience Level */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">
+              Experience Level *
+            </label>
+            <select
+              {...register("experience_level", {
+                required: "Experience is required",
+              })}
+              className={`input ${
+                errors.experience_level ? "input-error" : ""
+              }`}
+            >
+              {experienceOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Salary */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Salary</label>
+            <input {...register("salary")} className="input" />
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium">Description *</label>
+          <textarea
+            {...register("description", {
+              required: "Description is required",
+              minLength: { value: 50, message: "Minimum 50 characters" },
+            })}
+            rows={4}
+            className={`input ${errors.description ? "input-error" : ""}`}
+          />
+          {errors.description && (
+            <p className="text-red-500 text-sm">{errors.description.message}</p>
+          )}
+        </div>
+
+        {/* Requirements */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium">Requirements *</label>
+          <textarea
+            {...register("requirements", {
+              required: "Requirements are required",
+              minLength: { value: 50, message: "Minimum 50 characters" },
+            })}
+            rows={4}
+            className={`input ${errors.requirements ? "input-error" : ""}`}
+          />
+          {errors.requirements && (
+            <p className="text-red-500 text-sm">
+              {errors.requirements.message}
+            </p>
+          )}
+        </div>
+
+        {/* Benefits */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium">Benefits</label>
+          <textarea {...register("benefits")} rows={3} className="input" />
+        </div>
+
+        <div className="flex justify-end gap-4 pt-6">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
+      </form>
+    </CustomModal>
   );
 };
-
-export default EditJobModal;

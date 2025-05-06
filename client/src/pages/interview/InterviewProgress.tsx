@@ -146,7 +146,6 @@ export function InterviewProgress() {
     },
   ];
 
-  // Performance insights based on the data
   const strengths = [
     { title: "Excellent technical knowledge", score: 92 },
     { title: "Strong communication skills", score: 87 },
@@ -161,14 +160,12 @@ export function InterviewProgress() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 relative overflow-hidden">
-      {/* Floating background elements */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
         <div className="absolute top-20 left-20 w-48 h-48 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
         <div className="absolute bottom-20 right-20 w-64 h-64 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float-delayed"></div>
         <div className="absolute top-1/3 right-1/4 w-56 h-56 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
       </div>
 
-      {/* Navbar */}
       <header className="bg-white/90 backdrop-blur-md border-b border-indigo-100 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-16">
@@ -249,11 +246,8 @@ export function InterviewProgress() {
           </motion.div>
         )}
 
-        {/* Overview Tab */}
         {activeTab === "overview" && (
           <div className="space-y-8">
-            {/* Pie Chart for Overall Performance */}
-            {/* Score Distribution Card*/}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

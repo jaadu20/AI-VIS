@@ -32,9 +32,7 @@ class Job(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-   # In models.py - company_profile relation might not exist
 def __str__(self):
-    # Safer implementation:
     if hasattr(self.company, 'company_profile'):
         return f"{self.title} - {self.company.company_profile.company_name}"
     return f"{self.title} - {self.company.email}"

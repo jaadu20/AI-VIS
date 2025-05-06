@@ -6,6 +6,8 @@ from .permissions import IsCompanyUser
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from rest_framework import status
 
 class JobCreateView(generics.CreateAPIView):
     authentication_classes = [JWTAuthentication] 
@@ -49,18 +51,20 @@ class JobsByCompanyView(generics.ListAPIView):
         return Job.objects.filter(company__id=company_id).order_by('-created_at')
     
 class JobUpdateView(generics.UpdateAPIView):
-    # authentication_classes = [JWTAuthentication]
-    permission_classes = [AllowAny]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsCompanyUser]
     queryset = Job.objects.all()
     serializer_class = JobSerializer
 
     def get_queryset(self):
         return self.queryset.filter(company=self.request.user)
 
+    def perform_update(self, serializer):
+        serializer.save()
+
 class JobDeleteView(generics.DestroyAPIView):
-    # authentication_classes = [JWTAuthentication]
-    # permission_classes = [IsAuthenticated, IsCompanyUser]
-    permission_classes = [AllowAny]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsCompanyUser]
     queryset = Job.objects.all()
     
     def get_queryset(self):

@@ -67,31 +67,31 @@ export function AIInterview() {
 
   const startInterview = async () => {
     setShowPopup(false);
-    try {
-      const requestPayload = applicationId
-        ? { application_id: applicationId }
-        : {};
+    // try {
+    //   const requestPayload = applicationId
+    //     ? { application_id: applicationId }
+    //     : {};
 
-      const response = await api.post("/interviews/start/", requestPayload);
+    //   const response = await api.post("/interviews/start/", requestPayload);
 
-      if (!response.data?.interview_id || !response.data?.questions) {
-        throw new Error("Invalid interview initialization response");
-      }
+    //   if (!response.data?.interview_id || !response.data?.questions) {
+    //     throw new Error("Invalid interview initialization response");
+    //   }
 
-      setInterviewId(response.data.interview_id);
-      setQuestions(response.data.questions);
-      setCurrentQuestionIndex(0);
+    //   setInterviewId(response.data.interview_id);
+    //   setQuestions(response.data.questions);
+    //   setCurrentQuestionIndex(0);
 
-      await initializeMediaStream();
-      playQuestionAudio(response.data.questions[0].text);
-      startVideoRecording();
-    } catch (error) {
-      console.error("Interview start error:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to start interview"
-      );
-      setQuestions([]);
-    }
+    //   await initializeMediaStream();
+    //   playQuestionAudio(response.data.questions[0].text);
+    //   startVideoRecording();
+    // } catch (error) {
+    //   console.error("Interview start error:", error);
+    //   toast.error(
+    //     error instanceof Error ? error.message : "Failed to start interview"
+    //   );
+    //   setQuestions([]);
+    // }
   };
 
   const initializeMediaStream = async () => {
