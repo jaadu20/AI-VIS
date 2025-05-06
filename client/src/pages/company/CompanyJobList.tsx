@@ -222,11 +222,17 @@ const CompanyJobList: React.FC = () => {
         )}
 
         {selectedJob && (
-          <EditJobModal
-            job={selectedJob}
-            onClose={() => setSelectedJob(null)}
-            onSave={handleUpdate}
-          />
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="absolute inset-0" onClick={() => setSelectedJob(null)} />
+            <div className="relative z-10 w-full max-w-lg mx-auto p-6 bg-white rounded-lg shadow-lg">
+              <h2 className="text-xl font-semibold mb-4">Edit Job</h2>
+              <EditJobModal
+                job={selectedJob}
+                onClose={() => setSelectedJob(null)}
+                onSave={handleUpdate}
+              />
+            </div>
+          </div>
         )}
 
         {deletingJobId && (
