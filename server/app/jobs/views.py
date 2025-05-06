@@ -39,6 +39,15 @@ class JobDetailView(generics.RetrieveAPIView):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
     lookup_field = 'pk' 
+
+class JobsByCompanyView(generics.ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = JobSerializer
+
+    def get_queryset(self):
+        company_id = self.kwargs['company_id']
+        return Job.objects.filter(company__id=company_id).order_by('-created_at')
+    
 class JobUpdateView(generics.UpdateAPIView):
     # authentication_classes = [JWTAuthentication]
     permission_classes = [AllowAny]

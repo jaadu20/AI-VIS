@@ -43,7 +43,7 @@ export function Sidebar() {
         href: "/company/candidatesresults",
       },
       { icon: Building2, label: "Profile", href: `/company/profile/${user?.id}` },
-      { icon: FileText, label: "Job postings", href: "/company/jobs" },
+      { icon: FileText, label: "Job postings", href: `/jobs/company/${user?.id}` },
       { icon: Upload, label: "Interviews", href: "/job/update" },
     ],
     admin: [

@@ -32,6 +32,15 @@ export function CompanyProfile() {
 
   return (
     <DashboardLayout>
+       <header
+        className="top-0 left-64 w-full bg-black bg-opacity-80 py-3 z-10 shadow-md"
+      >
+        <div className="max-w-7xl mx-auto px-4 flex justify-center">
+          <h1 className="text-3xl font-extrabold text-yellow-300 tracking-wide">
+            AI VIS
+          </h1>
+        </div>
+      </header>
       <div
         className="p-8 min-h-screen"
         style={{

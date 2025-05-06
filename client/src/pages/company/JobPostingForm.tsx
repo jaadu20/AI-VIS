@@ -8,6 +8,7 @@ import { useState } from "react";
 import api from "../../api";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
+import { Briefcase } from "lucide-react";
 interface JobPostingForm {
   title: string;
   department: string;
@@ -38,7 +39,7 @@ const employmentTypes = [
 
 export function JobPostingForm() {
   const navigate = useNavigate();
-  const { user } = useAuthStore(); 
+  const { user } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     register,
@@ -77,7 +78,37 @@ export function JobPostingForm() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-8">
+      <header className="top-0 left-64 w-full bg-black bg-opacity-80 py-3 z-10 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 flex justify-center">
+          <h1 className="text-3xl font-extrabold text-yellow-300 tracking-wide">
+            AI VIS
+          </h1>
+        </div>
+      </header>
+      <div
+        className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-8"
+        style={{
+          backgroundImage:
+            "url('https://t4.ftcdn.net/jpg/04/91/04/57/360_F_491045782_57jOG41DcPq4BxRwYqzLrhsddudrq2MM.jpg')",
+          backgroundAttachment: "fixed",
+        }}
+      >
+        <div className="flex justify-between items-center mb-8">
+          <motion.h1
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-3xl font-bold text-yellow-400"
+          >
+            Create New Job Posting
+          </motion.h1>
+          <Button
+            onClick={() => (window.location.href = `/jobs/company/${user?.id}`)}
+          >
+            <Briefcase className="w-4 h-4 mr-2" />
+            All Job Postings
+          </Button>
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -86,9 +117,6 @@ export function JobPostingForm() {
           <Card className="max-w-4xl mx-auto">
             <div className="p-6 space-y-6">
               <div className="border-b border-gray-200 pb-4">
-                <h1 className="text-3xl font-bold text-blue-600">
-                  Create New Job Posting
-                </h1>
                 <p className="text-gray-600 mt-2">
                   Fill in the details below to create a new job opportunity
                 </p>

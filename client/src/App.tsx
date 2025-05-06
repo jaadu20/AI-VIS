@@ -126,7 +126,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/jobs/:jobId/apply" element={<JobApplicationPage />} />
         <Route
-          path="/company/jobs"
+          path="/jobs/company/:companyId"
           element={
             <PrivateRoute allowedRoles={["company"]}>
               <CompanyJobList />
