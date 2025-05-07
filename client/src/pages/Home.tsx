@@ -1,212 +1,375 @@
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { Briefcase, GraduationCap, ShieldCheck } from "lucide-react";
-import { Button } from "../components/ui/Button";
-import { About } from "./About";
-import home2png from "../assets/public/images/home2.png";
+  import { motion } from "framer-motion";
+  import { useNavigate } from "react-router-dom";
+  import {
+    Briefcase,
+    User,
+    Video,
+    Brain,
+    Mic,
+    Smile,
+    Clock,
+    BarChart,
+    Star,
+  } from "lucide-react";
+  import { Button } from "../components/ui/Button";
+  import interviewImg2 from "../assets/public/images/home2.png";
+  import wavePattern from "../assets/public/images/blue.jpg";
 
-export function Home() {
-  const navigate = useNavigate();
+  export function Home() {
+    const navigate = useNavigate();
+    const primaryBlue = "#2563eb";
+    const secondaryBlue = "#1d4ed8";
 
-  const scrollToSection = (id: string) => {
-    const section = document.getElementById(id);
-    if (section) {
-      section.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
-  return (
-    <div
-      className="min-h-screen bg-cover bg-center text-white "
-      style={{
-        backgroundImage:
-        "url('https://t4.ftcdn.net/jpg/04/91/04/57/360_F_491045782_57jOG41DcPq4BxRwYqzLrhsddudrq2MM.jpg')",
-        backgroundAttachment: "fixed",
-      }}
-    >
-      <header className="fixed w-full bg-black bg-opacity-100 py-4 z-10 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-          <h1 className="text-3xl font-extrabold text-yellow-300 tracking-wide">
-            AI VIS
-          </h1>
-          <nav className="space-x-6 text-lg">
-            <button
-              onClick={() => scrollToSection("hero")}
-              className="text-gray-200 hover:text-yellow-300"
-            >
-              Home
-            </button>
-            <button
-              onClick={() => navigate("/about")}
-              className="text-gray-200 hover:text-yellow-300"
-            >
-              About Us
-            </button>
-            <button
-              onClick={() => navigate("/getstarted")}
-              className="text-gray-200 hover:text-yellow-300"
-            >
-              Get Started
-            </button>
-            <button
-              onClick={() => navigate("/contact")}
-              className="text-gray-200 hover:text-yellow-300"
-            >
-              Contact
-            </button>
-          </nav>
-          <Button
-            className="bg-yellow-400 text-indigo-900 px-4 py-2 rounded-lg shadow-lg hover:bg-yellow-500"
-            onClick={() => navigate("/login?student")}
-          >
-            Login
-          </Button>
-        </div>
-      </header>
-
-      <motion.div
-        id="hero"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col-reverse md:flex-row items-center justify-between max-w-7xl mx-auto px-4 py-20"
-        style={{ paddingTop: "100px" }}
-      >
-        <div className="md:w-1/2 text-center md:text-left mt-10">
-          <h1 className="text-6xl font-bold text-yellow-300 leading-tight mb-6">
-            Revolutionize Hiring with{" "}
-            <span className="text-blue-200">AI VIS</span>
-          </h1>
-          <div className="bg-black/30 rounded-lg p-4 mb-4">
-            <p className="text-xl text-gray-300 mb-4 leading-relaxed">
-              AI-VIS is your ultimate recruitment partner, designed to simplify
-              hiring and empower careers. For HR professionals, it identifies
-              top talent with precision and fairness. For candidates, it
-              provides a platform to shine and showcase your potential.
-              Experience smarter, unbiased hiring and take the first step into
-              the future of recruitment today{" "}
-            </p>
-          </div>
-          <Button
-            onClick={() => navigate(`/signup`)}
-            className="bg-purple-600 text-white px-8 py-3 text-lg rounded-lg shadow-lg hover:bg-purple-700"
-          >
-            Register Now
-          </Button>
-        </div>
-        <div className="md:w-1/2 flex justify-center">
-          <img
-            src ={home2png}
-            alt="Cute robot with headset and notebook"
-            className="w-full l-full drop-shadow-2xl rounded-lg"
-          />
-        </div>
-      </motion.div>
-
-      <div id="pricing" className="max-w-7xl mx-auto px-4 py-16">
-        <h2 className="text-5xl font-bold text-center text-white mb-12">
-          Transforming the Way Talent Meets Opportunity
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[
-            {
-              title: "For Candidates",
-              description:
-                "Discover opportunities and showcase your skills to top companies.",
-              icon: GraduationCap,
-              action: () => navigate("/signup?type=student"),
-              color: "bg-blue-500",
-            },
-            {
-              title: "For HRs",
-              description:
-                "Find the perfect candidates using our AI-powered matching system.",
-              icon: Briefcase,
-              action: () => navigate("/signup?type=company"),
-              color: "bg-green-500",
-            },
-            {
-              title: "Admin Portal",
-              description:
-                "Manage and monitor platform activities and user interactions.",
-              icon: ShieldCheck,
-              action: () => navigate("/login?type=admin"),
-              color: "bg-purple-500",
-            },
-          ].map((item) => (
-            <motion.div
-              key={item.title}
-              whileHover={{ scale: 1.05 }}
-              className="bg-black bg-opacity-70 rounded-xl shadow-lg p-8 text-center hover:shadow-xl"
-            >
-              <div
-                className={`${item.color} w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6`}
+    return (
+      <div className="min-h-screen bg-white text-gray-800">
+        {/* Header */}
+        <header className="fixed w-full bg-white/95 backdrop-blur-md py-4 z-50 shadow-sm border-b border-blue-50">
+          <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <Video className="w-8 h-8 text-blue-600" />
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+                AI-VIS
+              </h1>
+            </div>
+            <nav className="hidden md:flex gap-8 items-center">
+              <button
+                onClick={() => navigate("/features")}
+                className="text-gray-600 hover:text-blue-600"
               >
-                <item.icon className="w-8 h-8 text-white" />
+                Features
+              </button>
+              <button
+                onClick={() => navigate("/how-it-works")}
+                className="text-gray-600 hover:text-blue-600"
+              >
+                How It Works
+              </button>
+              <div className="flex gap-4">
+                <Button
+                  onClick={() => navigate("/login?role=candidate")}
+                  className="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700"
+                >
+                  Candidate Login
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/login?role=company")}
+                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                >
+                  Company Login
+                </Button>
               </div>
-              <h2 className="text-2xl font-semibold text-white mb-4">
-                {item.title}
-              </h2>
-              <p className="text-gray-300 mb-6">{item.description}</p>
-              <Button
-                onClick={item.action}
-                className="w-full bg-indigo-500 text-white hover:bg-indigo-600"
-              >
-                Get Started
-              </Button>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      <div id="contact" className="bg-gray-900 text-gray-300 py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-8">Contact Us</h2>
-          <form className="max-w-lg mx-auto space-y-6">
-            <input
-              type="text"
-              placeholder="Your Name"
-              className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white"
-            />
-            <input
-              type="email"
-              placeholder="Your Email"
-              className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white"
-            />
-            <textarea
-              placeholder="Your Message"
-              className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white"
-            ></textarea>
-            <Button
-              className="w-full bg-yellow-400 text-indigo-900 px-4 py-2 rounded-lg shadow-lg hover:bg-yellow-500"
-              onClick={() => {
-                // Handle form submission
-                console.log("Form submitted");
-              }}
-            >
-              Send Message
-            </Button>
-          </form>
-        </div>
-      </div>
-
-      <footer className="bg-transparent text-gray-300 py-8">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
-          <p className="mb-4 md:mb-0 text-lg">
-            &copy; 2025 AI VIS. All rights reserved.
-          </p>
-          <div className="space-x-4 text-lg">
-            <a href="#" className="hover:text-yellow-400">
-              Privacy Policy
-            </a>
-            <a href="#" className="hover:text-yellow-400">
-              Terms of Service
-            </a>
-            <a href="#" className="hover:text-yellow-400">
-              Contact Us
-            </a>
+            </nav>
           </div>
-        </div>
-      </footer>
-    </div>
-  );
-}
+        </header>
+
+        {/* Hero Section */}
+        <section
+          className="pt-32 pb-20 px-4 bg-[url('/wave-pattern')] bg-cover"
+          style={{ backgroundImage: `url(${wavePattern})` }}
+        >
+          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12">
+            <div className="lg:w-1/2 space-y-8">
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-5xl font-bold text-gray-900"
+              >
+                Next-Gen AI-Powered
+                <span className="block text-blue-700 mt-2">
+                  Video Interview Platform
+                </span>
+              </motion.h1>
+              <p className="text-xl text-gray-600">
+                Revolutionize hiring with real-time AI analysis, dynamic
+                questioning, and comprehensive candidate evaluation through
+                intelligent video interviews.
+              </p>
+              <div className="flex gap-4">
+                <Button
+                  className="bg-blue-600 text-white px-8 py-4 text-lg hover:bg-blue-700"
+                  onClick={() => navigate("/signup?role=candidate")}
+                >
+                  Start as Candidate
+                </Button>
+                <Button
+                  variant="outline"
+                  className="text-blue-600 border-blue-600 px-8 py-4 text-lg hover:bg-blue-50"
+                  onClick={() => navigate("/signup?role=company")}
+                >
+                  Hire as Company
+                </Button>
+              </div>
+            </div>
+            <div className="lg:w-1/2 mb-24">
+              <img
+                src={interviewImg2}
+                alt="AI video interview interface"
+                className="rounded-l w-full h-auto md-2"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Key Features */}
+        <section className="py-20 bg-blue-50">
+          <div className="max-w-7xl mx-auto px-4">
+            <h2 className="text-4xl font-bold text-center mb-16 text-blue-900">
+              Smart Interview Features
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                {
+                  icon: Brain,
+                  title: "Dynamic Question Generation",
+                  desc: "AI-powered questions adapt based on previous answers using LLaMA-3 model",
+                },
+                {
+                  icon: Smile,
+                  title: "Emotion & Sentiment Analysis",
+                  desc: "Real-time facial emotion and voice sentiment detection",
+                },
+                {
+                  icon: Mic,
+                  title: "Real-Time Transcription",
+                  desc: "Live speech-to-text conversion with Azure AI",
+                },
+                {
+                  icon: BarChart,
+                  title: "Comprehensive Scoring",
+                  desc: "Integrated scoring system evaluating answers, emotion, and voice",
+                },
+                {
+                  icon: Clock,
+                  title: "Instant Scheduling",
+                  desc: "Flexible interview scheduling with calendar integration",
+                },
+                {
+                  icon: Star,
+                  title: "Bias-Free Evaluation",
+                  desc: "Objective scoring system eliminating human bias",
+                },
+              ].map((feature, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ y: -5 }}
+                  className="bg-white p-8 rounded-xl shadow-lg"
+                >
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+                    <feature.icon className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-4 text-blue-900">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-600">{feature.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works */}
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <h2 className="text-4xl font-bold text-blue-900 mb-8">
+                Intelligent Interview Flow
+              </h2>
+              <div className="space-y-6">
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center">
+                    1
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-blue-900">
+                      CV Screening
+                    </h3>
+                    <p className="text-gray-600">
+                      AI analysis matches CV with job requirements
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center">
+                    2
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-blue-900">
+                      Dynamic Interview
+                    </h3>
+                    <p className="text-gray-600">
+                      15 adaptive questions with AI-generated follow-ups
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center">
+                    3
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-blue-900">
+                      Real-Time Analysis
+                    </h3>
+                    <p className="text-gray-600">
+                      Continuous emotion and sentiment tracking
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center">
+                    4
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-blue-900">
+                      Instant Results
+                    </h3>
+                    <p className="text-gray-600">
+                      Detailed analytics dashboard for candidates and companies
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-blue-600 to-blue-400 p-8 rounded-2xl shadow-2xl">
+              <div className="bg-white p-6 rounded-xl shadow-lg">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
+                    <User className="w-6 h-6 text-blue-600" />
+                    <div>
+                      <h4 className="font-semibold">Candidate View</h4>
+                      <p className="text-sm text-gray-600">
+                        Real-time transcription & question editing
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
+                    <BarChart className="w-6 h-6 text-blue-600" />
+                    <div>
+                      <h4 className="font-semibold">Live Analytics</h4>
+                      <p className="text-sm text-gray-600">
+                        Performance metrics during interview
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
+                    <Brain className="w-6 h-6 text-blue-600" />
+                    <div>
+                      <h4 className="font-semibold">AI Assistance</h4>
+                      <p className="text-sm text-gray-600">
+                        Smart question suggestions
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="bg-gradient-to-r from-blue-600 to-blue-500 text-white py-20">
+          <div className="max-w-4xl mx-auto px-4 text-center">
+            <h2 className="text-4xl font-bold mb-6">
+              Ready to Transform Hiring?
+            </h2>
+            <p className="text-xl mb-8">
+              Join the future of AI-driven recruitment today
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button
+                className="bg-white text-blue-600 px-12 py-4 hover:bg-blue-50"
+                onClick={() => navigate("/signup")}
+              >
+                Start Free Trial
+              </Button>
+              <Button
+                variant="outline"
+                className="border-white text-white hover:bg-white/10"
+                onClick={() => navigate("/demo")}
+              >
+                Live Demo
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="bg-blue-900 text-white py-12">
+          <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Video className="w-8 h-8 text-white" />
+                <span className="text-xl font-bold">AI-VIS</span>
+              </div>
+              <p className="text-sm text-blue-200">
+                Innovating recruitment through AI-powered video interviews
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Candidates</h4>
+              <ul className="space-y-2 text-sm text-blue-200">
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Find Jobs
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Interview Prep
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Profile Settings
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Companies</h4>
+              <ul className="space-y-2 text-sm text-blue-200">
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Post Jobs
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Candidate Analytics
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Team Management
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Legal</h4>
+              <ul className="space-y-2 text-sm text-blue-200">
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Terms of Service
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Security
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-blue-800 mt-12 pt-8 text-center text-sm text-blue-300">
+            © 2024 AI-VIS. All rights reserved.
+          </div>
+        </footer>
+      </div>
+    );
+  }
