@@ -370,12 +370,12 @@ export function Signup() {
                           required: "Phone number is required",
                           pattern: {
                             value:
-                              /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/,
+                              /^[+][0-9]?/,
                             message: "Invalid phone number format",
                           },
                         })}
                         type="tel"
-                        placeholder="+1 (555) 555-5555"
+                        placeholder="+92 300 1234567"
                         className="pl-10 block w-full border border-gray-200 rounded-lg py-3 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 bg-white"
                       />
                     </div>
