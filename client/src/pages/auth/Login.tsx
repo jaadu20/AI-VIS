@@ -108,19 +108,19 @@ export function Login() {
             </h1>
           </div>
           <nav className="hidden md:flex gap-8 items-center">
-            {["Features", "How It Works", "Pricing", "Enterprise"].map(
+            {["Home", "How It Works", "Pricing", "Contact Us"].map(
               (label, i) => (
                 <motion.button
                   key={i}
                   onClick={() =>
                     navigate(
-                      label === "Features"
+                      label === "Home"
                         ? "/features"
                         : label === "How It Works"
-                        ? "/how-it-works"
+                        ? "/About"
                         : label === "Pricing"
                         ? "/pricing"
-                        : "/enterprise"
+                        : "/ContactUs"
                     )
                   }
                   className="text-gray-600 hover:text-blue-600 font-medium relative after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-blue-600 hover:after:w-full hover:after:transition-width after:transition-all"

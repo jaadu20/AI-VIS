@@ -20,6 +20,7 @@ import {
 import { Button } from "../components/ui/Button";
 import interviewImg2 from "../assets/public/images/home2.png";
 import wavePattern from "../assets/public/images/blue.jpg";
+import { About }  from "./About";
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -48,13 +49,13 @@ export function Home() {
             </h1>
           </div>
           <nav className="hidden md:flex gap-8 items-center">
-            {["Features", "How It Works", "Pricing", "Enterprise"].map((label, i) => (
+            {["Home", "How It Works", "Pricing", "Contact Us"].map((label, i) => (
               <motion.button
                 key={i}
                 onClick={() =>
-                  navigate(label === "Features" ? "/features" : 
-                          label === "How It Works" ? "/how-it-works" : 
-                          label === "Pricing" ? "/pricing" : "/enterprise")
+                  navigate(label === "Home" ? "/features" : 
+                          label === "How It Works" ? "/About" : 
+                          label === "Pricing" ? "/pricing" : "/ContactUs")
                 }
                 className="text-gray-600 hover:text-blue-600 font-medium relative after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-blue-600 hover:after:w-full hover:after:transition-width after:transition-all"
               >
