@@ -23,6 +23,7 @@ import { CompanyProfile } from "./pages/company/CompanyProfile";
 import { Getstarted } from "./pages/Getstarted";
 import { JobApplicationPage } from "./pages/candidate/JobApplicationPage";
 // import ProtectedRoute from "./components/ProtectedRoute";
+import { Pricing } from "./pages/Pricing";
 import CompanyJobList from "./pages/company/CompanyJobList";
 
 function PrivateRoute({
@@ -57,6 +58,7 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/getstarted" element={<Getstarted />} />
         <Route path="/forgetpass" element={<Forgetpass />} />
+        <Route path="/pricing" element={<Pricing/>} />
         <Route
           path="/reset-password/:uidb64/:token"
           element={<ResetPassword />}

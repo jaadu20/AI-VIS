@@ -134,3 +134,4 @@ Join us in transforming the recruitment process into something smarter, faster, 
   );
 }
 
+export default About;

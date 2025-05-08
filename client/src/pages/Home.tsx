@@ -53,9 +53,9 @@ export function Home() {
               <motion.button
                 key={i}
                 onClick={() =>
-                  navigate(label === "Home" ? "/features" : 
-                          label === "How It Works" ? "/About" : 
-                          label === "Pricing" ? "/pricing" : "/ContactUs")
+                  navigate(label === "Home" ? "/" : 
+                          label === "How It Works" ? "/about" : 
+                          label === "Pricing" ? "/pricing" : "/contact")
                 }
                 className="text-gray-600 hover:text-blue-600 font-medium relative after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-blue-600 hover:after:w-full hover:after:transition-width after:transition-all"
               >
