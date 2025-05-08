@@ -472,7 +472,7 @@ export function About() {
               {
                 name: "Muarij Shakeel",
                 role: "Director of Research",
-                bio: "Ph.D. in Computational Linguistics with expertise in sentiment analysis and emotion recognition algorithms.",
+                bio: "Expertise in sentiment analysis and emotion recognition algorithms.",
                 specialty: "Customer Experience",
               },
             ].map((member, i) => (
