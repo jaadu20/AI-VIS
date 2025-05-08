@@ -20,9 +20,7 @@ import { Forgetpass } from "./pages/auth/ForgetPassword";
 import { ResetPassword } from "./pages/auth/ResetPassword";
 import { CandidatesResult } from "./pages/company/CandidatesResult";
 import { CompanyProfile } from "./pages/company/CompanyProfile";
-import { Getstarted } from "./pages/Getstarted";
 import { JobApplicationPage } from "./pages/candidate/JobApplicationPage";
-// import ProtectedRoute from "./components/ProtectedRoute";
 import { Pricing } from "./pages/Pricing";
 import CompanyJobList from "./pages/company/CompanyJobList";
 
@@ -56,7 +54,6 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/getstarted" element={<Getstarted />} />
         <Route path="/forgetpass" element={<Forgetpass />} />
         <Route path="/pricing" element={<Pricing/>} />
         <Route

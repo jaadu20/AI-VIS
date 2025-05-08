@@ -162,7 +162,7 @@ export function Home() {
                 ))}
               </div>
               <p className="ml-4 text-sm text-gray-600">
-                <span className="font-medium">500+ companies</span> trust AI-VIS for hiring
+                <span className="font-medium">1+ companies</span> trust AI-VIS for hiring
               </p>
             </div>
           </motion.div>
@@ -189,7 +189,7 @@ export function Home() {
       </section>
 
       {/* Logos Section */}
-      <section className="py-12 border-y border-gray-200 bg-gray-50">
+      {/* <section className="py-12 border-y border-gray-200 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">
           <p className="text-center text-gray-500 mb-8 text-sm font-medium uppercase tracking-wide">
             Trusted by leading companies worldwide
@@ -202,7 +202,7 @@ export function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Key Features with staggered animation */}
       <section className="py-24 bg-gradient-to-b from-white to-blue-50">
@@ -643,7 +643,7 @@ export function Home() {
       </motion.footer>
       
       {/* Add a style tag for the grid pattern */}
-      <style jsx>{`
+      <style>{`
         .bg-grid-pattern {
           background-image: radial-gradient(circle, #3b82f6 1px, transparent 1px);
           background-size: 30px 30px;

@@ -197,7 +197,7 @@ export function Contact() {
                   <label className="text-sm font-medium text-gray-700" htmlFor="message">Your Message</label>
                   <textarea 
                     id="message"
-                    rows="5"
+                    rows={5}
                     className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Please provide details about your inquiry..."
                   ></textarea>
@@ -483,7 +483,7 @@ export function Contact() {
       </motion.footer>
       
       {/* Add a style tag for the grid pattern */}
-      <style jsx>{`
+      <style>{`
         .bg-grid-pattern {
           background-image: radial-gradient(circle, #3b82f6 1px, transparent 1px);
           background-size: 30px 30px;

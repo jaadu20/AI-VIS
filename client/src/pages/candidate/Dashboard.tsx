@@ -625,7 +625,7 @@ export function CandidateDashboard() {
       </motion.div>
 
       {/* Style for removing scrollbar but keeping functionality */}
-      <style jsx>{`
+      <style>{`
         .no-scrollbar {
           -ms-overflow-style: none;  /* IE and Edge */
           scrollbar-width: none;  /* Firefox */

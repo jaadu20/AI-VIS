@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import teamImg from "../assets/public/images/aibot.jpg";
-import officeImg from "../assets/public/images/blue.jpg";
+import officeImg from "../assets/public/images/office.png";
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 30 },
