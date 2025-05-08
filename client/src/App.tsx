@@ -98,7 +98,7 @@ function App() {
 
         {/* Candidate Routes */}
         <Route
-          path="/candidate/:Id/dashboard"
+          path="/candidate/dashboard"
           element={
             <PrivateRoute allowedRoles={["candidate"]}>
               <CandidateDashboard />
