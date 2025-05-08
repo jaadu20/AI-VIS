@@ -19,7 +19,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { Button } from "../components/ui/Button";
-import teamImg from "../assets/public/images/aibot.jpg";
+import teamImg from "../assets/public/images/team.png";
 import officeImg from "../assets/public/images/office.png";
 
 const sectionVariants = {

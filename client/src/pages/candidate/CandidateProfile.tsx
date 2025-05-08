@@ -322,7 +322,7 @@ export function CandidateProfile() {
                           <Button
                             type="button"
                             onClick={() => remove(index)}
-                            variant="destructive"
+                            variant="ghost"
                             size="sm"
                           >
                             <Trash className="h-4 w-4 mr-2" />
