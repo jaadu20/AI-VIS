@@ -349,7 +349,7 @@ export function CandidateDashboard() {
               {jobCategories.map((category, index) => (
                 <motion.button
                   key={index}
-                  whileHover={{ y: -2 }}
+                  // whileHover={{ y: -2 }}
                   onClick={() => setActiveCategory(category)}
                   className={`px-4 py-2 rounded-full whitespace-nowrap ${
                     activeCategory === category
