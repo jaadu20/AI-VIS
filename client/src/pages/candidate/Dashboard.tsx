@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Briefcase,
@@ -20,7 +20,7 @@ import {
   TrendingUp,
   Shield,
   ChevronDown,
-  BookOpen
+  BookOpen,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -38,7 +38,7 @@ interface Job {
   employment_type: string;
   salary: string;
   description: string;
-  requirements: string;
+  requirements: string[];
   created_at: string;
   company_name: string;
   match_percentage?: number;
@@ -50,9 +50,9 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
-    }
-  }
+      staggerChildren: 0.1,
+    },
+  },
 };
 
 const itemVariants = {
@@ -63,9 +63,9 @@ const itemVariants = {
     transition: {
       type: "spring",
       stiffness: 100,
-      damping: 15
-    }
-  }
+      damping: 15,
+    },
+  },
 };
 
 // Categories for job filtering
@@ -75,7 +75,7 @@ const jobCategories = [
   "Finance",
   "Marketing",
   "Healthcare",
-  "Education"
+  "Education",
 ];
 
 export function CandidateDashboard() {
@@ -87,24 +87,24 @@ export function CandidateDashboard() {
   const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState("All Jobs");
   const [showFilters, setShowFilters] = useState(false);
-  
+
   // Mock data for dashboard stats
   const dashboardStats = {
     applicationsSubmitted: 7,
     interviewsScheduled: 3,
     savedJobs: 12,
-    profileViews: 24
+    profileViews: 24,
   };
 
-  // useEffect(() => {
-  //   if (!user) {
-  //     navigate("/login");
-  //     toast.error("Please login to access dashboard");
-  //   } else if (user?.role !== "candidate") {
-  //     navigate("/");
-  //     toast.error("Unauthorized access");
-  //   }
-  // }, [user, navigate]);
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+      toast.error("Please login to access dashboard");
+    } else if (user?.role !== "candidate") {
+      navigate("/");
+      toast.error("Unauthorized access");
+    }
+  }, [user, navigate]);
 
   const fetchJobs = async () => {
     try {
@@ -126,8 +126,7 @@ export function CandidateDashboard() {
           ? job.requirements
           : job.requirements?.split("\n").filter(Boolean) || [],
         company_name: job.company_name || "Company",
-        // Add random match percentage for design purposes
-        match_percentage: Math.floor(Math.random() * 51) + 50
+        match_percentage: Math.floor(Math.random() * 51) + 50,
       }));
 
       setJobs(transformedJobs);
@@ -145,13 +144,18 @@ export function CandidateDashboard() {
     fetchJobs();
   }, []);
 
-  const filteredJobs = jobs.filter(
-    (job) =>
-      (activeCategory === "All Jobs" || job.employment_type.includes(activeCategory.toLowerCase())) &&
-      (job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-       job.company_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-       job.location.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Memoize filtered jobs for better performance
+  const filteredJobs = useMemo(() => {
+    const searchQueryLower = searchQuery.toLowerCase();
+    return jobs.filter(
+      (job) =>
+        (activeCategory === "All Jobs" ||
+          job.employment_type.includes(activeCategory.toLowerCase())) &&
+        (job.title.toLowerCase().includes(searchQueryLower) ||
+          job.company_name.toLowerCase().includes(searchQueryLower) ||
+          job.location.toLowerCase().includes(searchQueryLower))
+    );
+  }, [jobs, activeCategory, searchQuery]);
 
   const formatEmploymentType = (type: string) => {
     return type.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -161,11 +165,11 @@ export function CandidateDashboard() {
     navigate(`/jobs/${jobId}/apply`);
   };
 
-  // const getMatchColor = (percentage: number) => {
-  //   if (percentage >= 80) return "text-green-600";
-  //   if (percentage >= 60) return "text-blue-600";
-  //   return "text-orange-500";
-  // };
+  const getMatchColor = (percentage: number) => {
+    if (percentage >= 80) return "text-green-600";
+    if (percentage >= 60) return "text-blue-600";
+    return "text-orange-500";
+  };
 
   if (error) {
     return (
@@ -210,7 +214,7 @@ export function CandidateDashboard() {
             </div>
           </div>
         </nav>
-        
+
         <div className="pt-32 pb-16 px-4 max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -222,8 +226,8 @@ export function CandidateDashboard() {
               Error Loading Jobs
             </h2>
             <p className="text-gray-600 mb-6">{error}</p>
-            <Button 
-              onClick={fetchJobs} 
+            <Button
+              onClick={fetchJobs}
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
             >
               Retry
@@ -300,17 +304,42 @@ export function CandidateDashboard() {
             transition={{ delay: 0.2 }}
             className="mb-8"
           >
-            <h1 className="text-3xl font-bold text-gray-900 mb-6">Your Dashboard</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-6">
+              Your Dashboard
+            </h1>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               {[
-                { icon: Briefcase, label: "Applications", value: dashboardStats.applicationsSubmitted, color: "blue" },
-                { icon: Calendar, label: "Interviews", value: dashboardStats.interviewsScheduled, color: "green" },
-                { icon: Star, label: "Saved Jobs", value: dashboardStats.savedJobs, color: "purple" },
-                { icon: TrendingUp, label: "Profile Views", value: dashboardStats.profileViews, color: "orange" }
+                {
+                  icon: Briefcase,
+                  label: "Applications",
+                  value: dashboardStats.applicationsSubmitted,
+                  color: "blue",
+                },
+                {
+                  icon: Calendar,
+                  label: "Interviews",
+                  value: dashboardStats.interviewsScheduled,
+                  color: "green",
+                },
+                {
+                  icon: Star,
+                  label: "Saved Jobs",
+                  value: dashboardStats.savedJobs,
+                  color: "purple",
+                },
+                {
+                  icon: TrendingUp,
+                  label: "Profile Views",
+                  value: dashboardStats.profileViews,
+                  color: "orange",
+                },
               ].map((stat, index) => (
                 <motion.div
                   key={index}
-                  whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.15)" }}
+                  whileHover={{
+                    y: -5,
+                    boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.15)",
+                  }}
                   className="bg-white rounded-xl shadow-md border border-gray-100 p-6 flex items-center"
                 >
                   <div className={`bg-${stat.color}-100 p-3 rounded-xl mr-4`}>
@@ -318,7 +347,9 @@ export function CandidateDashboard() {
                   </div>
                   <div>
                     <h3 className="text-gray-500 text-sm">{stat.label}</h3>
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {stat.value}
+                    </p>
                   </div>
                 </motion.div>
               ))}
@@ -344,7 +375,7 @@ export function CandidateDashboard() {
                 <ChevronDown className="h-4 w-4 ml-1" />
               </Button>
             </div>
-            
+
             <div className="flex overflow-x-auto pb-2 gap-2 no-scrollbar">
               {jobCategories.map((category, index) => (
                 <motion.button
@@ -372,7 +403,9 @@ export function CandidateDashboard() {
               >
                 <div className="grid md:grid-cols-3 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Salary Range</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Salary Range
+                    </label>
                     <div className="flex items-center gap-2">
                       <Input placeholder="Min" className="w-full" />
                       <span>-</span>
@@ -380,12 +413,14 @@ export function CandidateDashboard() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Experience Level</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Experience Level
+                    </label>
                     <div className="flex gap-2 flex-wrap">
                       {["Entry", "Mid", "Senior", "Executive"].map((level) => (
-                        <Button 
+                        <Button
                           key={level}
-                          variant="outline" 
+                          variant="outline"
                           className="text-sm py-1 px-3 border-gray-200"
                         >
                           {level}
@@ -394,22 +429,28 @@ export function CandidateDashboard() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Date Posted</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Date Posted
+                    </label>
                     <div className="flex gap-2 flex-wrap">
-                      {["Today", "This Week", "This Month", "Any Time"].map((time) => (
-                        <Button 
-                          key={time}
-                          variant="outline" 
-                          className="text-sm py-1 px-3 border-gray-200"
-                        >
-                          {time}
-                        </Button>
-                      ))}
+                      {["Today", "This Week", "This Month", "Any Time"].map(
+                        (time) => (
+                          <Button
+                            key={time}
+                            variant="outline"
+                            className="text-sm py-1 px-3 border-gray-200"
+                          >
+                            {time}
+                          </Button>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
                 <div className="flex justify-end mt-6">
-                  <Button className="bg-blue-600 text-white">Apply Filters</Button>
+                  <Button className="bg-blue-600 text-white">
+                    Apply Filters
+                  </Button>
                 </div>
               </motion.div>
             )}
@@ -467,9 +508,10 @@ export function CandidateDashboard() {
                 <motion.div
                   key={job.id}
                   variants={itemVariants}
-                  whileHover={{ 
-                    y: -8, 
-                    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" 
+                  whileHover={{
+                    y: -8,
+                    boxShadow:
+                      "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
                   }}
                   className="bg-white rounded-xl shadow-md border border-gray-100 hover:border-blue-200 transition-all duration-300 flex flex-col h-full overflow-hidden"
                 >
@@ -499,7 +541,7 @@ export function CandidateDashboard() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex flex-wrap gap-3">
                       <span className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full capitalize flex items-center">
                         <Briefcase className="h-3 w-3 mr-1" />
@@ -533,32 +575,35 @@ export function CandidateDashboard() {
                       </p>
                     </div>
 
-                    {Array.isArray(job.requirements) && job.requirements.length > 0 && (
-                      <div className="mt-4">
-                        <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                          <CheckCircle className="h-4 w-4 text-blue-500 mr-1" />
-                          Key Requirements
-                        </h3>
-                        <ul className="space-y-1">
-                          {job.requirements.slice(0, 2).map((req: string, index: number) => (
-                            <li
-                              key={index}
-                              className="text-gray-600 text-sm flex items-start"
-                            >
-                              <div className="h-5 w-5 flex items-center justify-center flex-shrink-0">
-                                <div className="h-1.5 w-1.5 bg-blue-500 rounded-full"></div>
-                              </div>
-                              <span className="line-clamp-1">{req}</span>
-                            </li>
-                          ))}
-                          {job.requirements.length > 2 && (
-                            <li className="text-blue-500 text-xs font-medium">
-                              +{job.requirements.length - 2} more requirements
-                            </li>
-                          )}
-                        </ul>
-                      </div>
-                    )}
+                    {Array.isArray(job.requirements) &&
+                      job.requirements.length > 0 && (
+                        <div className="mt-4">
+                          <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                            <CheckCircle className="h-4 w-4 text-blue-500 mr-1" />
+                            Key Requirements
+                          </h3>
+                          <ul className="space-y-1">
+                            {job.requirements
+                              .slice(0, 2)
+                              .map((req: string, index: number) => (
+                                <li
+                                  key={index}
+                                  className="text-gray-600 text-sm flex items-start"
+                                >
+                                  <div className="h-5 w-5 flex items-center justify-center flex-shrink-0">
+                                    <div className="h-1.5 w-1.5 bg-blue-500 rounded-full"></div>
+                                  </div>
+                                  <span className="line-clamp-1">{req}</span>
+                                </li>
+                              ))}
+                            {job.requirements.length > 2 && (
+                              <li className="text-blue-500 text-xs font-medium">
+                                +{job.requirements.length - 2} more requirements
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
 
                     <div className="pt-4 mt-auto flex gap-3">
                       <Button
@@ -593,7 +638,8 @@ export function CandidateDashboard() {
                 No jobs found matching "{searchQuery}"
               </h3>
               <p className="mt-2 text-gray-600 max-w-md mx-auto">
-                Try adjusting your search terms or filters to find more opportunities
+                Try adjusting your search terms or filters to find more
+                opportunities
               </p>
               <Button
                 className="mt-6 bg-blue-600 hover:bg-blue-700 text-white"
