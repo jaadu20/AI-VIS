@@ -211,18 +211,15 @@ export function CandidateProfile() {
   };
 
   const handleLogout = () => {
-    // Close the dialog
-    setShowLogoutDialog(false);
-
-    // Perform logout action
-    api
-      .post("/api/auth/logout/")
+    api.post("/api/auth/logout/")
       .then(() => {
-        toast.success("Logged out successfully");
+        // Remove tokens from storage
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
         navigate("/");
       })
-      .catch(() => {
-        toast.error("Failed to logout");
+      .catch(error => {
+        console.error("Logout error:", error);
       });
   };
 

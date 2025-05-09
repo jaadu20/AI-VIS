@@ -6,6 +6,7 @@ from .views import (
     ForgotPasswordView,
     ResetPasswordView, 
     CandidateProfileView,
+    LogoutView, 
 )
 
 urlpatterns = [
@@ -13,7 +14,7 @@ urlpatterns = [
     path('auth/login/', MyTokenObtainPairView.as_view(), name='login'),
     path('auth/forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
     path('auth/reset-password/', ResetPasswordView.as_view(), name='reset-password'),
-
+    path('auth/logout/', LogoutView.as_view(), name='logout'),  # New
     path('candidate/profile/', CandidateProfileView.as_view(), name='candidate-profile'),
 ]
     
