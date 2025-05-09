@@ -79,6 +79,10 @@ const jobCategories = [
 ];
 
 export function CandidateDashboard() {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
+
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -95,6 +99,10 @@ export function CandidateDashboard() {
     savedJobs: 12,
     profileViews: 24,
   };
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
 
   useEffect(() => {
     if (!user) {

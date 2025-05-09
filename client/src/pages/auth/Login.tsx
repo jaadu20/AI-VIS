@@ -9,6 +9,7 @@ import { Footer } from "../../components/Footer";
 import api from "../../api";
 import { toast, Toaster } from "react-hot-toast";
 import { jwtDecode } from "jwt-decode";
+import axios from "axios";
 
 interface LoginForm {
   email: string;
@@ -81,7 +82,7 @@ export function Login() {
       toast.success("Login successful!");
     } catch (err) {
       let errorMessage = "Login failed. Please check your credentials.";
-      if (err.response?.status === 401) {
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
         errorMessage = "Invalid email or password";
       }
       setError(errorMessage);

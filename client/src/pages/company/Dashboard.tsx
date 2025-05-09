@@ -236,7 +236,7 @@ export function CompanyDashboard() {
         </div>
       </motion.header>
 
-      <main className="py-6 px-6">
+      <main className="py-6 px-6 bg-gradient-to-b from-blue-50 to-white">
         <div className="max-w-7xl mx-auto">
           {/* Dashboard Welcome Banner */}
           <motion.div

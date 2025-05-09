@@ -157,7 +157,7 @@ export function JobPostingForm() {
         </div>
       </motion.header>
 
-      <main className="py-6 px-6">
+      <main className="py-6 px-6 bg-gradient-to-b from-blue-50 to-white">
         <div className="max-w-7xl mx-auto">
           {/* Banner */}
           <motion.div

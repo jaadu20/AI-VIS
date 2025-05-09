@@ -223,7 +223,7 @@ export function CandidatesResult() {
         </div>
       </motion.header>
 
-      <main className="py-6 px-6 bg-gray-50 min-h-screen">
+      <main className="py-6 px-6 bg-gray-50 min-h-screen bg-gradient-to-b from-blue-50 to-white">
         <div className="max-w-7xl mx-auto">
           {/* Stats Banner */}
           <motion.div
