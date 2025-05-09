@@ -264,11 +264,11 @@ export function JobApplicationPage() {
     // }
   };
 
-  const getMatchColor = (percentage: number) => {
-    if (percentage >= 80) return "text-green-600";
-    if (percentage >= 60) return "text-blue-600";
-    return "text-orange-500";
-  };
+  // const getMatchColor = (percentage: number) => {
+  //   if (percentage >= 80) return "text-green-600";
+  //   if (percentage >= 60) return "text-blue-600";
+  //   return "text-orange-500";
+  // };
 
   if (isLoading) {
     return (
@@ -476,14 +476,14 @@ export function JobApplicationPage() {
                       </div>
                     </div>
 
-                    {job.match_percentage && (
+                    {/* {job.match_percentage && (
                       <div className="mt-4 md:mt-0 flex items-center justify-center px-4 py-2 bg-green-50 rounded-full">
                         <Shield className="h-5 w-5 text-green-600 mr-2" />
                         <span className="font-semibold text-green-700">
                           {job.match_percentage}% Match
                         </span>
                       </div>
-                    )}
+                    )} */}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
@@ -612,7 +612,7 @@ export function JobApplicationPage() {
                               {simJob.company_name}
                             </p>
                           </div>
-                          {simJob.match_percentage && (
+                          {/* {simJob.match_percentage && (
                             <div
                               className={`flex items-center ${getMatchColor(
                                 simJob.match_percentage
@@ -623,7 +623,7 @@ export function JobApplicationPage() {
                                 {simJob.match_percentage}% Match
                               </span>
                             </div>
-                          )}
+                          )} */}
                         </div>
 
                         <div className="flex flex-wrap gap-2 mb-3">

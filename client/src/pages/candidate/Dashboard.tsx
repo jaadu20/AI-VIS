@@ -161,11 +161,11 @@ export function CandidateDashboard() {
     navigate(`/jobs/${jobId}/apply`);
   };
 
-  const getMatchColor = (percentage: number) => {
-    if (percentage >= 80) return "text-green-600";
-    if (percentage >= 60) return "text-blue-600";
-    return "text-orange-500";
-  };
+  // const getMatchColor = (percentage: number) => {
+  //   if (percentage >= 80) return "text-green-600";
+  //   if (percentage >= 60) return "text-blue-600";
+  //   return "text-orange-500";
+  // };
 
   if (error) {
     return (
@@ -475,14 +475,14 @@ export function CandidateDashboard() {
                 >
                   <div className="p-6 space-y-4 flex flex-col h-full relative">
                     {/* Match indicator */}
-                    {job.match_percentage && (
+                    {/* {job.match_percentage && (
                       <div className="absolute top-4 right-4">
                         <div className={`flex items-center ${getMatchColor(job.match_percentage)}`}>
                           <Shield className="h-4 w-4 mr-1" />
                           <span className="text-xs font-bold">{job.match_percentage}% Match</span>
                         </div>
                       </div>
-                    )}
+                    )} */}
 
                     <div className="flex items-start pb-2">
                       <div className="bg-blue-100 p-3 rounded-xl mr-4">

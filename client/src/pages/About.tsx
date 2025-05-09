@@ -54,7 +54,7 @@ export function About() {
             </h1>
           </div>
           <nav className="hidden md:flex gap-8 items-center">
-            {["Home", "How It Works", "Pricing", "Contact Us"].map(
+            {["Home", "About Us", "Pricing", "Contact Us"].map(
               (label, i) => (
                 <motion.button
                   key={i}
@@ -62,7 +62,7 @@ export function About() {
                     navigate(
                       label === "Home"
                         ? "/"
-                        : label === "How It Works"
+                        : label === "About Us"
                         ? "/about"
                         : label === "Pricing"
                         ? "/pricing"
