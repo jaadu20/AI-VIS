@@ -588,7 +588,7 @@ export function JobApplicationPage() {
               </motion.div>
 
               {/* Similar Jobs Section */}
-              {similarJobs.length > 0 && (
+              {/* {similarJobs.length > 0 && (
                 <motion.div variants={itemVariants} className="space-y-4">
                   <h2 className="text-xl font-bold text-gray-900 pl-2">
                     Similar Positions
@@ -612,7 +612,7 @@ export function JobApplicationPage() {
                               {simJob.company_name}
                             </p>
                           </div>
-                          {/* {simJob.match_percentage && (
+                          {simJob.match_percentage && (
                             <div
                               className={`flex items-center ${getMatchColor(
                                 simJob.match_percentage
@@ -623,7 +623,7 @@ export function JobApplicationPage() {
                                 {simJob.match_percentage}% Match
                               </span>
                             </div>
-                          )} */}
+                          )}
                         </div>
 
                         <div className="flex flex-wrap gap-2 mb-3">
@@ -658,13 +658,13 @@ export function JobApplicationPage() {
                     ))}
                   </div>
                 </motion.div>
-              )}
+              )} */}
             </motion.div>
 
             <motion.div variants={itemVariants} className="space-y-6">
               {/* Application Card */}
               <motion.div
-                whileHover={{ y: -5 }}
+                whileHover={{ y: 0 }}
                 transition={{ type: "spring", stiffness: 300 }}
                 className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300"
               >
@@ -891,12 +891,12 @@ export function JobApplicationPage() {
         >
           <ChevronLeft className="h-5 w-5 transform rotate-90" />
         </Button>
-        <Button
+        {/* <Button
           className="rounded-full p-3 shadow-lg bg-green-600 hover:bg-green-700"
           onClick={() => navigate(`/candidate/${user?.id}/saved-jobs`)}
         >
           <Star className="h-5 w-5" />
-        </Button>
+        </Button> */}
       </motion.div>
     </div>
   );
