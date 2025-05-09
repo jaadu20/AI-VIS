@@ -228,9 +228,9 @@ const CompanyJobList = () => {
                 <h2 className="text-2xl md:text-3xl font-bold text-white">
                   {companyName || user?.company_name || "Company"} Job Postings
                 </h2>
-                <p className="text-blue-100 mt-2 max-w-xl">
+                {/* <p className="text-blue-100 mt-2 max-w-xl">
                   Manage all your job listings in one place. Track applications, edit postings, or create new job opportunities.
-                </p>
+                </p> */}
                 
                 {/* Stats row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">

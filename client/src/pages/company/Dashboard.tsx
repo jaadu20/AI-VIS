@@ -45,7 +45,6 @@ const sectionVariants = {
 export function CompanyDashboard() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState("overview");
   const [isLoading, setIsLoading] = useState(true);
 
   // Simulate loading state
@@ -113,36 +112,6 @@ export function CompanyDashboard() {
       skills: ["Figma", "User Research", "Prototyping"],
       match: "88%",
     },
-    {
-      id: "3",
-      name: "Mike Johnson",
-      position: "Backend Developer",
-      status: "Under Consideration",
-      date: "1d ago",
-      avatar: "MJ",
-      skills: ["Node.js", "Express", "MongoDB"],
-      match: "85%",
-    },
-    {
-      id: "4",
-      name: "Sarah Williams",
-      position: "Product Manager",
-      status: "Offer Sent",
-      date: "2d ago",
-      avatar: "SW",
-      skills: ["Agile", "Roadmapping", "User Stories"],
-      match: "95%",
-    },
-    {
-      id: "5",
-      name: "David Brown",
-      position: "Data Scientist",
-      status: "Technical Assessment",
-      date: "3d ago",
-      avatar: "DB",
-      skills: ["Python", "ML", "Data Analysis"],
-      match: "89%",
-    },
   ];
 
   const activeJobs = [
@@ -164,15 +133,6 @@ export function CompanyDashboard() {
       location: "New York, NY",
       posted: "May 3, 2025",
     },
-    {
-      id: "3",
-      title: "Backend Engineer",
-      applications: 28,
-      deadline: "May 18, 2025",
-      department: "Engineering",
-      location: "Hybrid",
-      posted: "May 2, 2025",
-    },
   ];
 
   const todayInterviews = [
@@ -192,23 +152,7 @@ export function CompanyDashboard() {
       type: "In-Person",
       status: "Upcoming",
     },
-    {
-      id: "3",
-      name: "David Brown",
-      position: "Data Scientist",
-      time: "9:00 AM - 9:45 AM",
-      type: "Video Call",
-      status: "Completed",
-    },
   ];
-
-  // const dashboardTabs = [
-  //   { id: "overview", label: "Overview" },
-  //   { id: "applications", label: "Applications" },
-  //   { id: "jobs", label: "Jobs" },
-  //   { id: "interviews", label: "Interviews" },
-  //   { id: "reports", label: "Reports" }
-  // ];
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -766,108 +710,6 @@ export function CompanyDashboard() {
                   >
                     Join
                   </Button>
-                </div>
-              </Card>
-              {/* Quick Actions Card */}
-              <Card className="border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Quick Actions
-                  </h3>
-                </div>
-                <div className="p-4 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button
-                      variant="outline"
-                      className="h-auto p-4 text-left hover:bg-blue-50 border-blue-100"
-                      onClick={() => navigate("/company/post-job")}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <Plus className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            Post New Job
-                          </p>
-                          <p className="text-sm text-gray-500 mt-1">
-                            Create a new job listing
-                          </p>
-                        </div>
-                      </div>
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      className="h-auto p-4 text-left hover:bg-green-50 border-green-100"
-                      onClick={() => navigate("/company/reports")}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <FileText className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            Generate Report
-                          </p>
-                          <p className="text-sm text-gray-500 mt-1">
-                            Export recruitment analytics
-                          </p>
-                        </div>
-                      </div>
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      className="h-auto p-4 text-left hover:bg-purple-50 border-purple-100"
-                      onClick={() => navigate("/company/interviews/schedule")}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                          <Calendar className="w-5 h-5 text-purple-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            Schedule Interview
-                          </p>
-                          <p className="text-sm text-gray-500 mt-1">
-                            Set up a new interview
-                          </p>
-                        </div>
-                      </div>
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      className="h-auto p-4 text-left hover:bg-orange-50 border-orange-100"
-                      onClick={() => navigate("/company/templates")}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-orange-100 rounded-lg">
-                          <Briefcase className="w-5 h-5 text-orange-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            Job Templates
-                          </p>
-                          <p className="text-sm text-gray-500 mt-1">
-                            Use pre-made templates
-                          </p>
-                        </div>
-                      </div>
-                    </Button>
-                  </div>
-                </div>
-                <div className="px-6 py-4 border-t border-gray-100 bg-gray-50">
-                  <p className="text-sm text-gray-600">
-                    Need help?{" "}
-                    <button
-                      onClick={() => navigate("/company/support")}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Contact support
-                    </button>
-                  </p>
                 </div>
               </Card>
             </motion.div>

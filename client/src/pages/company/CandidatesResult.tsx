@@ -232,16 +232,16 @@ export function CandidatesResult() {
             animate="visible"
             className="mb-8"
           >
-            <Card className="border-none shadow-lg bg-gradient-to-br from-indigo-600 to-blue-700 overflow-hidden">
+            <Card className="border-none shadow-lg bg-gradient-to-r from-blue-600 to-blue-800 overflow-hidden rounded-2xl">
               <div className="p-6">
                 <h2 className="text-2xl font-bold text-white mb-4">Assessment Overview</h2>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                   <div className="bg-white/10 rounded-lg p-4">
                     <div className="flex items-center">
                       <UserCheck className="w-8 h-8 text-blue-200 mr-3" />
                       <div>
-                        <p className="text-blue-100 text-sm">Total Candidates</p>
+                        <p className="text-white text-sm">Total Candidates</p>
                         <p className="text-2xl font-bold text-white">{candidatesData.length}</p>
                       </div>
                     </div>
@@ -251,7 +251,7 @@ export function CandidatesResult() {
                     <div className="flex items-center">
                       <Award className="w-8 h-8 text-blue-200 mr-3" />
                       <div>
-                        <p className="text-blue-100 text-sm">Top Score</p>
+                        <p className="text-white text-sm">Top Score</p>
                         <p className="text-2xl font-bold text-white">
                           {Math.max(...candidatesData.map(c => parseInt(c.score)))}%
                         </p>
@@ -259,23 +259,23 @@ export function CandidatesResult() {
                     </div>
                   </div>
                   
-                  <div className="bg-white/10 rounded-lg p-4">
+                  {/* <div className="bg-white/10 rounded-lg p-4">
                     <div className="flex items-center">
                       <CheckCircle className="w-8 h-8 text-blue-200 mr-3" />
                       <div>
-                        <p className="text-blue-100 text-sm">Hired</p>
+                        <p className="text-white text-sm">Hired</p>
                         <p className="text-2xl font-bold text-white">
                           {candidatesData.filter(c => c.status === "Hired").length}
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
                   
                   <div className="bg-white/10 rounded-lg p-4">
                     <div className="flex items-center">
                       <Briefcase className="w-8 h-8 text-blue-200 mr-3" />
                       <div>
-                        <p className="text-blue-100 text-sm">Open Positions</p>
+                        <p className="text-white text-sm">Open Positions</p>
                         <p className="text-2xl font-bold text-white">
                           {new Set(candidatesData.map(c => c.position)).size}
                         </p>
@@ -298,7 +298,7 @@ export function CandidatesResult() {
             <Card className="border shadow-sm p-4">
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 {/* Search */}
-                <div className="relative col-span-2">
+                <div className="relative col-span-2 mt-6">
                   <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
@@ -354,7 +354,7 @@ export function CandidatesResult() {
                   </div>
                   <div className="flex">
                     <select
-                      className="block w-full rounded-l-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+                      className="block w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
                     >
@@ -362,16 +362,6 @@ export function CandidatesResult() {
                       <option value="name">Name</option>
                       <option value="date">Interview Date</option>
                     </select>
-                    <button
-                      onClick={toggleSortDirection}
-                      className="flex items-center justify-center px-3 rounded-r-lg border border-l-0 border-gray-300 bg-gray-50 hover:bg-gray-100"
-                    >
-                      {sortDirection === "asc" ? (
-                        <ChevronUp className="w-5 h-5 text-gray-500" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-gray-500" />
-                      )}
-                    </button>
                   </div>
                 </div>
               </div>
