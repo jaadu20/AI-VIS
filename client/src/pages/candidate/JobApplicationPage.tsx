@@ -91,6 +91,12 @@ export function JobApplicationPage() {
   const [similarJobs, setSimilarJobs] = useState<Job[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  {
+    useEffect(() => {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }, []);
+  }
+
   useEffect(() => {
     const fetchJobDetails = async () => {
       try {

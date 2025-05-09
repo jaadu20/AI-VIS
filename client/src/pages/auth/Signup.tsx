@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
@@ -32,6 +32,11 @@ interface SignupForm {
 
 export function Signup() {
   const navigate = useNavigate();
+  {
+    useEffect(() => {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }, []);
+  }
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<"candidate" | "company">(
@@ -133,12 +138,12 @@ export function Signup() {
                   onClick={() =>
                     navigate(
                       label === "Home"
-                        ? "/features"
+                        ? "/"
                         : label === "How It Works"
-                        ? "/About"
+                        ? "/about"
                         : label === "Pricing"
                         ? "/pricing"
-                        : "/ContactUs"
+                        : "/contact"
                     )
                   }
                   className="text-gray-600 hover:text-blue-600 font-medium relative after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-blue-600 hover:after:w-full hover:after:transition-width after:transition-all"
@@ -369,8 +374,7 @@ export function Signup() {
                         {...register("phone", {
                           required: "Phone number is required",
                           pattern: {
-                            value:
-                              /^[+][0-9]?/,
+                            value: /^[+][0-9]?/,
                             message: "Invalid phone number format",
                           },
                         })}

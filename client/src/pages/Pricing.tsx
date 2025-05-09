@@ -18,6 +18,7 @@ import {
   Quote,
 } from "lucide-react";
 import { Button } from "../components/ui/Button";
+import { useEffect } from "react";
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -32,7 +33,11 @@ const cardVariants = {
 
 export function Pricing() {
   const navigate = useNavigate();
-
+  {
+    useEffect(() => {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }, []);
+  }
   const pricingPlans = [
     {
       name: "Starter",

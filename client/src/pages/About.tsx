@@ -21,6 +21,7 @@ import {
 import { Button } from "../components/ui/Button";
 import teamImg from "../assets/public/images/team.png";
 import officeImg from "../assets/public/images/office.png";
+import { useEffect } from "react";
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -29,7 +30,11 @@ const sectionVariants = {
 
 export function About() {
   const navigate = useNavigate();
-
+  {
+    useEffect(() => {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }, []);
+  }
   return (
     <div className="min-h-screen bg-white text-gray-800 overflow-x-hidden">
       {/* Header - Reusing from Home */}
@@ -769,4 +774,4 @@ export function About() {
   );
 }
 
-export default About; 
+export default About;

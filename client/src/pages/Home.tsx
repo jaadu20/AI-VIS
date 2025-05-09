@@ -15,12 +15,13 @@ import {
   Mail,
   Zap,
   Shield,
-  Award
+  Award,
 } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import interviewImg2 from "../assets/public/images/home2.png";
 import wavePattern from "../assets/public/images/blue.jpg";
-import { About }  from "./About";
+import { About } from "./About";
+import { useEffect } from "react";
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -29,7 +30,11 @@ const sectionVariants = {
 
 export function Home() {
   const navigate = useNavigate();
-
+  {
+    useEffect(() => {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }, []);
+  }
   return (
     <div className="min-h-screen bg-white text-gray-800 overflow-x-hidden">
       {/* Header with slide-down animation */}
@@ -49,19 +54,27 @@ export function Home() {
             </h1>
           </div>
           <nav className="hidden md:flex gap-8 items-center">
-            {["Home", "How It Works", "Pricing", "Contact Us"].map((label, i) => (
-              <motion.button
-                key={i}
-                onClick={() =>
-                  navigate(label === "Home" ? "/" : 
-                          label === "How It Works" ? "/about" : 
-                          label === "Pricing" ? "/pricing" : "/contact")
-                }
-                className="text-gray-600 hover:text-blue-600 font-medium relative after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-blue-600 hover:after:w-full hover:after:transition-width after:transition-all"
-              >
-                {label}
-              </motion.button>
-            ))}
+            {["Home", "How It Works", "Pricing", "Contact Us"].map(
+              (label, i) => (
+                <motion.button
+                  key={i}
+                  onClick={() =>
+                    navigate(
+                      label === "Home"
+                        ? "/"
+                        : label === "How It Works"
+                        ? "/about"
+                        : label === "Pricing"
+                        ? "/pricing"
+                        : "/contact"
+                    )
+                  }
+                  className="text-gray-600 hover:text-blue-600 font-medium relative after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-blue-600 hover:after:w-full hover:after:transition-width after:transition-all"
+                >
+                  {label}
+                </motion.button>
+              )
+            )}
             <div className="flex gap-4">
               <Button
                 onClick={() => navigate("/login?role=candidate")}
@@ -84,7 +97,7 @@ export function Home() {
       {/* Hero with parallax image and fade-in text */}
       <section
         className="pt-36 pb-24 px-4 bg-fixed bg-center bg-cover relative overflow-hidden"
-        style={{ 
+        style={{
           backgroundImage: `linear-gradient(to bottom, rgba(241, 245, 249, 0.9), rgba(209, 226, 249, 0.95))`,
         }}
       >
@@ -92,7 +105,7 @@ export function Home() {
           <div className="absolute inset-0 bg-blue-400 opacity-5"></div>
           <div className="absolute top-0 left-0 w-full h-full bg-grid-pattern opacity-10"></div>
         </div>
-        
+
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 relative z-10">
           <motion.div
             initial="hidden"
@@ -112,15 +125,14 @@ export function Home() {
               className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight"
             >
               AI-Powered
-              <span className="block text-blue-700 mt-2">
-                Video Interviews
-              </span>
+              <span className="block text-blue-700 mt-2">Video Interviews</span>
             </motion.h1>
             <p className="text-xl text-gray-600 max-w-lg">
-              Revolutionize hiring with real-time AI analysis, dynamic questioning, and 
-              comprehensive candidate evaluation that saves time and identifies top talent.
+              Revolutionize hiring with real-time AI analysis, dynamic
+              questioning, and comprehensive candidate evaluation that saves
+              time and identifies top talent.
             </p>
-            
+
             <div className="flex items-center text-gray-500 text-sm space-x-6">
               <div className="flex items-center">
                 <CheckCircle className="w-4 h-4 text-blue-600 mr-2" />
@@ -131,7 +143,7 @@ export function Home() {
                 <span>14-day free trial</span>
               </div>
             </div>
-            
+
             <div className="flex gap-4 flex-wrap">
               <motion.div whileHover={{ scale: 1.05 }}>
                 <Button
@@ -152,21 +164,27 @@ export function Home() {
                 </Button>
               </motion.div>
             </div>
-            
+
             <div className="flex items-center mt-8 pt-6 border-t border-gray-200">
               <div className="flex -space-x-2">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className={`w-8 h-8 rounded-full border-2 border-white bg-blue-${i*100} flex items-center justify-center text-xs text-white font-bold`}>
+                  <div
+                    key={i}
+                    className={`w-8 h-8 rounded-full border-2 border-white bg-blue-${
+                      i * 100
+                    } flex items-center justify-center text-xs text-white font-bold`}
+                  >
                     {i}
                   </div>
                 ))}
               </div>
               <p className="ml-4 text-sm text-gray-600">
-                <span className="font-medium">1+ companies</span> trust AI-VIS for hiring
+                <span className="font-medium">1+ companies</span> trust AI-VIS
+                for hiring
               </p>
             </div>
           </motion.div>
-          
+
           <motion.div
             initial={{ opacity: 0, scale: 0.8, rotateY: 10 }}
             animate={{ opacity: 1, scale: 1, rotateY: 0 }}
@@ -223,11 +241,12 @@ export function Home() {
               Engineered for Hiring Excellence
             </motion.h2>
             <p className="text-gray-600 text-lg">
-              Our AI-powered platform combines cutting-edge technology with intuitive design 
-              to deliver the most effective video interview experience.
+              Our AI-powered platform combines cutting-edge technology with
+              intuitive design to deliver the most effective video interview
+              experience.
             </p>
           </div>
-          
+
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -281,8 +300,12 @@ export function Home() {
                 whileHover={{ y: -8, boxShadow: "0 15px 30px rgba(0,0,0,0.1)" }}
                 className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 hover:border-blue-200 transition-all duration-300"
               >
-                <div className={`w-14 h-14 bg-${feature.color}-100 rounded-2xl flex items-center justify-center mb-6`}>
-                  <feature.icon className={`w-7 h-7 text-${feature.color}-600`} />
+                <div
+                  className={`w-14 h-14 bg-${feature.color}-100 rounded-2xl flex items-center justify-center mb-6`}
+                >
+                  <feature.icon
+                    className={`w-7 h-7 text-${feature.color}-600`}
+                  />
                 </div>
                 <h3 className="text-xl font-semibold mb-4 text-gray-900">
                   {feature.title}
@@ -313,11 +336,11 @@ export function Home() {
               Intelligent Interview Flow
             </motion.h2>
             <p className="text-gray-600 text-lg">
-              Our streamlined process combines AI technology with human-centered design
-              to deliver exceptional interview experiences.
+              Our streamlined process combines AI technology with human-centered
+              design to deliver exceptional interview experiences.
             </p>
           </div>
-          
+
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
               initial="hidden"
@@ -384,14 +407,16 @@ export function Home() {
               <div className="relative bg-gradient-to-br from-blue-600 to-blue-400 p-8 rounded-2xl shadow-2xl">
                 <div className="bg-white p-6 rounded-xl shadow-lg space-y-6">
                   <div className="flex justify-between items-center pb-4 border-b border-gray-100">
-                    <h3 className="font-bold text-blue-900">Interview Session</h3>
+                    <h3 className="font-bold text-blue-900">
+                      Interview Session
+                    </h3>
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-red-500"></div>
                       <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                       <div className="w-3 h-3 rounded-full bg-green-500"></div>
                     </div>
                   </div>
-                
+
                   {[
                     {
                       icon: User,
@@ -412,7 +437,7 @@ export function Home() {
                       icon: Award,
                       title: "Skill Assessment",
                       desc: "Automated evaluation of technical and soft skills",
-                    }
+                    },
                   ].map((card, i) => (
                     <div
                       key={i}
@@ -422,8 +447,12 @@ export function Home() {
                         <card.icon className="w-6 h-6 text-blue-600 group-hover:text-white transition-colors" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-gray-900">{card.title}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{card.desc}</p>
+                        <h4 className="font-semibold text-gray-900">
+                          {card.title}
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {card.desc}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -453,23 +482,26 @@ export function Home() {
               What Our Clients Say
             </motion.h2>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
                 name: "Sarah Johnson",
                 role: "HR Director, TechCorp",
-                quote: "AI-VIS has reduced our hiring time by 60% while improving the quality of our hires significantly. The AI analytics provide insights we never had before.",
+                quote:
+                  "AI-VIS has reduced our hiring time by 60% while improving the quality of our hires significantly. The AI analytics provide insights we never had before.",
               },
               {
                 name: "Michael Chang",
                 role: "CEO, StartUp Innovations",
-                quote: "As a growing startup, we needed to scale our hiring process efficiently. AI-VIS delivered beyond our expectations with its intelligent analysis and bias-free evaluations.",
+                quote:
+                  "As a growing startup, we needed to scale our hiring process efficiently. AI-VIS delivered beyond our expectations with its intelligent analysis and bias-free evaluations.",
               },
               {
                 name: "Jessica Williams",
                 role: "Recruitment Manager, Global Solutions",
-                quote: "The dynamic questioning system adapts perfectly to each candidate, revealing capabilities that traditional interviews would miss. It's transformed our approach to talent acquisition.",
+                quote:
+                  "The dynamic questioning system adapts perfectly to each candidate, revealing capabilities that traditional interviews would miss. It's transformed our approach to talent acquisition.",
               },
             ].map((testimonial, i) => (
               <motion.div
@@ -481,16 +513,26 @@ export function Home() {
               >
                 <div className="text-blue-500 mb-4">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <Star key={star} className="w-5 h-5 inline-block fill-current" />
+                    <Star
+                      key={star}
+                      className="w-5 h-5 inline-block fill-current"
+                    />
                   ))}
                 </div>
-                <p className="text-gray-600 mb-6 italic">"{testimonial.quote}"</p>
+                <p className="text-gray-600 mb-6 italic">
+                  "{testimonial.quote}"
+                </p>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold">
-                    {testimonial.name.split(' ').map(name => name[0]).join('')}
+                    {testimonial.name
+                      .split(" ")
+                      .map((name) => name[0])
+                      .join("")}
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
+                    <h4 className="font-semibold text-gray-900">
+                      {testimonial.name}
+                    </h4>
                     <p className="text-sm text-gray-500">{testimonial.role}</p>
                   </div>
                 </div>
@@ -511,8 +553,9 @@ export function Home() {
             Ready to Transform Your Hiring Process?
           </h2>
           <p className="text-xl mb-12 max-w-3xl mx-auto">
-            Join thousands of companies using AI-VIS to find top talent efficiently and accurately. 
-            Start your free trial today with no commitment.
+            Join thousands of companies using AI-VIS to find top talent
+            efficiently and accurately. Start your free trial today with no
+            commitment.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-6 max-w-xl mx-auto">
             <motion.div whileHover={{ scale: 1.05 }} className="flex-1">
@@ -550,14 +593,15 @@ export function Home() {
                   Stay Updated with AI Recruitment Trends
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Subscribe to our newsletter for the latest industry insights, product updates, and hiring tips.
+                  Subscribe to our newsletter for the latest industry insights,
+                  product updates, and hiring tips.
                 </p>
               </div>
               <div className="md:w-1/2 w-full">
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <input 
-                    type="email" 
-                    placeholder="Enter your email" 
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
                     className="px-4 py-3 rounded-lg border border-gray-300 flex-grow focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <Button className="bg-blue-600 text-white py-3 px-6 whitespace-nowrap hover:bg-blue-700">
@@ -587,18 +631,21 @@ export function Home() {
                 <span className="text-2xl font-bold">AI-VIS</span>
               </div>
               <p className="text-gray-400 mb-8 max-w-md">
-                Transforming the recruitment landscape with AI-powered video interviews that identify the best talent quickly and accurately.
+                Transforming the recruitment landscape with AI-powered video
+                interviews that identify the best talent quickly and accurately.
               </p>
               <div className="flex gap-4">
-                {["Twitter", "LinkedIn", "Facebook", "YouTube"].map((social) => (
-                  <a 
-                    key={social} 
-                    href="#" 
-                    className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
-                  >
-                    <span className="text-xs">{social[0]}</span>
-                  </a>
-                ))}
+                {["Twitter", "LinkedIn", "Facebook", "YouTube"].map(
+                  (social) => (
+                    <a
+                      key={social}
+                      href="#"
+                      className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
+                    >
+                      <span className="text-xs">{social[0]}</span>
+                    </a>
+                  )
+                )}
               </div>
             </div>
             {[
@@ -608,7 +655,13 @@ export function Home() {
               },
               {
                 title: "Resources",
-                links: ["Documentation", "Guides", "Webinars", "Blog", "Case Studies"],
+                links: [
+                  "Documentation",
+                  "Guides",
+                  "Webinars",
+                  "Blog",
+                  "Case Studies",
+                ],
               },
               {
                 title: "Company",
@@ -620,7 +673,10 @@ export function Home() {
                 <ul className="space-y-4">
                   {col.links.map((link, j) => (
                     <li key={j}>
-                      <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                      <a
+                        href="#"
+                        className="text-gray-400 hover:text-white transition-colors"
+                      >
                         {link}
                       </a>
                     </li>
@@ -634,14 +690,20 @@ export function Home() {
               © 2024 AI-VIS. All rights reserved.
             </p>
             <div className="flex gap-6 mt-4 md:mt-0">
-              <a href="#" className="text-sm text-gray-500 hover:text-white">Privacy Policy</a>
-              <a href="#" className="text-sm text-gray-500 hover:text-white">Terms of Service</a>
-              <a href="#" className="text-sm text-gray-500 hover:text-white">Cookie Policy</a>
+              <a href="#" className="text-sm text-gray-500 hover:text-white">
+                Privacy Policy
+              </a>
+              <a href="#" className="text-sm text-gray-500 hover:text-white">
+                Terms of Service
+              </a>
+              <a href="#" className="text-sm text-gray-500 hover:text-white">
+                Cookie Policy
+              </a>
             </div>
           </div>
         </div>
       </motion.footer>
-      
+
       {/* Add a style tag for the grid pattern */}
       <style>{`
         .bg-grid-pattern {
