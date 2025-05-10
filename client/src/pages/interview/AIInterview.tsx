@@ -273,9 +273,6 @@ export function AIInterview() {
           new Blob(recordedChunks, { type: "audio/webm" })
         );
       }
-
-      // In a real implementation, uncomment the API call below
-
       const response = await api.post(
         `/interviews/${interviewId}/submit/`,
         formData,
@@ -588,7 +585,7 @@ export function AIInterview() {
                   )}
 
                   {/* Video overlay controls */}
-                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <div className="absolute bottom-0 inset-x-0 p-4">
                     <div className="flex justify-between items-center">
                       <div className="flex gap-2">
                         <button

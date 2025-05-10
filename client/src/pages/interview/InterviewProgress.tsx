@@ -300,7 +300,7 @@ export function InterviewProgress() {
                 </div>
               </div>
 
-              <div className="flex flex-col md:flex-row p-16">
+              <div className="flex flex-col md:flex-row p-10">
                 <div className="elative w-52 h-52 mx-auto md:mx-0 mb-6 md:mb-0">
                   <div className="h-64 relative">
                     <ResponsiveContainer width="100%" height="100%">
@@ -354,7 +354,7 @@ export function InterviewProgress() {
                         </defs>
 
                         <text
-                          x="50%"
+                          x="52%"
                           y="42%"
                           textAnchor="middle"
                           dominantBaseline="middle"
@@ -367,7 +367,7 @@ export function InterviewProgress() {
                           y="52%"
                           textAnchor="middle"
                           dominantBaseline="middle"
-                          className="text-xs fill-indigo-400"
+                          className="text-l fill-indigo-500 text-bold"
                         >
                           OVERALL
                         </text>
@@ -925,7 +925,7 @@ export function InterviewProgress() {
                 <div className="flex justify-end gap-4 pt-6">
                   <Button
                     onClick={() => navigate("/candidate/dashboard")}
-                    variant="secondary"
+                    variant="outline"
                     className="px-6 py-3 border border-gray-300 font-medium text-gray-700 rounded-xl hover:bg-gray-50"
                   >
                     Cancel
