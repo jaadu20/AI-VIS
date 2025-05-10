@@ -203,8 +203,8 @@ export function InterviewProgress() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-indigo-600 to-blue-600 p-2 rounded-lg shadow-sm">
-                <Briefcase className="h-5 w-5 text-white" />
+              <div className="p-2 rounded-lg shadow-sm border-border-gray-200 bg-indigo-50">
+                <Briefcase className="h-7 w-7 text-blue-600" />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-blue-700">
