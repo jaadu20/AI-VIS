@@ -1,22 +1,21 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
-  Briefcase, 
-  Edit, 
-  Trash, 
-  AlertTriangle, 
-  Building2, 
-  MapPin, 
-  Clock, 
-  Award, 
+import {
+  Briefcase,
+  Edit,
+  Trash,
+  AlertTriangle,
+  Building2,
+  MapPin,
+  Clock,
+  Award,
   DollarSign,
   ArrowLeft,
   Search,
   Filter,
   CheckCircle,
   XCircle,
-  Loader2
 } from "lucide-react";
 import api from "../../api";
 import { Job } from "../../types";
@@ -60,15 +59,15 @@ const DeleteConfirmationModal = ({
           be undone.
         </p>
         <div className="flex gap-4 w-full">
-          <Button 
-            variant="outline" 
-            onClick={onCancel} 
+          <Button
+            variant="outline"
+            onClick={onCancel}
             className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50"
           >
             Cancel
           </Button>
-          <Button 
-            onClick={onConfirm} 
+          <Button
+            onClick={onConfirm}
             className="flex-1 bg-red-600 hover:bg-red-700 text-white"
           >
             Delete Permanently
@@ -79,11 +78,11 @@ const DeleteConfirmationModal = ({
   </motion.div>
 );
 
-const JobStatusBadge = ({ status }) => {
+const JobStatusBadge = ({ status }: { status: string }) => {
   let badgeClass = "";
   let Icon = null;
-  
-  switch(status) {
+
+  switch (status) {
     case "published":
       badgeClass = "bg-green-100 text-green-800";
       Icon = CheckCircle;
@@ -100,9 +99,11 @@ const JobStatusBadge = ({ status }) => {
       badgeClass = "bg-blue-100 text-blue-800";
       Icon = Briefcase;
   }
-  
+
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium ${badgeClass}`}>
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium ${badgeClass}`}
+    >
       <Icon className="w-3 h-3 mr-1" />
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
@@ -169,13 +170,16 @@ const CompanyJobList = () => {
     }
   };
 
-  const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         job.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.location.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesFilter = filterStatus === "all" || job.status === filterStatus;
-    
+  const filteredJobs = jobs.filter((job) => {
+    const matchesSearch =
+      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.location.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesFilter =
+      filterStatus === "all" ||
+      job.status?.toLowerCase() === filterStatus.toLowerCase();
+
     return matchesSearch && matchesFilter;
   });
 
@@ -231,12 +235,16 @@ const CompanyJobList = () => {
                 {/* <p className="text-blue-100 mt-2 max-w-xl">
                   Manage all your job listings in one place. Track applications, edit postings, or create new job opportunities.
                 </p> */}
-                
+
                 {/* Stats row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                   <div className="bg-white/10 rounded-lg p-4">
-                    <h3 className="text-white text-lg font-semibold">Total Jobs</h3>
-                    <p className="text-3xl font-bold text-white">{jobs.length}</p>
+                    <h3 className="text-white text-lg font-semibold">
+                      Total Jobs
+                    </h3>
+                    <p className="text-3xl font-bold text-white">
+                      {jobs.length}
+                    </p>
                   </div>
                   <div className="bg-white/10 rounded-lg p-4">
                     <h3 className="text-white text-lg font-semibold">Active</h3>
@@ -248,7 +256,7 @@ const CompanyJobList = () => {
                   <div className="bg-white/10 rounded-lg p-4">
                     <h3 className="text-white text-lg font-semibold">Drafts</h3>
                     <p className="text-3xl font-bold text-white">
-                      {jobs.filter(job => job.status === "draft").length}
+                      {jobs.filter((job) => job.status === "draft").length}
                     </p>
                   </div>
                 </div>
@@ -278,7 +286,11 @@ const CompanyJobList = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Filter className="w-5 h-5 text-gray-500" />
+                  <label htmlFor="filterStatus" className="sr-only">
+                    Filter by status
+                  </label>
                   <select
+                    id="filterStatus"
                     className="rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
@@ -315,10 +327,12 @@ const CompanyJobList = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
                 <Briefcase className="w-8 h-8 text-gray-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No job postings found</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                No job postings found
+              </h3>
               <p className="text-gray-600 mb-6">
-                {searchTerm || filterStatus !== "all" 
-                  ? "Try adjusting your search or filters" 
+                {searchTerm || filterStatus !== "all"
+                  ? "Try adjusting your search or filters"
                   : "Create your first job posting to attract top talent"}
               </p>
               {user?.id?.toString() === companyId && (
@@ -350,10 +364,14 @@ const CompanyJobList = () => {
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <div className="flex items-center gap-2 mb-2">
-                            <h3 className="text-xl font-semibold text-gray-900">{job.title}</h3>
-                            <JobStatusBadge status={job.status || "published"} />
+                            <h3 className="text-xl font-semibold text-gray-900">
+                              {job.title}
+                            </h3>
+                            <JobStatusBadge
+                              status={job.status || "published"}
+                            />
                           </div>
-                          
+
                           <div className="flex flex-wrap gap-3 text-sm text-gray-600">
                             {job.department && (
                               <span className="inline-flex items-center text-gray-600">
@@ -361,28 +379,29 @@ const CompanyJobList = () => {
                                 {job.department}
                               </span>
                             )}
-                            
+
                             {job.location && (
                               <span className="inline-flex items-center text-gray-600">
                                 <MapPin className="w-4 h-4 mr-1 text-gray-400" />
                                 {job.location}
                               </span>
                             )}
-                            
+
                             {job.employment_type && (
                               <span className="inline-flex items-center text-gray-600">
                                 <Clock className="w-4 h-4 mr-1 text-gray-400" />
-                                {job.employment_type.replace(/-/g, ' ')}
+                                {job.employment_type.replace(/-/g, " ")}
                               </span>
                             )}
-                            
+
                             {job.experience_level && (
                               <span className="inline-flex items-center text-gray-600">
                                 <Award className="w-4 h-4 mr-1 text-gray-400" />
-                                {job.experience_level.charAt(0).toUpperCase() + job.experience_level.slice(1)}
+                                {job.experience_level.charAt(0).toUpperCase() +
+                                  job.experience_level.slice(1)}
                               </span>
                             )}
-                            
+
                             {job.salary && (
                               <span className="inline-flex items-center text-gray-600">
                                 <DollarSign className="w-4 h-4 mr-1 text-gray-400" />
@@ -415,15 +434,18 @@ const CompanyJobList = () => {
                       </div>
 
                       <div className="mt-4 pt-4 border-t border-gray-100">
-                        <h4 className="font-medium text-gray-900 mb-2">Job Description</h4>
+                        <h4 className="font-medium text-gray-900 mb-2">
+                          Job Description
+                        </h4>
                         <p className="text-gray-600 text-sm line-clamp-3">
                           {job.description}
                         </p>
                       </div>
-                      
+
                       <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap justify-between items-center">
                         <div className="text-sm text-gray-500">
-                          Posted: {new Date(job.created_at).toLocaleDateString()}
+                          Posted:{" "}
+                          {new Date(job.created_at).toLocaleDateString()}
                         </div>
                         <Button
                           variant="outline"

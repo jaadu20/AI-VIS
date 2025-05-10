@@ -106,18 +106,12 @@ export function AIInterview() {
         ? { application_id: applicationId }
         : {};
 
-      // This is a mock since the API call is commented out in original code
-      // In a real implementation, uncomment the API call below
-      /*
       const response = await api.post("/interviews/start/", requestPayload);
-
       if (!response.data?.interview_id || !response.data?.questions) {
         throw new Error("Invalid interview initialization response");
       }
-
       setInterviewId(response.data.interview_id);
       setQuestions(response.data.questions);
-      */
 
       // Mock data for demonstration
       setInterviewId("mock-interview-id");
@@ -197,8 +191,6 @@ export function AIInterview() {
   const playQuestionAudio = async (questionText: string) => {
     try {
       setIsSpeaking(true);
-      // In a real implementation, uncomment the API call below
-      /*
       const response = await api.post(
         "/interviews/tts/",
         { text: questionText },
@@ -209,7 +201,6 @@ export function AIInterview() {
       const audio = new Audio(audioUrl);
       audio.onended = () => setIsSpeaking(false);
       audio.play();
-      */
 
       // Mock audio playback for demonstration
       setTimeout(() => setIsSpeaking(false), 3000);
@@ -231,11 +222,8 @@ export function AIInterview() {
         formData.append("audio", audioBlob);
 
         try {
-          // In a real implementation, uncomment the API call below
-          /*
           const sttResponse = await api.post("/interviews/stt/", formData);
           setAnswer(sttResponse.data.text);
-          */
 
           // Mock STT response for demonstration
           setAnswer(
@@ -287,7 +275,7 @@ export function AIInterview() {
       }
 
       // In a real implementation, uncomment the API call below
-      /*
+
       const response = await api.post(
         `/interviews/${interviewId}/submit/`,
         formData,
@@ -313,7 +301,6 @@ export function AIInterview() {
         playQuestionAudio(response.data.question.text);
         startVideoRecording();
       }
-      */
 
       // Mock response for demonstration
       setTimeout(() => {
@@ -383,19 +370,6 @@ export function AIInterview() {
     // Using a total of 15 questions as mentioned in the welcome screen
     return (currentQuestionIndex / 14) * 100;
   };
-
-  // const getDifficultyColor = (difficulty: string) => {
-  //   switch (difficulty.toLowerCase()) {
-  //     case "easy":
-  //       return "text-green-600 bg-green-100";
-  //     case "medium":
-  //       return "text-yellow-600 bg-yellow-100";
-  //     case "hard":
-  //       return "text-red-600 bg-red-100";
-  //     default:
-  //       return "text-blue-600 bg-blue-100";
-  //   }
-  // };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-sky-50 flex flex-col">
@@ -832,53 +806,6 @@ export function AIInterview() {
                       </div>
                     </div>
                   )}
-
-                  <div className="w-full mt-2 space-y-4">
-                    <div className="flex items-center justify-between px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="flex items-center">
-                        <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
-                          <span className="text-indigo-600 font-bold">
-                            {currentQuestionIndex + 1}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">
-                            Current Question
-                          </p>
-                          <p className="text-sm font-medium text-gray-800">
-                            Question {currentQuestionIndex + 1} of 15
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs text-gray-500">Progress</span>
-                        <p className="text-sm font-medium text-gray-800">
-                          {Math.round(calculateProgress())}%
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-around items-center w-full">
-                      <div className="text-center">
-                        <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-1">
-                          <Clock className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <p className="text-xs text-gray-500">Duration</p>
-                        <p className="text-sm font-medium text-gray-800">
-                          {formatTime(interviewDuration)}
-                        </p>
-                      </div>
-                      <div className="text-center">
-                        <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-1">
-                          <CheckCircle className="h-5 w-5 text-green-600" />
-                        </div>
-                        <p className="text-xs text-gray-500">Completed</p>
-                        <p className="text-sm font-medium text-gray-800">
-                          {currentQuestionIndex} of 15
-                        </p>
-                      </div>
-                    </div>
-                  </div>
                 </motion.div>
 
                 {/* Status Indicators */}

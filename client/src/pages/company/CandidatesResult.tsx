@@ -35,7 +35,7 @@ const sectionVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
-const ScoreBadge = ({ score }) => {
+const ScoreBadge = ({ score }: { score: string }) => {
   // Convert score to number and determine badge color
   const scoreNum = parseInt(score);
   let badgeClass = "";
@@ -63,7 +63,7 @@ export function CandidatesResult() {
   const [filterPosition, setFilterPosition] = useState("all");
   const [sortBy, setSortBy] = useState("score");
   const [sortDirection, setSortDirection] = useState("desc");
-  const [expandedCandidate, setExpandedCandidate] = useState(null);
+  const [expandedCandidate, setExpandedCandidate] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
@@ -145,7 +145,7 @@ export function CandidatesResult() {
       } else if (sortBy === "name") {
         comparison = a.name.localeCompare(b.name);
       } else if (sortBy === "date") {
-        comparison = new Date(a.interview_date) - new Date(b.interview_date);
+        comparison = new Date(a.interview_date).getTime() - new Date(b.interview_date).getTime();
       }
       
       return sortDirection === "asc" ? comparison : -comparison;
@@ -158,13 +158,13 @@ export function CandidatesResult() {
     setSortDirection(sortDirection === "asc" ? "desc" : "asc");
   };
   
-  const toggleExpandCandidate = (id) => {
+  const toggleExpandCandidate = (id: string) => {
     setExpandedCandidate(expandedCandidate === id ? null : id);
   };
   
   const positions = [...new Set(candidatesData.map(candidate => candidate.position))];
   
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status: string) => {
     switch(status) {
       case "Hired":
         return <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-800">
@@ -315,7 +315,9 @@ export function CandidatesResult() {
                     <SlidersHorizontal className="w-4 h-4 text-gray-500 mr-1" />
                     <label className="text-sm text-gray-600">Score Range</label>
                   </div>
+                  <label htmlFor="scoreFilter" className="sr-only">Score Range</label>
                   <select
+                    id="scoreFilter"
                     className="block w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
                     value={filterScore}
                     onChange={(e) => setFilterScore(e.target.value)}
@@ -334,7 +336,9 @@ export function CandidatesResult() {
                     <Briefcase className="w-4 h-4 text-gray-500 mr-1" />
                     <label className="text-sm text-gray-600">Position</label>
                   </div>
+                  <label htmlFor="positionFilter" className="sr-only">Position</label>
                   <select
+                    id="positionFilter"
                     className="block w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
                     value={filterPosition}
                     onChange={(e) => setFilterPosition(e.target.value)}
@@ -353,7 +357,9 @@ export function CandidatesResult() {
                     <label className="text-sm text-gray-600">Sort By</label>
                   </div>
                   <div className="flex">
+                    <label htmlFor="sortBy" className="sr-only">Sort By</label>
                     <select
+                      id="sortBy"
                       className="block w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}

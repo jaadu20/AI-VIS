@@ -154,7 +154,7 @@ export function CompanyDashboard() {
     },
   ];
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "Pending Review":
         return "bg-yellow-100 text-yellow-800";
@@ -171,14 +171,14 @@ export function CompanyDashboard() {
     }
   };
 
-  const renderInterviewIcon = (type) => {
+  const renderInterviewIcon = (type: string) => {
     if (type === "Video Call") {
       return <Video className="w-5 h-5 text-blue-500" />;
     }
     return <Users className="w-5 h-5 text-green-500" />;
   };
 
-  const renderInterviewStatus = (status) => {
+  const renderInterviewStatus = (status: string) => {
     if (status === "Completed") {
       return <CheckCircle2 className="w-4 h-4 text-green-500" />;
     }
@@ -414,7 +414,7 @@ export function CompanyDashboard() {
                 </div>
                 <div className="px-6 py-4 bg-gray-50 flex justify-center">
                   <Button
-                    variant="link"
+                    variant="ghost"
                     className="text-blue-600 hover:text-blue-800 flex items-center"
                     onClick={() =>
                       navigate(`/company/${user?.id}/applications`)
@@ -441,7 +441,10 @@ export function CompanyDashboard() {
                       </h3>
                     </div>
                     <div className="flex gap-2">
-                      <select className="text-sm border border-gray-200 rounded-md px-2 py-1">
+                      <select
+                        className="text-sm border border-gray-200 rounded-md px-2 py-1"
+                        aria-label="Select time range"
+                      >
                         <option>Last 30 days</option>
                         <option>Last 90 days</option>
                         <option>This year</option>
@@ -626,7 +629,7 @@ export function CompanyDashboard() {
                 </div>
                 <div className="px-6 py-4 bg-gray-50 text-center">
                   <Button
-                    variant="link"
+                    variant="ghost"
                     className="text-blue-600 hover:text-blue-800 flex items-center justify-center"
                     onClick={() => navigate("/company/post-job")}
                   >

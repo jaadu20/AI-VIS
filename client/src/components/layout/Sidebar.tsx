@@ -295,7 +295,17 @@ export function Sidebar() {
 }
 
 // Sidebar menu item component
-function SidebarMenuItem({ item, isActive, isCollapsed, onClick }) {
+function SidebarMenuItem({
+  item,
+  isActive,
+  isCollapsed,
+  onClick,
+}: {
+  item: SidebarItem;
+  isActive: boolean;
+  isCollapsed: boolean;
+  onClick: () => void;
+}) {
   return (
     <motion.li
       whileHover={{ x: isCollapsed ? 0 : 2 }}

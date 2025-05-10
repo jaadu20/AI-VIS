@@ -38,9 +38,9 @@ export function Progress({
     <div 
       className={progressStyles({ variant, className })} 
       role="progressbar"
-      aria-valuenow={value}
+      aria-valuenow={Number.isFinite(value) && value >= 0 ? value : 0}
       aria-valuemin={0}
-      aria-valuemax={max}
+      aria-valuemax={Number.isFinite(max) && max > 0 ? max : 100}
       {...props}
     >
       <div

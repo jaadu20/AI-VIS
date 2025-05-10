@@ -1,5 +1,6 @@
 // src/types.ts
 export interface Job {
+    status: any;
     id: number;
     title: string;
     department: string;
