@@ -531,9 +531,9 @@ export function AIInterview() {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2 text-indigo-700">
-                  <div className="bg-indigo-100 p-2 rounded-full">
-                    <Video className="h-5 w-5 text-indigo-600" />
+                <div className="flex items-center gap-2 text-blue-700">
+                  <div className="bg-indigo-50 p-2 rounded-full">
+                    <Video className="h-5 w-5 text-blue-700" />
                   </div>
                   <h1 className="text-xl font-semibold tracking-tight">
                     AI-VIS Professional Interview
@@ -563,7 +563,7 @@ export function AIInterview() {
               </div>
             </nav>
 
-            <main className="flex-grow max-w-8xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <main className="flex-grow max-w-8xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-2 gap-8 ml-6 mr-6">
               <section className="lg:col-span-1 space-y-6">
                 <motion.div
                   className="relative bg-gradient-to-b from-gray-900 to-gray-800 rounded-2xl overflow-hidden shadow-xl aspect-video"
@@ -732,7 +732,7 @@ export function AIInterview() {
                     </div>
                   </div>
 
-                  <h2 className="text-xl font-bold text-indigo-700 mb-1">
+                  <h2 className="text-xl font-bold text-blue-700 mb-1">
                     AI Interview Assistant
                   </h2>
 
