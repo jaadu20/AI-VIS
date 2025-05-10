@@ -26,8 +26,8 @@ INSTALLED_APPS = [
     'channels',
     # My apps
     'users',
-    'interview',
     'jobs',
+    'interview',
     'interview_applications',
 ]
 

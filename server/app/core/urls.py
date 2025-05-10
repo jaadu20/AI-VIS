@@ -8,7 +8,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('users.urls')),
     path('jobs/', include('jobs.urls')),
-    path('interview_applications/', include('interview_applications.urls')),
+    # path('interview_applications/', include('interview_applications.urls')),
     # path('interviews/', include('interview.urls')),
    
 ]
