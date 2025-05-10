@@ -185,8 +185,7 @@ const CompanyJobList = () => {
 
   return (
     <DashboardLayout>
-      {/* Header */}
-      <motion.header
+\      <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 120, damping: 20 }}
@@ -220,7 +219,6 @@ const CompanyJobList = () => {
 
       <main className="py-6 px-6 bg-gradient-to-b from-blue-50 to-white">
         <div className="max-w-7xl mx-auto">
-          {/* Banner */}
           <motion.div
             variants={fadeInUp}
             initial="hidden"
@@ -235,8 +233,6 @@ const CompanyJobList = () => {
                 {/* <p className="text-blue-100 mt-2 max-w-xl">
                   Manage all your job listings in one place. Track applications, edit postings, or create new job opportunities.
                 </p> */}
-
-                {/* Stats row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                   <div className="bg-white/10 rounded-lg p-4">
                     <h3 className="text-white text-lg font-semibold">
