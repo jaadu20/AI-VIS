@@ -54,27 +54,25 @@ export function About() {
             </h1>
           </div>
           <nav className="hidden md:flex gap-8 items-center">
-            {["Home", "About Us", "Pricing", "Contact Us"].map(
-              (label, i) => (
-                <motion.button
-                  key={i}
-                  onClick={() =>
-                    navigate(
-                      label === "Home"
-                        ? "/"
-                        : label === "About Us"
-                        ? "/about"
-                        : label === "Pricing"
-                        ? "/pricing"
-                        : "/contact"
-                    )
-                  }
-                  className="text-gray-600 hover:text-blue-600 font-medium relative after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-blue-600 hover:after:w-full hover:after:transition-width after:transition-all"
-                >
-                  {label}
-                </motion.button>
-              )
-            )}
+            {["Home", "About Us", "Pricing", "Contact Us"].map((label, i) => (
+              <motion.button
+                key={i}
+                onClick={() =>
+                  navigate(
+                    label === "Home"
+                      ? "/"
+                      : label === "About Us"
+                      ? "/about"
+                      : label === "Pricing"
+                      ? "/pricing"
+                      : "/contact"
+                  )
+                }
+                className="text-gray-600 hover:text-blue-600 font-medium relative after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-blue-600 hover:after:w-full hover:after:transition-width after:transition-all"
+              >
+                {label}
+              </motion.button>
+            ))}
             <div className="flex gap-4">
               <Button
                 onClick={() => navigate("/login?role=candidate")}

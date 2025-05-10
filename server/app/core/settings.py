@@ -28,7 +28,7 @@ INSTALLED_APPS = [
     'users',
     'interview',
     'jobs',
-    'job_applications',
+    'interview_applications',
 ]
 
 # Configure ASGI application
@@ -175,6 +175,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AZURE_SPEECH_KEY =  os.getenv('AZURE_SPEECH_KEY')
 AZURE_SPEECH_REGION = 'eastus' 
+
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'

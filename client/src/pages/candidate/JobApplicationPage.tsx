@@ -88,7 +88,6 @@ export function JobApplicationPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [eligibilityResult, setEligibilityResult] =
     useState<EligibilityResult | null>(null);
-  const [similarJobs, setSimilarJobs] = useState<Job[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -101,8 +100,6 @@ export function JobApplicationPage() {
         setIsLoading(true);
         const response = await api.get(`/jobs/current/${jobId}`);
         const responseData = response.data.results || response.data;
-
-        // Process the job data
         const processedJob = {
           ...responseData,
           requirements: Array.isArray(responseData.requirements)
@@ -111,13 +108,9 @@ export function JobApplicationPage() {
           benefits: Array.isArray(responseData.benefits)
             ? responseData.benefits
             : responseData.benefits?.split("\n").filter(Boolean) || [],
-          match_percentage: Math.floor(Math.random() * 31) + 70, // Mock match percentage (70-100%)
         };
 
         setJob(processedJob);
-
-        // Mock similar jobs
-        generateSimilarJobs(processedJob);
       } catch (error) {
         toast.error("Failed to load job details");
         navigate("/candidate/dashboard");
@@ -128,53 +121,6 @@ export function JobApplicationPage() {
 
     fetchJobDetails();
   }, [jobId, navigate]);
-
-  // Generate mock similar jobs based on the current job
-  const generateSimilarJobs = (currentJob: Job) => {
-    if (!currentJob) return;
-
-    const mockSimilarJobs = [
-      {
-        id: "sim-job-1",
-        title: `Senior ${currentJob.title
-          .replace("Senior", "")
-          .replace("Junior", "")}`,
-        company_name: "TechCorp Inc.",
-        location: currentJob.location,
-        employment_type: currentJob.employment_type,
-        salary: currentJob.salary,
-        experience_level: "Senior",
-        description:
-          "Similar position with additional leadership responsibilities...",
-        requirements: currentJob.requirements,
-        department: currentJob.department,
-        benefits: currentJob.benefits,
-        created_at: new Date(
-          Date.now() - 3 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-        match_percentage: Math.floor(Math.random() * 15) + 75,
-      },
-      {
-        id: "sim-job-2",
-        title: currentJob.title.replace("Senior", "").replace("Junior", ""),
-        company_name: "InnovateTech",
-        location: "Remote",
-        employment_type: currentJob.employment_type,
-        salary: currentJob.salary,
-        experience_level: "Mid-level",
-        description: "Similar role in a fast-growing startup environment...",
-        requirements: currentJob.requirements,
-        department: currentJob.department,
-        benefits: currentJob.benefits,
-        created_at: new Date(
-          Date.now() - 1 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-        match_percentage: Math.floor(Math.random() * 15) + 65,
-      },
-    ];
-
-    setSimilarJobs(mockSimilarJobs);
-  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -229,8 +175,7 @@ export function JobApplicationPage() {
   };
 
   const handleStartInterview = async () => {
-    navigate(`/interview`);
-    // Commented out for now as it's commented in the original code
+    navigate(`/interview/`);
     // if (!cvFile || !jobId) {
     //   toast.error("Please upload your CV");
     //   return;
@@ -241,32 +186,25 @@ export function JobApplicationPage() {
     //   formData.append("cv", cvFile);
     //   formData.append("job", jobId);
 
-    //   const response = await api.post(
-    //     "/applications/check-eligibility/",
-    //     formData,
-    //     { headers: { "Content-Type": "multipart/form-data" } }
-    //   );
+    //   const response = await api.post("/applications/", formData, {
+    //     headers: { "Content-Type": "multipart/form-data" },
+    //   });
 
     //   if (response.data.eligible) {
-    //     navigate(`/interview/${response.data.interview_id}`);
+    //     navigate(`/interview/${response.data.id}`);
+    //     toast.success("Application successful! Starting interview...");
     //   } else {
     //     setEligibilityResult({
     //       eligible: false,
-    //       message: response.data.message,
+    //       message: "Your skills don't match the job requirements",
     //       match_score: response.data.match_score,
-    //       missing_skills: response.data.missing_skills
+    //       missing_skills: response.data.missing_skills.split(", "),
     //     });
     //   }
     // } catch (error: any) {
     //   toast.error(error.response?.data?.error || "Application failed");
     // }
   };
-
-  // const getMatchColor = (percentage: number) => {
-  //   if (percentage >= 80) return "text-green-600";
-  //   if (percentage >= 60) return "text-blue-600";
-  //   return "text-orange-500";
-  // };
 
   if (isLoading) {
     return (
@@ -473,15 +411,6 @@ export function JobApplicationPage() {
                         </p>
                       </div>
                     </div>
-
-                    {/* {job.match_percentage && (
-                      <div className="mt-4 md:mt-0 flex items-center justify-center px-4 py-2 bg-green-50 rounded-full">
-                        <Shield className="h-5 w-5 text-green-600 mr-2" />
-                        <span className="font-semibold text-green-700">
-                          {job.match_percentage}% Match
-                        </span>
-                      </div>
-                    )} */}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
@@ -584,79 +513,6 @@ export function JobApplicationPage() {
                   </div>
                 </div>
               </motion.div>
-
-              {/* Similar Jobs Section */}
-              {/* {similarJobs.length > 0 && (
-                <motion.div variants={itemVariants} className="space-y-4">
-                  <h2 className="text-xl font-bold text-gray-900 pl-2">
-                    Similar Positions
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {similarJobs.map((simJob, index) => (
-                      <motion.div
-                        key={index}
-                        whileHover={{
-                          y: -5,
-                          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                        }}
-                        className="bg-white rounded-xl shadow-sm border border-gray-100 hover:border-blue-200 p-5"
-                      >
-                        <div className="flex justify-between mb-3">
-                          <div>
-                            <h3 className="font-semibold text-gray-900">
-                              {simJob.title}
-                            </h3>
-                            <p className="text-sm text-blue-600">
-                              {simJob.company_name}
-                            </p>
-                          </div>
-                          {simJob.match_percentage && (
-                            <div
-                              className={`flex items-center ${getMatchColor(
-                                simJob.match_percentage
-                              )}`}
-                            >
-                              <Shield className="h-4 w-4 mr-1" />
-                              <span className="text-xs font-medium">
-                                {simJob.match_percentage}% Match
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full flex items-center">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {simJob.location}
-                          </span>
-                          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center">
-                            <Briefcase className="h-3 w-3 mr-1" />
-                            {formatEmploymentType(simJob.employment_type)}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between mt-4">
-                          <span className="text-xs text-gray-500 flex items-center">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {formatDistanceToNow(
-                              new Date(simJob.created_at)
-                            )}{" "}
-                            ago
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                            onClick={() => navigate(`/jobs/${simJob.id}`)}
-                          >
-                            View Job
-                          </Button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              )} */}
             </motion.div>
 
             <motion.div variants={itemVariants} className="space-y-6">
