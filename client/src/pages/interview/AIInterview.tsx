@@ -563,8 +563,8 @@ export function AIInterview() {
               </div>
             </nav>
 
-            <main className="flex-grow max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <section className="lg:col-span-2 space-y-6">
+            <main className="flex-grow max-w-8xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <section className="lg:col-span-1 space-y-6">
                 <motion.div
                   className="relative bg-gradient-to-b from-gray-900 to-gray-800 rounded-2xl overflow-hidden shadow-xl aspect-video"
                   variants={fadeInVariants}
@@ -633,7 +633,187 @@ export function AIInterview() {
                     </div>
                   </div>
                 </motion.div>
+                <motion.div
+                  className="space-y-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  {showWarning && (
+                    <div className="px-5 py-4 bg-amber-50 border border-amber-200 rounded-xl shadow-sm">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <AlertTriangle className="h-5 w-5 text-amber-500" />
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-amber-800">
+                            Media Warning
+                          </h3>
+                          <div className="mt-1 text-sm text-amber-700">
+                            <p>
+                              Please enable your {!audioEnabled && "microphone"}
+                              {!audioEnabled && !cameraEnabled && " and "}
+                              {!cameraEnabled && "camera"} for the best
+                              interview experience.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {cameraEnabled && (
+                    <div className="px-5 py-4 bg-green-50 border border-green-200 rounded-xl shadow-sm">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-green-800">
+                            Ready to Go
+                          </h3>
+                          <div className="mt-1 text-sm text-green-700">
+                            <p>
+                              Your interview is in progress. Take your time and
+                              answer each question thoughtfully.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="px-5 py-4 bg-blue-50 border border-blue-200 rounded-xl shadow-sm">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <Video className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-blue-800">
+                          Interview Tips
+                        </h3>
+                        <div className="mt-1 text-sm text-blue-700">
+                          <p>
+                            Look directly at the camera while answering
+                            questions and maintain a professional posture.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </section>
 
+              <aside className="lg:col-span-1 flex flex-col gap-6">
+                <motion.div
+                  className="bg-white rounded-2xl shadow-xl p-6 flex flex-col items-center border border-gray-100"
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <div
+                    className={`w-48 h-48 rounded-full mb-4 overflow-hidden ${
+                      isSpeaking
+                        ? "ring-4 ring-indigo-400 ring-offset-2 transition-all duration-300"
+                        : ""
+                    }`}
+                  >
+                    <div
+                      className={`w-full h-full relative ${
+                        isSpeaking ? "animate-pulse" : ""
+                      }`}
+                    >
+                      <img
+                        src={aibot}
+                        alt="AI Interviewer"
+                        className="rounded-full w-full h-full object-cover"
+                      />
+                      {isSpeaking && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-indigo-500/20 to-transparent" />
+                      )}
+                    </div>
+                  </div>
+
+                  <h2 className="text-xl font-bold text-indigo-700 mb-1">
+                    AI Interview Assistant
+                  </h2>
+
+                  <div className="text-gray-600 text-center mb-4">
+                    <p className="text-sm">
+                      {isSpeaking
+                        ? "Speaking... please listen carefully"
+                        : "Your interview coach and assistant"}
+                    </p>
+                  </div>
+
+                  {isSpeaking && (
+                    <div className="flex justify-center w-full mb-4">
+                      <div className="flex space-x-1 items-center">
+                        <div className="w-1 h-2 bg-indigo-500 rounded-full animate-bounce"></div>
+                        <div
+                          className="w-1 h-3 bg-indigo-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.2s" }}
+                        ></div>
+                        <div
+                          className="w-1 h-4 bg-indigo-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.4s" }}
+                        ></div>
+                        <div
+                          className="w-1 h-3 bg-indigo-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.6s" }}
+                        ></div>
+                        <div
+                          className="w-1 h-2 bg-indigo-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.8s" }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="w-full mt-2 space-y-4">
+                    {/* <div className="flex items-center justify-between px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center">
+                        <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                          <span className="text-indigo-600 font-bold">
+                            {currentQuestionIndex + 1}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">
+                            Current Question
+                          </p>
+                          <p className="text-sm font-medium text-gray-800">
+                            Question {currentQuestionIndex + 1} of 15
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs text-gray-500">Progress</span>
+                        <p className="text-sm font-medium text-gray-800">
+                          {Math.round(calculateProgress())}%
+                        </p>
+                      </div>
+                    </div> */}
+
+                    {/* <div className="flex justify-around items-center w-full">
+                      <div className="text-center">
+                        <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-1">
+                          <Clock className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <p className="text-xs text-gray-500">Duration</p>
+                        <p className="text-sm font-medium text-gray-800">
+                          {formatTime(interviewDuration)}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-1">
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                        </div>
+                        <p className="text-xs text-gray-500">Completed</p>
+                        <p className="text-sm font-medium text-gray-800">
+                          {currentQuestionIndex} of 15
+                        </p>
+                      </div>
+                    </div> */}
+                  </div>
+                </motion.div>
                 <motion.div
                   className="bg-white rounded-2xl shadow-xl p-6 relative overflow-hidden border border-gray-100"
                   initial={{ opacity: 0, y: 20 }}
@@ -738,145 +918,6 @@ export function AIInterview() {
                       )}
                     </Button>
                   </div>
-                </motion.div>
-              </section>
-
-              <aside className="lg:col-span-1 flex flex-col gap-6">
-                <motion.div
-                  className="bg-white rounded-2xl shadow-xl p-6 flex flex-col items-center border border-gray-100"
-                  initial={{ scale: 0.95, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <div
-                    className={`w-28 h-28 rounded-full mb-4 overflow-hidden ${
-                      isSpeaking
-                        ? "ring-4 ring-indigo-400 ring-offset-2 transition-all duration-300"
-                        : ""
-                    }`}
-                  >
-                    <div
-                      className={`w-full h-full relative ${
-                        isSpeaking ? "animate-pulse" : ""
-                      }`}
-                    >
-                      <img
-                        src={aibot}
-                        alt="AI Interviewer"
-                        className="rounded-full w-full h-full object-cover"
-                      />
-                      {isSpeaking && (
-                        <div className="absolute inset-0 bg-gradient-to-t from-indigo-500/20 to-transparent" />
-                      )}
-                    </div>
-                  </div>
-
-                  <h2 className="text-xl font-bold text-indigo-700 mb-1">
-                    AI Interview Assistant
-                  </h2>
-
-                  <div className="text-gray-600 text-center mb-4">
-                    <p className="text-sm">
-                      {isSpeaking
-                        ? "Speaking... please listen carefully"
-                        : "Your interview coach and assistant"}
-                    </p>
-                  </div>
-
-                  {isSpeaking && (
-                    <div className="flex justify-center w-full mb-4">
-                      <div className="flex space-x-1 items-center">
-                        <div className="w-1 h-2 bg-indigo-500 rounded-full animate-bounce"></div>
-                        <div
-                          className="w-1 h-3 bg-indigo-500 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.2s" }}
-                        ></div>
-                        <div
-                          className="w-1 h-4 bg-indigo-500 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.4s" }}
-                        ></div>
-                        <div
-                          className="w-1 h-3 bg-indigo-500 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.6s" }}
-                        ></div>
-                        <div
-                          className="w-1 h-2 bg-indigo-500 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.8s" }}
-                        ></div>
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
-
-                {/* Status Indicators */}
-                <motion.div
-                  className="space-y-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  {showWarning && (
-                    <div className="px-5 py-4 bg-amber-50 border border-amber-200 rounded-xl shadow-sm">
-                      <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                          <AlertTriangle className="h-5 w-5 text-amber-500" />
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-sm font-medium text-amber-800">
-                            Media Warning
-                          </h3>
-                          <div className="mt-1 text-sm text-amber-700">
-                            <p>
-                              Please enable your {!audioEnabled && "microphone"}
-                              {!audioEnabled && !cameraEnabled && " and "}
-                              {!cameraEnabled && "camera"} for the best
-                              interview experience.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="px-5 py-4 bg-blue-50 border border-blue-200 rounded-xl shadow-sm">
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0">
-                        <Video className="h-5 w-5 text-blue-500" />
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-blue-800">
-                          Interview Tips
-                        </h3>
-                        <div className="mt-1 text-sm text-blue-700">
-                          <p>
-                            Look directly at the camera while answering
-                            questions and maintain a professional posture.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {cameraEnabled && (
-                    <div className="px-5 py-4 bg-green-50 border border-green-200 rounded-xl shadow-sm">
-                      <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                          <CheckCircle className="h-5 w-5 text-green-500" />
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-sm font-medium text-green-800">
-                            Ready to Go
-                          </h3>
-                          <div className="mt-1 text-sm text-green-700">
-                            <p>
-                              Your interview is in progress. Take your time and
-                              answer each question thoughtfully.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </motion.div>
               </aside>
             </main>
