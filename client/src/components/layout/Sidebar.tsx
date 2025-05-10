@@ -45,16 +45,16 @@ export function Sidebar() {
         label: "Dashboard",
         href: `/company/${user?.id}/dashboard`,
       },
-      { icon: Briefcase, label: "Post Job", href: "/company/post-job" },
-      {
-        icon: Users,
-        label: "Candidates Result",
-        href: "/company/candidatesresults",
-      },
+      { icon: Briefcase, label: "Post Job", href: `/company/post-job/${user?.id}` },
       {
         icon: FileText,
         label: "Job postings",
         href: `/jobs/company/${user?.id}`,
+      },
+      {
+        icon: Users,
+        label: "Candidates Result",
+        href: `/company/candidatesresults/${user?.id}`,
       },
       {
         icon: Building2,

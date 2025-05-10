@@ -261,14 +261,14 @@ export function CompanyDashboard() {
                   <Button
                     variant="outline"
                     className="text-white border-white/30 hover:bg-white/10 hover:border-white"
-                    onClick={() => navigate("/company/reports")}
+                    // onClick={() => navigate("/company/reports")}
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export
                   </Button>
                   <Button
                     className="bg-white text-blue-600 hover:bg-blue-50"
-                    onClick={() => navigate("/company/post-job")}
+                    onClick={() => navigate(`/company/post-job/${user?.id}`)}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Post New Job

@@ -185,7 +185,7 @@ const CompanyJobList = () => {
 
   return (
     <DashboardLayout>
-\      <motion.header
+      <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 120, damping: 20 }}
@@ -199,14 +199,14 @@ const CompanyJobList = () => {
             <Button
               variant="outline"
               className="text-gray-500 border-gray-200 hover:bg-gray-50"
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate(`/company/${user?.id}/dashboard`)}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Dashboard
             </Button>
             {user?.id?.toString() === companyId && (
               <Button
-                onClick={() => navigate("/company/post-job")}
+                onClick={() => navigate(`/company/post-job/${user?.id}`)}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Briefcase className="w-4 h-4 mr-2" />

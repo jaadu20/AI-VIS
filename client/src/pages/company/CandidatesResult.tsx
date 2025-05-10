@@ -23,7 +23,7 @@ import { DashboardLayout } from "../../components/layout/DashboardLayout";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { useNavigate } from "react-router-dom";
-
+import { useAuthStore } from "../../store/authStore";
 // Animation variants
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -58,6 +58,7 @@ const ScoreBadge = ({ score }: { score: string }) => {
 };
 
 export function CandidatesResult() {
+  const user = useAuthStore((state) => state.user);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterScore, setFilterScore] = useState("all");
   const [filterPosition, setFilterPosition] = useState("all");
@@ -207,13 +208,13 @@ export function CandidatesResult() {
          <Button
               variant="outline"
               className="text-gray-500 border-gray-200 hover:bg-gray-50"
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate(`/company/${user?.id}/dashboard`)}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Dashboard
             </Button>
             <Button
-              onClick={() => {}}
+              // onClick={() => {}}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Download className="w-4 h-4 mr-2" />

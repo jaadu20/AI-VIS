@@ -71,7 +71,7 @@ function App() {
           }
         />
         <Route
-          path="/company/candidatesresults"
+          path="/company/candidatesresults/:jobId"
           element={
             <PrivateRoute allowedRoles={["company"]}>
               <CandidatesResult />
@@ -87,7 +87,7 @@ function App() {
           }
         />
         <Route
-          path="/company/post-job"
+          path="/company/post-job/:jobId"
           element={
             <PrivateRoute allowedRoles={["company"]}>
               <JobPostingForm />
