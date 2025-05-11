@@ -21,6 +21,7 @@ import {
   Shield,
   ChevronDown,
   BookOpen,
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -30,6 +31,13 @@ import { formatDistanceToNow } from "date-fns";
 import api from "../../api";
 import { toast } from "react-hot-toast";
 import { useAuthStore } from "../../store/authStore";
+
+interface ScheduledInterview {
+  id: string;
+  jobTitle: string;
+  companyName: string;
+  dateTime: string;
+}
 
 interface Job {
   id: string;
@@ -76,6 +84,26 @@ const jobCategories = [
   "Marketing",
   "Healthcare",
   "Education",
+];
+
+// scheduledInterviews mock data
+const scheduledInterviews: ScheduledInterview[] = [
+  {
+    id: "interview-1",
+    jobTitle: "Senior Frontend Developer",
+    companyName: "TechCorp Inc.",
+    dateTime: new Date(
+      new Date().getTime() + 2 * 24 * 60 * 60 * 1000
+    ).toISOString(),
+  },
+  {
+    id: "interview-2",
+    jobTitle: "React Developer",
+    companyName: "InnoSoft Solutions",
+    dateTime: new Date(
+      new Date().getTime() + 5 * 24 * 60 * 60 * 1000
+    ).toISOString(),
+  },
 ];
 
 export function CandidateDashboard() {
@@ -312,9 +340,9 @@ export function CandidateDashboard() {
             transition={{ delay: 0.2 }}
             className="mb-8"
           >
-            <h1 className="text-3xl font-bold text-gray-900 mb-6">
+            {/* <h1 className="text-3xl font-bold text-gray-900 mb-6">
               Your Dashboard
-            </h1>
+            </h1> */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               {[
                 {
@@ -363,7 +391,103 @@ export function CandidateDashboard() {
               ))}
             </div>
           </motion.div>
+          {/* Scheduled Interviews Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-6"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Upcoming Interviews
+              </h2>
+              <Button
+                variant="outline"
+                className="border-blue-200 text-blue-600 flex items-center space-x-1"
+                onClick={() => navigate("/interviews")}
+              >
+                <span>View All</span>
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
 
+            {scheduledInterviews.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {scheduledInterviews.map((interview) => (
+                  <motion.div
+                    key={interview.id}
+                    whileHover={{
+                      y: -5,
+                      boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.15)",
+                    }}
+                    className="bg-white rounded-xl shadow-md border border-gray-100 p-4"
+                  >
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1 flex justify-between items-center">
+                      <span>{interview.jobTitle}</span>
+                      <Calendar className="h-6 w-6 text-blue-600" />
+                    </h3>
+                    <p className="text-gray-600 font-medium mb-2">
+                      {interview.companyName}
+                    </p>
+
+                    <div className="space-y-3 text-sm">
+                      <div className="flex items-start">
+                        <Clock className="h-4 w-4 text-gray-500 mt-0.5 mr-2" />
+                        <div>
+                          <p className="text-gray-700 font-medium">
+                            {new Date(interview.dateTime).toLocaleDateString(
+                              "en-US",
+                              {
+                                weekday: "long",
+                                month: "short",
+                                day: "numeric",
+                              }
+                            )}
+                          </p>
+                          <p className="text-gray-500">
+                            {new Date(interview.dateTime).toLocaleTimeString(
+                              "en-US",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex gap-2">
+                      <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                        Start
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 border-blue-200 text-blue-600"
+                      >
+                        Reschedule
+                      </Button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center bg-blue-50 rounded-xl text-center"
+              >
+                <ClipboardList className="h-16 w-16 text-blue-400 " />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  No interviews scheduled yet!
+                </h3>
+                <p className="text-gray-600 max-w-md">
+                  You don't have any upcoming interviews.
+                </p>
+              </motion.div>
+            )}
+          </motion.div>
           {/* Category Navigation */}
           <motion.div
             initial={{ opacity: 0 }}

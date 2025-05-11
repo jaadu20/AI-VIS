@@ -27,7 +27,7 @@ import {
 import { toast } from "react-hot-toast";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
-import api from "../../api"; // Added missing import for API
+import api from "../../api"; 
 
 // Motion components for animations
 const MotionDiv: React.FC<{
