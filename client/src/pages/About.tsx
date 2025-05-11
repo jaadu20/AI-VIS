@@ -128,7 +128,7 @@ export function About() {
               </span>
             </motion.h1>
             <p className="text-xl text-gray-600 mx-auto">
-              Founded in 2021, AI-VIS is on a mission to transform the hiring
+              Founded in 2025, AI-VIS is on a mission to transform the hiring
               process with advanced artificial intelligence and machine learning
               technologies.
             </p>
@@ -333,31 +333,31 @@ export function About() {
             <div className="space-y-24">
               {[
                 {
-                  year: "2021",
+                  year: "2025",
                   title: "Foundation",
                   desc: "AI-VIS was founded by a team of AI researchers, HR professionals, and recruitment experts with a shared vision of transforming the interview process.",
-                  highlight: "Secured $3M in seed funding",
+                  highlight: "Secured $0 in seed funding",
                 },
                 {
-                  year: "2022",
+                  year: "2025",
                   title: "Product Launch",
                   desc: "After intensive development and testing, we launched our first AI video interview platform, supporting basic candidate assessment for small to medium businesses.",
-                  highlight: "Onboarded our first 100 customers",
+                  highlight: "Onboarded our first 10 customers",
                 },
                 {
-                  year: "2023",
+                  year: "2026",
                   title: "Growth & Expansion",
                   desc: "Expanded our team and capabilities, adding advanced sentiment analysis, multilingual support, and comprehensive analytics dashboards.",
                   highlight: "Reached 10,000 interviews processed monthly",
                 },
                 {
-                  year: "2024",
+                  year: "2027",
                   title: "Enterprise Solutions",
                   desc: "Introduced enterprise-grade solutions with custom integrations, advanced security features, and dedicated support teams for larger organizations.",
                   highlight: "Partnered with Fortune 500 companies",
                 },
                 {
-                  year: "2025",
+                  year: "2028",
                   title: "Global Impact",
                   desc: "Today, AI-VIS serves clients in over 30 countries, helping companies of all sizes find their ideal candidates through our state-of-the-art platform.",
                   highlight: "500,000+ interviews facilitated",
@@ -535,17 +535,17 @@ export function About() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
               {
-                metric: "500K+",
+                metric: "50K+",
                 label: "Interviews Conducted",
                 icon: Video,
               },
               {
-                metric: "2,000+",
+                metric: "2,00+",
                 label: "Corporate Clients",
                 icon: Briefcase,
               },
               {
-                metric: "30+",
+                metric: "3+",
                 label: "Countries Served",
                 icon: Globe,
               },

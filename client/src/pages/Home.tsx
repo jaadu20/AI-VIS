@@ -241,8 +241,8 @@ export function Home() {
               Engineered for Hiring Excellence
             </motion.h2>
             <p className="text-gray-600 text-lg">
-              Our AI-powered platform combines cutting-edge technology with
-              intuitive design to deliver the most effective video interview
+              Our platform combines cutting-edge technology with
+              intuitive design to deliver the most effective AI-powered video interview
               experience.
             </p>
           </div>
@@ -260,7 +260,7 @@ export function Home() {
               {
                 icon: Brain,
                 title: "Dynamic Question Generation",
-                desc: "AI-powered questions adapt based on previous answers using advanced LLaMA-3 model",
+                desc: "AI-powered questions adapt based on previous presponses using advanced AI model",
                 color: "blue",
               },
               {
