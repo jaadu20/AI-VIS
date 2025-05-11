@@ -133,7 +133,17 @@ const InterviewOptionsModal = ({
                 <X className="h-5 w-5 text-gray-500" />
               </button>
             </div>
-
+            <div className="flex justify-between items-center p-6 border-b border-gray-100">
+              <div className="flex items-center space-x-2">
+                <Zap className="h-6 w-6 text-blue-600" />
+                <h4 className="text-lg font-semibold text-gray-900">
+                  AI-Powered Interview
+                </h4>
+              </div>
+              <p className="text-sm text-green-700 font-medium">
+               Congratulation you are eligible, Now
+              </p>
+            </div>
             <div className="p-6 space-y-6">
               <motion.div
                 whileHover={{ y: -2 }}
@@ -146,7 +156,7 @@ const InterviewOptionsModal = ({
                   </div>
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900">
-                      Start Interview Now
+                      Start Instant Interview
                     </h4>
                     <p className="text-gray-600">
                       Begin your AI-powered interview immediately
