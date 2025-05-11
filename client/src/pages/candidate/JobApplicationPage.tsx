@@ -580,79 +580,6 @@ export function JobApplicationPage() {
                   </div>
                 </div>
               </motion.div>
-
-              {/* Similar Jobs Section */}
-              {similarJobs.length > 0 && (
-                <motion.div variants={itemVariants} className="space-y-4">
-                  <h2 className="text-xl font-bold text-gray-900 pl-2">
-                    Similar Positions
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {similarJobs.map((simJob, index) => (
-                      <motion.div
-                        key={index}
-                        whileHover={{
-                          y: -5,
-                          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                        }}
-                        className="bg-white rounded-xl shadow-sm border border-gray-100 hover:border-blue-200 p-5"
-                      >
-                        <div className="flex justify-between mb-3">
-                          <div>
-                            <h3 className="font-semibold text-gray-900">
-                              {simJob.title}
-                            </h3>
-                            <p className="text-sm text-blue-600">
-                              {simJob.company_name}
-                            </p>
-                          </div>
-                          {simJob.match_percentage && (
-                            <div
-                              className={`flex items-center ${getMatchColor(
-                                simJob.match_percentage
-                              )}`}
-                            >
-                              <Shield className="h-4 w-4 mr-1" />
-                              <span className="text-xs font-medium">
-                                {simJob.match_percentage}% Match
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full flex items-center">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {simJob.location}
-                          </span>
-                          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center">
-                            <Briefcase className="h-3 w-3 mr-1" />
-                            {formatEmploymentType(simJob.employment_type)}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between mt-4">
-                          <span className="text-xs text-gray-500 flex items-center">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {formatDistanceToNow(
-                              new Date(simJob.created_at)
-                            )}{" "}
-                            ago
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                            onClick={() => navigate(`/jobs/${simJob.id}`)}
-                          >
-                            View Job
-                          </Button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
             </motion.div>
 
             <motion.div variants={itemVariants} className="space-y-6">
@@ -763,7 +690,6 @@ export function JobApplicationPage() {
                   </div>
                 </div>
               </motion.div>
-
               {/* Interview Process Card */}
               <motion.div
                 whileHover={{ y: -5 }}
@@ -833,35 +759,6 @@ export function JobApplicationPage() {
                   </div>
                 </div>
               </motion.div>
-
-              {/* Company Insights Card */}
-              <motion.div
-                whileHover={{ y: -5 }}
-                className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:border-blue-200 p-6"
-              >
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                  <Building2 className="h-5 w-5 text-blue-600 mr-2" />
-                  Company Insights
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Calendar className="h-5 w-5 text-gray-500" />
-                    <span className="text-sm text-gray-600">Founded: 2015</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <User className="h-5 w-5 text-gray-500" />
-                    <span className="text-sm text-gray-600">
-                      501-1000 employees
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Star className="h-5 w-5 text-gray-500" />
-                    <span className="text-sm text-gray-600">
-                      4.8/5 Glassdoor rating
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
             </motion.div>
           </motion.div>
         </div>
@@ -872,26 +769,6 @@ export function JobApplicationPage() {
         onClose={() => setEligibilityResult(null)}
         onRetry={() => setCvFile(null)}
       />
-
-      {/* Quick Navigation FAB */}
-      <motion.div
-        initial={{ opacity: 0, y: 100 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="fixed bottom-8 right-8 flex gap-2"
-      >
-        <Button
-          className="rounded-full p-3 shadow-lg bg-blue-600 hover:bg-blue-700"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        >
-          <ChevronLeft className="h-5 w-5 transform rotate-90" />
-        </Button>
-        <Button
-          className="rounded-full p-3 shadow-lg bg-green-600 hover:bg-green-700"
-          onClick={() => navigate(`/candidate/${user?.id}/saved-jobs`)}
-        >
-          <Star className="h-5 w-5" />
-        </Button>
-      </motion.div>
     </div>
   );
 }
