@@ -777,7 +777,7 @@ export function CandidateProfile() {
                 variant="outline"
                 className="flex items-center border-red-200 text-red-600 hover:bg-red-50 py-2 pr-2"
               >
-                <LogOut className="h-4 w-12" />
+                <LogOut className="h-4 w-8" />
                 Logout
               </Button>
             </div>
