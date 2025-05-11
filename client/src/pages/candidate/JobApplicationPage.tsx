@@ -795,6 +795,7 @@ export function JobApplicationPage() {
                   
                 </div>
               </motion.div>
+              {/* Interview Process Card */}
               <motion.div
                 whileHover={{ y: -5 }}
                 transition={{ type: "spring", stiffness: 300 }}
