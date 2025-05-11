@@ -23,7 +23,6 @@ import { CompanyProfile } from "./pages/company/CompanyProfile";
 import { JobApplicationPage } from "./pages/candidate/JobApplicationPage";
 import { Pricing } from "./pages/Pricing";
 import CompanyJobList from "./pages/company/CompanyJobList";
-import { InterviewOptionsModal } from "./pages/candidate/ScheduleInterview";
 function PrivateRoute({
   children,
   allowedRoles,
@@ -115,23 +114,6 @@ function App() {
             <PrivateRoute allowedRoles={["candidate"]}>
               <AIInterview />
             </PrivateRoute>
-          }
-        />
-        <Route
-          path="/schedule"
-          element={
-            <InterviewOptionsModal
-              isOpen={false}
-              onClose={function (): void {
-                throw new Error("Function not implemented.");
-              }}
-              onSchedule={function (_date: string, _time: string): void {
-                throw new Error("Function not implemented.");
-              }}
-              onStartNow={function (): void {
-                throw new Error("Function not implemented.");
-              }}
-            />
           }
         />
         <Route path="/complete" element={<InterviewProgress />} />
