@@ -125,7 +125,7 @@ function App() {
               onClose={function (): void {
                 throw new Error("Function not implemented.");
               }}
-              onSchedule={function (date: string, time: string): void {
+              onSchedule={function (_date: string, _time: string): void {
                 throw new Error("Function not implemented.");
               }}
               onStartNow={function (): void {

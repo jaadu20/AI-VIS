@@ -3,14 +3,14 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../../components/ui/Button";
 
-interface InterviewOptionsModalProps {
+interface InterviewOptionsModal {
   isOpen: boolean;
   onClose: () => void;
   onSchedule: (date: string, time: string) => void;
   onStartNow: () => void;
 }
 
-export function InterviewOptionsModal({ isOpen, onClose, onSchedule, onStartNow }: InterviewOptionsModalProps) {
+export function InterviewOptionsModal({ isOpen, onClose, onSchedule, onStartNow }: InterviewOptionsModal) {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
 
