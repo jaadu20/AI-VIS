@@ -94,7 +94,7 @@ export function About() {
 
       {/* Hero Section with Company Vision */}
       <section
-        className="pt-60 pb-56 px-4 bg-fixed bg-center bg-cover relative overflow-hidden"
+        className="pt-56 pb-60 px-4 bg-fixed bg-center bg-cover relative overflow-hidden"
         style={{
           backgroundImage: `linear-gradient(to bottom, rgba(241, 245, 249, 0.9), rgba(209, 226, 249, 0.95))`,
         }}
