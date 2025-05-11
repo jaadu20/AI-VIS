@@ -141,7 +141,8 @@ const InterviewOptionsModal = ({
                 </h4>
               </div>
               <p className="text-sm text-green-700 font-medium">
-                Congratulation you are eligible, Now
+                Congratulation you are eligible for this interview now select an option
+                to proceed further
               </p>
             </div>
             <div className="p-6 space-y-6">
