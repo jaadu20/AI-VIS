@@ -94,7 +94,7 @@ export function About() {
 
       {/* Hero Section with Company Vision */}
       <section
-        className="pt-36 pb-24 px-4 bg-fixed bg-center bg-cover relative overflow-hidden"
+        className="pt-60 pb-56 px-4 bg-fixed bg-center bg-cover relative overflow-hidden"
         style={{
           backgroundImage: `linear-gradient(to bottom, rgba(241, 245, 249, 0.9), rgba(209, 226, 249, 0.95))`,
         }}
@@ -333,7 +333,7 @@ export function About() {
             <div className="space-y-24">
               {[
                 {
-                  year: "2025",
+                  year: "2024",
                   title: "Foundation",
                   desc: "AI-VIS was founded by a team of AI researchers, HR professionals, and recruitment experts with a shared vision of transforming the interview process.",
                   highlight: "Secured $0 in seed funding",
@@ -470,13 +470,13 @@ export function About() {
                 name: "Zainab Jabbar",
                 role: "Director of Customer Success",
                 bio: "Customer experience specialist focused on helping organizations maximize the value of their AI investments.",
-                specialty: "NLP",
+                specialty: "Customer Experience",
               },
               {
                 name: "Muarij Shakeel",
                 role: "Director of Research",
                 bio: "Expertise in sentiment analysis and emotion recognition algorithms.",
-                specialty: "Customer Experience",
+                specialty: "ML Engineering",
               },
             ].map((member, i) => (
               <motion.div

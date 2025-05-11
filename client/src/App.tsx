@@ -16,14 +16,14 @@ import { JobPostingForm } from "./pages/company/JobPostingForm";
 import { useAuthStore } from "./store/authStore";
 import { About } from "./pages/About";
 import { Contact } from "./pages/Contact";
-import { Forgetpass } from "./pages/auth/ForgetPassword";
+import { ForgetPassword } from "./pages/auth/ForgetPassword";
 import { ResetPassword } from "./pages/auth/ResetPassword";
 import { CandidatesResult } from "./pages/company/CandidatesResult";
 import { CompanyProfile } from "./pages/company/CompanyProfile";
 import { JobApplicationPage } from "./pages/candidate/JobApplicationPage";
 import { Pricing } from "./pages/Pricing";
 import CompanyJobList from "./pages/company/CompanyJobList";
-
+import { InterviewOptionsModal } from "./pages/candidate/ScheduleInterview";
 function PrivateRoute({
   children,
   allowedRoles,
@@ -54,12 +54,9 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/forgetpass" element={<Forgetpass />} />
-        <Route path="/pricing" element={<Pricing/>} />
-        <Route
-          path="/reset-password/:uidb64/:token"
-          element={<ResetPassword />}
-        />
+        <Route path="/forgetpass" element={<ForgetPassword />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/ResetPassword" element={<ResetPassword />} />
 
         {/* Company Routes */}
         <Route
@@ -120,7 +117,23 @@ function App() {
             </PrivateRoute>
           }
         />
-
+        <Route
+          path="/schedule"
+          element={
+            <InterviewOptionsModal
+              isOpen={false}
+              onClose={function (): void {
+                throw new Error("Function not implemented.");
+              }}
+              onSchedule={function (date: string, time: string): void {
+                throw new Error("Function not implemented.");
+              }}
+              onStartNow={function (): void {
+                throw new Error("Function not implemented.");
+              }}
+            />
+          }
+        />
         <Route path="/complete" element={<InterviewProgress />} />
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/jobs/:jobId/apply" element={<JobApplicationPage />} />
