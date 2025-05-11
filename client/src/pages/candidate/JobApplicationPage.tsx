@@ -141,7 +141,7 @@ const InterviewOptionsModal = ({
                 </h4>
               </div>
               <p className="text-sm text-green-700 font-medium">
-               Congratulation you are eligible, Now
+                Congratulation you are eligible, Now
               </p>
             </div>
             <div className="p-6 space-y-6">
@@ -449,8 +449,7 @@ export function JobApplicationPage() {
   };
 
   const handleScheduleInterview = (date: string, time: string) => {
-    setShowInterviewOptions(false);
-
+    navigate(`/candidate/${user?.id}/dashboard`);
     // if (!cvFile || !jobId) return;
     // const formData = new FormData();
     // formData.append("cv", cvFile);
@@ -486,7 +485,7 @@ export function JobApplicationPage() {
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center justify-between h-16">
               <Button
-                onClick={() => navigate("/candidate/dashboard")}
+                onClick={() => navigate(`/candidate/${user?.id}/dashboard`)}
                 variant="outline"
                 className="flex items-center space-x-2 border-blue-200 text-blue-600"
               >
@@ -506,7 +505,7 @@ export function JobApplicationPage() {
               <Button
                 variant="ghost"
                 className="flex items-center space-x-2 text-gray-600 hover:text-blue-600"
-                onClick={() => navigate(`/candidate/profile/${user?.id}`)}
+                onClick={() => navigate(`/candidate/${user?.id}/dashboard`)}
               >
                 <User className="h-5 w-5" />
                 <span className="hidden sm:inline">Profile</span>
