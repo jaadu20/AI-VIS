@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../../components/ui/Button";
 import {
   Briefcase,
@@ -10,24 +10,22 @@ import {
   Video,
   FileText as FileTextIcon,
   Zap,
-  FileBarChart,
   CheckCircle2,
   UploadCloud,
-  Camera,
-  ChevronLeft,
   Building2,
-  Star,
-  Shield,
   ArrowLeft,
-  Send,
-  Calendar,
-  BookOpen,
   User,
+  X,
+  Calendar as CalendarIcon,
+  BookOpen,
+  Calendar,
+  Star,
+  FileBarChart,
 } from "lucide-react";
 import api from "../../api";
+import { ReactNode } from "react";
 import { toast } from "react-hot-toast";
 import { formatDistanceToNow } from "date-fns";
-import { EligibilityResultModal } from "../../components/EligibilityResultModal";
 import { useAuthStore } from "../../store/authStore";
 import { Skeleton } from "../../components/ui/Skeleton";
 
@@ -54,7 +52,211 @@ interface EligibilityResult {
   missing_skills?: string[];
 }
 
-// Animation variants
+interface InterviewOptionsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSchedule: (date: string, time: string) => void;
+  onTakeNow: () => void;
+  jobTitle: string;
+}
+
+const InterviewOptionsModal = ({
+  isOpen,
+  onClose,
+  onSchedule,
+  onTakeNow,
+  jobTitle,
+}: InterviewOptionsModalProps) => {
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
+
+  const getNextDays = () => {
+    const days = [];
+    const today = new Date();
+    for (let i = 1; i <= 7; i++) {
+      const nextDay = new Date(today);
+      nextDay.setDate(today.getDate() + i);
+      const formattedDate = nextDay.toISOString().split("T")[0];
+      const dayName = nextDay.toLocaleDateString("en-US", { weekday: "short" });
+      const dayNumber = nextDay.getDate();
+      const month = nextDay.toLocaleDateString("en-US", { month: "short" });
+      days.push({
+        value: formattedDate,
+        label: `${dayName}, ${month} ${dayNumber}`,
+      });
+    }
+    return days;
+  };
+
+  const timeSlots = [
+    "09:00 AM",
+    "10:00 AM",
+    "11:00 AM",
+    "01:00 PM",
+    "02:00 PM",
+    "03:00 PM",
+    "04:00 PM",
+  ];
+
+  const handleSchedule = () => {
+    if (selectedDate && selectedTime) {
+      onSchedule(selectedDate, selectedTime);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: "spring", damping: 20 }}
+            className="bg-white w-full max-w-lg rounded-2xl shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-6 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-gray-900">
+                Interview Options - {jobTitle}
+              </h3>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <motion.div
+                whileHover={{ y: -2 }}
+                className="bg-blue-50 p-4 rounded-xl border border-blue-100 hover:border-blue-300 cursor-pointer transition-colors"
+                onClick={onTakeNow}
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="bg-blue-600 p-3 rounded-full">
+                    <Video className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900">
+                      Start Interview Now
+                    </h4>
+                    <p className="text-gray-600">
+                      Begin your AI-powered interview immediately
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+
+              <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="bg-green-600 p-3 rounded-full">
+                    <CalendarIcon className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900">
+                      Schedule for Later
+                    </h4>
+                    <p className="text-gray-600">
+                      Book your interview at a convenient time
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4 mt-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Date
+                    </label>
+                    <div className="grid grid-cols-7 gap-2">
+                      {getNextDays().map((day) => (
+                        <motion.button
+                          key={day.value}
+                          whileHover={{ y: -2 }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`p-2 rounded-lg text-center text-xs ${
+                            selectedDate === day.value
+                              ? "bg-green-600 text-white"
+                              : "bg-white border border-gray-200 text-gray-700 hover:border-green-400"
+                          }`}
+                          onClick={() => setSelectedDate(day.value)}
+                        >
+                          <div className="font-medium">
+                            {day.label.split(",")[0]}
+                          </div>
+                          <div>
+                            {day.label.split(" ")[1]} {day.label.split(" ")[2]}
+                          </div>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {selectedDate && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Time
+                      </label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {timeSlots.map((time) => (
+                          <motion.button
+                            key={time}
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.95 }}
+                            className={`p-2 rounded-lg text-center ${
+                              selectedTime === time
+                                ? "bg-green-600 text-white"
+                                : "bg-white border border-gray-200 text-gray-700 hover:border-green-400"
+                            }`}
+                            onClick={() => setSelectedTime(time)}
+                          >
+                            {time}
+                          </motion.button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-100 flex justify-between">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="border-gray-200 text-gray-700"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSchedule}
+                disabled={!selectedDate || !selectedTime}
+                className={`${
+                  selectedDate && selectedTime
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-gray-200 cursor-not-allowed text-gray-500"
+                }`}
+              >
+                Schedule Interview
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -88,6 +290,8 @@ export function JobApplicationPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [eligibilityResult, setEligibilityResult] =
     useState<EligibilityResult | null>(null);
+  const [isCheckingEligibility, setIsCheckingEligibility] = useState(false);
+  const [showInterviewOptions, setShowInterviewOptions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -174,12 +378,47 @@ export function JobApplicationPage() {
     return type.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   };
 
-  const handleStartInterview = async () => {
-    navigate(`/interview/`);
-    // if (!cvFile || !jobId) {
-    //   toast.error("Please upload your CV");
-    //   return;
+  const handleCheckEligibility = async () => {
+    if (!cvFile || !jobId) {
+      toast.error("Please upload your CV");
+      return;
+    }
+    setShowInterviewOptions(true);
+
+    // try {
+    //   setIsCheckingEligibility(true);
+    //   const formData = new FormData();
+    //   formData.append("cv", cvFile);
+    //   formData.append("job", jobId);
+
+    //   const response = await api.post(
+    //     "/applications/check-eligibility",
+    //     formData,
+    //     {
+    //       headers: { "Content-Type": "multipart/form-data" },
+    //     }
+    //   );
+
+    //   if (response.data.match_score >= 70) {
+    //     setShowInterviewOptions(true);
+    //   } else {
+    //     setEligibilityResult({
+    //       eligible: false,
+    //       message: "Your skills don't match the job requirements",
+    //       match_score: response.data.match_score,
+    //       missing_skills: response.data.missing_skills?.split(", ") || [],
+    //     });
+    //   }
+    // } catch (error: any) {
+    //   toast.error(error.response?.data?.error || "Eligibility check failed");
+    // } finally {
+    //   setIsCheckingEligibility(false);
     // }
+  };
+
+  const handleStartInterviewNow = async () => {
+    navigate("/interview");
+    // if (!cvFile || !jobId) return;
 
     // try {
     //   const formData = new FormData();
@@ -190,20 +429,39 @@ export function JobApplicationPage() {
     //     headers: { "Content-Type": "multipart/form-data" },
     //   });
 
-    //   if (response.data.eligible) {
-    //     navigate(`/interview/${response.data.id}`);
-    //     toast.success("Application successful! Starting interview...");
-    //   } else {
-    //     setEligibilityResult({
-    //       eligible: false,
-    //       message: "Your skills don't match the job requirements",
-    //       match_score: response.data.match_score,
-    //       missing_skills: response.data.missing_skills.split(", "),
-    //     });
-    //   }
+    //   navigate(`/interview/${response.data.id}`);
+    //   toast.success("Application successful! Starting interview...");
     // } catch (error: any) {
     //   toast.error(error.response?.data?.error || "Application failed");
+    // } finally {
+    //   setShowInterviewOptions(false);
     // }
+  };
+
+  const handleScheduleInterview = (date: string, time: string) => {
+    setShowInterviewOptions(false);
+
+    // if (!cvFile || !jobId) return;
+    // const formData = new FormData();
+    // formData.append("cv", cvFile);
+    // formData.append("job", jobId);
+    // formData.append("interview_date", date);
+    // formData.append("interview_time", time);
+    // api
+    //   .post("/applications/schedule-interview", formData, {
+    //     headers: { "Content-Type": "multipart/form-data" },
+    //   })
+    //   .then(() => {
+    //     toast.success(
+    //       `Interview scheduled for ${new Date(
+    //         date
+    //       ).toLocaleDateString()} at ${time}`
+    //     );
+    //     navigate("/candidate/dashboard");
+    //   })
+    //   .catch((error) => {
+    //     toast.error(error.response?.data?.error || "Scheduling failed");
+    //   });
   };
 
   if (isLoading) {
@@ -339,7 +597,6 @@ export function JobApplicationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Fixed Header with glass effect */}
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
@@ -390,7 +647,6 @@ export function JobApplicationPage() {
               variants={itemVariants}
               className="lg:col-span-2 space-y-6"
             >
-              {/* Job Details Card */}
               <motion.div
                 whileHover={{ y: -5 }}
                 transition={{ type: "spring", stiffness: 300 }}
@@ -516,7 +772,6 @@ export function JobApplicationPage() {
             </motion.div>
 
             <motion.div variants={itemVariants} className="space-y-6">
-              {/* Application Card */}
               <motion.div
                 whileHover={{ y: 0 }}
                 transition={{ type: "spring", stiffness: 300 }}
@@ -534,96 +789,119 @@ export function JobApplicationPage() {
                       </label>
                       <div
                         className={`relative flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl group transition-colors 
-                        ${
-                          isDragging
-                            ? "border-blue-500 bg-blue-50"
-                            : "border-blue-200 hover:border-blue-500"
-                        }`}
+        ${
+          isDragging
+            ? "border-blue-500 bg-blue-50"
+            : cvFile
+            ? "border-green-500 bg-green-50"
+            : "border-blue-200 hover:border-blue-500"
+        }`}
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
                       >
-                        <label
-                          htmlFor="cv-upload"
-                          className="absolute inset-0 cursor-pointer z-10"
-                        >
+                        <div className="space-y-2 text-center">
+                          <div className="flex flex-col items-center">
+                            {cvFile ? (
+                              <>
+                                <FileTextIcon className="mx-auto h-12 w-12 text-green-500" />
+                                <p className="text-sm text-gray-600 mt-2">
+                                  <span className="font-medium">
+                                    {cvFile.name}
+                                  </span>
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {(cvFile.size / (1024 * 1024)).toFixed(2)} MB
+                                </p>
+                                <button
+                                  onClick={() => setCvFile(null)}
+                                  className="mt-2 text-xs text-red-600 hover:text-red-800"
+                                >
+                                  Remove file
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <UploadCloud
+                                  className="mx-auto h-12 w-12 text-blue-400 group-hover:text-blue-500"
+                                  strokeWidth={1.5}
+                                />
+                                <p className="text-sm text-gray-600 mt-2">
+                                  <label
+                                    htmlFor="cv-upload"
+                                    className="font-medium text-blue-600 hover:text-blue-700 cursor-pointer"
+                                  >
+                                    Upload a file
+                                  </label>{" "}
+                                  or drag and drop
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  PDF, DOC, DOCX up to 5MB
+                                </p>
+                              </>
+                            )}
+                          </div>
                           <input
                             id="cv-upload"
-                            ref={fileInputRef}
+                            name="cv-upload"
                             type="file"
-                            accept=".pdf,.doc,.docx"
-                            onChange={handleFileUpload}
+                            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                             className="sr-only"
+                            ref={fileInputRef}
+                            onChange={handleFileUpload}
                           />
-                        </label>
-
-                        <div className="space-y-1 text-center relative z-0">
-                          <UploadCloud
-                            className={`mx-auto h-12 w-12 transition-colors 
-                            ${
-                              isDragging
-                                ? "text-blue-500"
-                                : "text-blue-400 group-hover:text-blue-500"
-                            }`}
-                          />
-                          <div className="flex flex-col items-center text-sm text-gray-600">
-                            <span className="font-medium text-blue-600 underline">
-                              Click to upload
-                            </span>
-                            <p className="mt-2">or drag and drop</p>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-2">
-                            PDF, DOC, DOCX (Max 5MB)
-                          </p>
                         </div>
-                        <div
-                          className={`absolute inset-0 rounded-xl transition-opacity 
-                          ${
-                            isDragging
-                              ? "opacity-100 bg-blue-500/10"
-                              : "opacity-0 group-hover:opacity-100 bg-blue-500/5"
-                          }`}
-                        />
                       </div>
-                      {cvFile && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="mt-3 flex items-center justify-between p-3 bg-blue-50 rounded-lg"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <FileTextIcon className="h-5 w-5 text-blue-600" />
-                            <span className="text-sm font-medium text-gray-700 truncate max-w-[200px]">
-                              {cvFile.name}
-                            </span>
-                          </div>
-                          <CheckCircle2 className="h-5 w-5 text-green-500" />
-                        </motion.div>
-                      )}
                     </div>
 
-                    <motion.div
+                    <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
+                      disabled={!cvFile || isCheckingEligibility}
+                      onClick={handleCheckEligibility}
+                      className={`w-full p-3 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all
+                      ${
+                        cvFile
+                          ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
+                          : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      }`}
                     >
-                      <Button
-                        onClick={handleStartInterview}
-                        className={`w-full py-4 text-base font-medium shadow-lg transition-all
-                        ${
-                          cvFile
-                            ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        }`}
-                        disabled={!cvFile}
-                      >
-                        <Zap className="h-5 w-5 mr-2" />
-                        Start AI Interview
-                      </Button>
-                    </motion.div>
+                      {isCheckingEligibility ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                          <span className="ml-2">Checking Eligibility...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <Zap className="h-5 w-5" />
+                          <span>Check Eligibility & Apply</span>
+                        </>
+                      )}
+                    </motion.button>
+
+                    {cvFile && (
+                      <div className="rounded-xl bg-blue-50 p-4 border border-blue-100">
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-blue-100 p-2 rounded-full">
+                            <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900">
+                              How it works
+                            </h3>
+                            <p className="mt-1 text-sm text-gray-600">
+                              Our AI will analyze your CV against job
+                              requirements to determine your eligibility score.
+                              If you're a good match, you'll be able to schedule
+                              or start your interview immediately.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
-
               {/* Interview Process Card */}
               <motion.div
                 whileHover={{ y: -5 }}
@@ -701,7 +979,7 @@ export function JobApplicationPage() {
               >
                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
                   <Building2 className="h-5 w-5 text-blue-600 mr-2" />
-                  Company Insights
+                  About {job.company_name}
                 </h3>
                 <div className="space-y-4">
                   <div className="flex items-center space-x-3">
@@ -725,47 +1003,33 @@ export function JobApplicationPage() {
             </motion.div>
           </motion.div>
         </div>
+
+        <InterviewOptionsModal
+          isOpen={showInterviewOptions}
+          onClose={() => setShowInterviewOptions(false)}
+          onSchedule={handleScheduleInterview}
+          onTakeNow={handleStartInterviewNow}
+          jobTitle={job?.title || ""}
+        />
       </main>
-
-      <EligibilityResultModal
-        result={eligibilityResult}
-        onClose={() => setEligibilityResult(null)}
-        onRetry={() => setCvFile(null)}
-      />
-
-      {/* Quick Navigation FAB */}
-      <motion.div
-        initial={{ opacity: 0, y: 100 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="fixed bottom-8 right-8 flex gap-2"
-      >
-        <Button
-          className="rounded-full p-3 shadow-lg bg-blue-600 hover:bg-blue-700"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        >
-          <ChevronLeft className="h-5 w-5 transform rotate-90" />
-        </Button>
-        {/* <Button
-          className="rounded-full p-3 shadow-lg bg-green-600 hover:bg-green-700"
-          onClick={() => navigate(`/candidate/${user?.id}/saved-jobs`)}
-        >
-          <Star className="h-5 w-5" />
-        </Button> */}
-      </motion.div>
     </div>
   );
 }
 
-// Reusable Section Component
 const Section = ({
   title,
   children,
 }: {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) => (
-  <div className="border-t border-gray-100 pt-8">
-    <h3 className="text-xl font-semibold text-gray-900 mb-4">{title}</h3>
+  <div className="space-y-4">
+    <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+      <span className="bg-blue-100 p-2 rounded-lg mr-3">
+        <BookOpen className="h-5 w-5 text-blue-600" />
+      </span>
+      {title}
+    </h3>
     {children}
   </div>
 );
