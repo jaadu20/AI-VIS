@@ -17,7 +17,6 @@ import { useAuthStore } from "./store/authStore";
 import { About } from "./pages/About";
 import { Contact } from "./pages/Contact";
 import { Forgetpass } from "./pages/auth/ForgetPassword";
-import { ResetPassword } from "./pages/auth/ResetPassword";
 import { CandidatesResult } from "./pages/company/CandidatesResult";
 import { CompanyProfile } from "./pages/company/CompanyProfile";
 import { Getstarted } from "./pages/Getstarted";
@@ -57,14 +56,11 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/getstarted" element={<Getstarted />} />
         <Route path="/forgetpass" element={<Forgetpass />} />
-        <Route
-          path="/reset-password/:uidb64/:token"
-          element={<ResetPassword />}
-        />
+      
 
         {/* Company Routes */}
         <Route
-          path="/company/:Id/dashboard"
+          path="/company/dashboard"
           element={
             <PrivateRoute allowedRoles={["company"]}>
               <CompanyDashboard />
@@ -80,7 +76,7 @@ function App() {
           }
         />
         <Route
-          path="/company/profile/:userId"
+          path="/company/profile"
           element={
             <PrivateRoute allowedRoles={["company"]}>
               <CompanyProfile />

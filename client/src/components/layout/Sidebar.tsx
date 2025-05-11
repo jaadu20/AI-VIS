@@ -35,15 +35,15 @@ export function Sidebar() {
       { icon: GraduationCap, label: "Profile", href: "/student/profile" },
     ],
     company: [
-      { icon: LayoutDashboard, label: "Dashboard", href: `/company/${user?.id}/dashboard`},
+      { icon: LayoutDashboard, label: "Dashboard", href: `/company/dashboard`},
       { icon: Briefcase, label: "Post Job", href: "/company/post-job" },
       {
         icon: Users,
         label: "Candidates Result",
         href: "/company/candidatesresults",
       },
-      { icon: Building2, label: "Profile", href: `/company/profile/${user?.id}` },
-      { icon: FileText, label: "Job postings", href: `/jobs/company/${user?.id}` },
+      { icon: Building2, label: "Profile", href: `/company/profile` },
+      { icon: FileText, label: "Job postings", href: `/jobs/company` },
       { icon: Upload, label: "Interviews", href: "/job/update" },
     ],
     admin: [
