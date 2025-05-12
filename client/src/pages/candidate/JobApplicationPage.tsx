@@ -394,10 +394,9 @@ export function JobApplicationPage() {
       toast.error("Please upload your CV");
       return;
     }
-    setShowInterviewOptions(true);
 
     // try {
-    //   setIsCheckingEligibility(true);
+       setIsCheckingEligibility(true);
     //   const formData = new FormData();
     //   formData.append("cv", cvFile);
     //   formData.append("job", jobId);
@@ -411,7 +410,7 @@ export function JobApplicationPage() {
     //   );
 
     //   if (response.data.match_score >= 70) {
-    //     setShowInterviewOptions(true);
+         setShowInterviewOptions(true);
     //   } else {
     //     setEligibilityResult({
     //       eligible: false,
@@ -423,7 +422,7 @@ export function JobApplicationPage() {
     // } catch (error: any) {
     //   toast.error(error.response?.data?.error || "Eligibility check failed");
     // } finally {
-    //   setIsCheckingEligibility(false);
+       setIsCheckingEligibility(false);
     // }
   };
 
