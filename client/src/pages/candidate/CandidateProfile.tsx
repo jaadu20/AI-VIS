@@ -803,7 +803,7 @@ export function CandidateProfile() {
                 <div className="flex flex-col items-center text-center">
                   {/* Profile Image */}
                   <div className="relative group mb-6">
-                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-blue-100">
+                    <div className=" w-32 h-32 rounded-full overflow-hidden border-4 border-blue-100">
                       <img
                         src={imageUrl || "/api/placeholder/120/120"}
                         alt="Profile"

@@ -418,8 +418,8 @@ export function CandidateDashboard() {
                   <motion.div
                     key={interview.id}
                     whileHover={{
-                      y: -5,
-                      boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.15)",
+                      y: 0,
+                      boxShadow: "0 10px 25px -5px rgba(27, 101, 220, 0.15)",
                     }}
                     className="bg-white rounded-xl shadow-md border border-gray-100 p-4"
                   >
