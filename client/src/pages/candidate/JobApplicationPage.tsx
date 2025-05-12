@@ -396,7 +396,7 @@ export function JobApplicationPage() {
     }
 
     // try {
-       setIsCheckingEligibility(true);
+    setIsCheckingEligibility(true);
     //   const formData = new FormData();
     //   formData.append("cv", cvFile);
     //   formData.append("job", jobId);
@@ -410,7 +410,7 @@ export function JobApplicationPage() {
     //   );
 
     //   if (response.data.match_score >= 70) {
-         setShowInterviewOptions(true);
+    setShowInterviewOptions(true);
     //   } else {
     //     setEligibilityResult({
     //       eligible: false,
@@ -422,7 +422,7 @@ export function JobApplicationPage() {
     // } catch (error: any) {
     //   toast.error(error.response?.data?.error || "Eligibility check failed");
     // } finally {
-       setIsCheckingEligibility(false);
+    setIsCheckingEligibility(false);
     // }
   };
 
@@ -678,7 +678,7 @@ export function JobApplicationPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 ">
                     {[
                       {
                         icon: MapPin,
@@ -709,13 +709,13 @@ export function JobApplicationPage() {
                     ].map((item, index) => (
                       <motion.div
                         key={index}
-                        whileHover={{ scale: 1.03 }}
+                        whileHover={{ scale: 1.01 }}
                         transition={{
                           type: "spring",
                           stiffness: 400,
                           damping: 10,
                         }}
-                        className={`flex items-center space-x-3 p-4 ${item.color} rounded-xl`}
+                        className={`flex items-center space-x-3 p-4 ${item.color} rounded-xl hover:shadow-sm`}
                       >
                         <div className="bg-white p-2 rounded-full">
                           <item.icon className="h-5 w-5 text-gray-700" />
