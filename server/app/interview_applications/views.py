@@ -1,6 +1,6 @@
 # applications/views.py
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework import generics, status
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import Application
@@ -11,68 +11,19 @@ from .serializers import (
     ScheduleInterviewSerializer
 )
 from jobs.models import Job
-from cv_analyzer import CVAnalyzer
-from matching import SkillMatcher
+from cv_analyzer import CVAnalyzer  # Note: You might need to update this import path
+from matching import SkillMatcher   # Note: You might need to update this import path
 import logging
 
 logger = logging.getLogger(__name__)
 
-class ApplicationViewSet(viewsets.ModelViewSet):
-    serializer_class = ApplicationSerializer
+class ApplicationCreateView(generics.CreateAPIView):
+    serializer_class = ApplicationCreateSerializer
     permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        """Filter applications for the current user"""
-        return Application.objects.filter(user=self.request.user)
-    
-    @action(detail=False, methods=['post'], serializer_class=EligibilityCheckSerializer)
-    def check_eligibility(self, request):
-        """Check if applicant is eligible for the job"""
-        serializer = self.get_serializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        cv_file = serializer.validated_data['cv']
-        job_id = serializer.validated_data['job']
-        
-        try:
-            job = Job.objects.get(id=job_id)
-        except Job.DoesNotExist:
-            return Response({"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-        # Initialize CV analyzer and skill matcher
-        cv_analyzer = CVAnalyzer()
-        skill_matcher = SkillMatcher()
-        
-        try:
-            # Analyze CV
-            cv_analysis = cv_analyzer.analyze_cv(cv_file)
-            if "error" in cv_analysis:
-                return Response(cv_analysis, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Calculate match score
-            match_result = skill_matcher.calculate_match_score(cv_analysis, job)
-            match_score = match_result['match_score']
-            missing_skills = match_result['missing_skills']
-            
-            response_data = {
-                "match_score": round(match_score, 2),
-                "eligible": match_score >= 70,  # Threshold for eligibility
-                "missing_skills": ", ".join(missing_skills) if missing_skills else None
-            }
-            
-            return Response(response_data, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            logger.error(f"Error in CV analysis: {str(e)}")
-            return Response(
-                {"error": "Failed to analyze CV. Please try again."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
     
     def create(self, request, *args, **kwargs):
         """Create a new application"""
-        serializer = ApplicationCreateSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
@@ -127,11 +78,92 @@ class ApplicationViewSet(viewsets.ModelViewSet):
                 {"error": "Failed to process application. Please try again."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+class ApplicationListView(generics.ListAPIView):
+    serializer_class = ApplicationSerializer
+    permission_classes = [IsAuthenticated]
     
-    @action(detail=False, methods=['post'], serializer_class=ScheduleInterviewSerializer)
-    def schedule_interview(self, request):
+    def get_queryset(self):
+        """Filter applications for the current user"""
+        return Application.objects.filter(user=self.request.user)
+
+class ApplicationDetailView(generics.RetrieveAPIView):
+    serializer_class = ApplicationSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'pk'
+    
+    def get_queryset(self):
+        return Application.objects.filter(user=self.request.user)
+
+class ApplicationUpdateView(generics.UpdateAPIView):
+    serializer_class = ApplicationSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'pk'
+    
+    def get_queryset(self):
+        return Application.objects.filter(user=self.request.user)
+
+class ApplicationDeleteView(generics.DestroyAPIView):
+    serializer_class = ApplicationSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'pk'
+    
+    def get_queryset(self):
+        return Application.objects.filter(user=self.request.user)
+
+class CheckEligibilityView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, format=None):
+        """Check if applicant is eligible for the job"""
+        serializer = EligibilityCheckSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        cv_file = serializer.validated_data['cv']
+        job_id = serializer.validated_data['job']
+        
+        try:
+            job = Job.objects.get(id=job_id)
+        except Job.DoesNotExist:
+            return Response({"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Initialize CV analyzer and skill matcher
+        cv_analyzer = CVAnalyzer()
+        skill_matcher = SkillMatcher()
+        
+        try:
+            # Analyze CV
+            cv_analysis = cv_analyzer.analyze_cv(cv_file)
+            if "error" in cv_analysis:
+                return Response(cv_analysis, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Calculate match score
+            match_result = skill_matcher.calculate_match_score(cv_analysis, job)
+            match_score = match_result['match_score']
+            missing_skills = match_result['missing_skills']
+            
+            response_data = {
+                "match_score": round(match_score, 2),
+                "eligible": match_score >= 70,  # Threshold for eligibility
+                "missing_skills": ", ".join(missing_skills) if missing_skills else None
+            }
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error in CV analysis: {str(e)}")
+            return Response(
+                {"error": "Failed to analyze CV. Please try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class ScheduleInterviewView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, format=None):
         """Schedule an interview for a job application"""
-        serializer = self.get_serializer(data=request.data)
+        serializer = ScheduleInterviewSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
@@ -190,3 +222,11 @@ class ApplicationViewSet(viewsets.ModelViewSet):
                 {"error": "Failed to schedule interview. Please try again."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+class UserApplicationsView(generics.ListAPIView):
+    """View to list all applications for the current user (redundant with ApplicationListView but included for completeness)"""
+    serializer_class = ApplicationSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Application.objects.filter(user=self.request.user)
