@@ -1,3 +1,4 @@
+# interview_applications/serializers.py
 from rest_framework import serializers
 from .models import Application
 from jobs.serializers import JobSerializer

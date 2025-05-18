@@ -11,8 +11,8 @@ from .serializers import (
     ScheduleInterviewSerializer
 )
 from jobs.models import Job
-from cv_analyzer import CVAnalyzer  # Note: You might need to update this import path
-from matching import SkillMatcher   # Note: You might need to update this import path
+from .cv_analyzer import CVAnalyzer  
+from .matching import SkillMatcher  
 import logging
 
 logger = logging.getLogger(__name__)
