@@ -14,6 +14,17 @@ from jobs.models import Job
 from .cv_analyzer import CVAnalyzer  
 from .matching import SkillMatcher  
 import logging
+from celery import shared_task
+
+@shared_task
+def async_process_application(application_id):
+    try:
+        application = Application.objects.get(id=application_id)
+        # Perform heavy processing here
+        application.status = 'processed'
+        application.save()
+    except Exception as e:
+        logger.error(f"Error processing application {application_id}: {str(e)}")
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +42,7 @@ class ApplicationCreateView(generics.CreateAPIView):
         job_id = serializer.validated_data['job']
         
         try:
-            job = Job.objects.get(id=job_id)
+            job = Job.objects   .get(id=job_id)
         except Job.DoesNotExist:
             return Response({"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND)
         
@@ -66,11 +77,8 @@ class ApplicationCreateView(generics.CreateAPIView):
                 status='pending'
             )
             application.save()
-            
-            return Response(
-                ApplicationSerializer(application).data,
-                status=status.HTTP_201_CREATED
-            )
+            async_process_application.delay(application.id)
+            return Response({"status": "processing"}, status=status.HTTP_202_ACCEPTED)
             
         except Exception as e:
             logger.error(f"Error creating application: {str(e)}")
@@ -113,26 +121,31 @@ class ApplicationDeleteView(generics.DestroyAPIView):
 
 class CheckEligibilityView(APIView):
     permission_classes = [IsAuthenticated]
-    
-    def post(self, request, format=None):
-        """Check if applicant is eligible for the job"""
+
+    def post(self, request):
+        # Add request data logging
+        logger.info(f"Received eligibility check request: {request.data}")
+        
         serializer = EligibilityCheckSerializer(data=request.data)
         if not serializer.is_valid():
+            logger.error(f"Validation error: {serializer.errors}")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        cv_file = serializer.validated_data['cv']
-        job_id = serializer.validated_data['job']
-        
+
         try:
+            job_id = serializer.validated_data['job']
+            logger.info(f"Processing job ID: {job_id}")
+            
             job = Job.objects.get(id=job_id)
-        except Job.DoesNotExist:
-            return Response({"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND)
-        
+            logger.info(f"Found job: {job.title}")
+        except (Job.DoesNotExist, ValueError):
+            return Response({"error": "Job not found or invalid job ID"}, status=status.HTTP_404_NOT_FOUND)       
         # Initialize CV analyzer and skill matcher
         cv_analyzer = CVAnalyzer()
         skill_matcher = SkillMatcher()
         
         try:
+            # Extract CV file from validated data
+            cv_file = serializer.validated_data['cv']
             # Analyze CV
             cv_analysis = cv_analyzer.analyze_cv(cv_file)
             if "error" in cv_analysis:
@@ -145,8 +158,8 @@ class CheckEligibilityView(APIView):
             
             response_data = {
                 "match_score": round(match_score, 2),
-                "eligible": match_score >= 70,  # Threshold for eligibility
-                "missing_skills": ", ".join(missing_skills) if missing_skills else None
+                "eligible": match_score >= 70,
+                "missing_skills": missing_skills if missing_skills else []
             }
             
             return Response(response_data, status=status.HTTP_200_OK)

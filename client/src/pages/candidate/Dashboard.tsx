@@ -198,7 +198,7 @@ export function CandidateDashboard() {
   };
 
   const handleApplyNow = (jobId: string) => {
-    navigate(`/jobs/${jobId}/apply`);
+    navigate(`/jobs/${jobId}/apply/`); 
   };
 
   const getMatchColor = (percentage: number) => {

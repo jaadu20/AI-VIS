@@ -130,3 +130,19 @@ class SkillMatcher:
             'match_score': min(100, match_score),  # Cap at 100
             'missing_skills': missing_skills
         }
+    def extract_skills(self, text):
+        doc = self.nlp(text)
+        skills = set()
+
+        # Extract noun phrases containing skill-related terms
+        skill_keywords = ['skill', 'proficient', 'experienced', 'knowledge', 'familiar']
+        for chunk in doc.noun_chunks:
+            if any(keyword in chunk.text.lower() for keyword in skill_keywords):
+                skills.add(chunk.text)
+        
+        # Extract entities labeled as technology
+        for ent in doc.ents:
+            if ent.label_ == "TECHNOLOGY":
+                skills.add(ent.text)
+        
+        return list(skills)
