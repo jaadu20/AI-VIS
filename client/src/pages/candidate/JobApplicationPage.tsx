@@ -310,11 +310,10 @@ export function JobApplicationPage() {
   const [showInterviewOptions, setShowInterviewOptions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  
   useEffect(() => {
     if (!jobId) {
       toast.error("Invalid job listing");
-      navigate("/candidate/dashboard");
+      navigate(`/candidate/${user?.id}/dashboard`);
     }
   }, [jobId, navigate]);
 
@@ -392,7 +391,6 @@ export function JobApplicationPage() {
     toast.success("CV uploaded successfully");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
-
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -497,11 +495,7 @@ export function JobApplicationPage() {
       setIsCheckingEligibility(true);
       const formData = new FormData();
       formData.append("cv", cvFile);
-
-      // Make sure to send the job ID as a string without toString()
-      // The toString() might be changing the format of the UUID
-      formData.append("job", jobId);
-
+      formData.append("job", Number(jobId).toString());
       console.log("FormData contents:", {
         cv: cvFile.name,
         job: jobId,

@@ -120,25 +120,17 @@ class ApplicationDeleteView(generics.DestroyAPIView):
         return Application.objects.filter(user=self.request.user)
 
 class CheckEligibilityView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def post(self, request):
-        # Add request data logging
-        logger.info(f"Received eligibility check request: {request.data}")
-        
         serializer = EligibilityCheckSerializer(data=request.data)
         if not serializer.is_valid():
-            logger.error(f"Validation error: {serializer.errors}")
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response(serializer.errors, status=400)
+        
         try:
-            job_id = serializer.validated_data['job']
-            logger.info(f"Processing job ID: {job_id}")
-            
-            job = Job.objects.get(id=job_id)
-            logger.info(f"Found job: {job.title}")
-        except (Job.DoesNotExist, ValueError):
-            return Response({"error": "Job not found or invalid job ID"}, status=status.HTTP_404_NOT_FOUND)       
+            # Get job by integer ID
+            job = Job.objects.get(id=serializer.validated_data['job'])
+        except Job.DoesNotExist:
+            return Response({"error": "Job not found"}, status=404)
+        
         # Initialize CV analyzer and skill matcher
         cv_analyzer = CVAnalyzer()
         skill_matcher = SkillMatcher()

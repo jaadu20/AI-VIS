@@ -25,8 +25,7 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
         
 class EligibilityCheckSerializer(serializers.Serializer):
     cv = serializers.FileField()
-    job = serializers.CharField()  # Changed from UUIDField to CharField
-    
+    job = serializers.IntegerField()  # Changed from UUIDField to IntegerField
     def validate_job(self, value):
         """
         Validate and convert job ID to UUID format

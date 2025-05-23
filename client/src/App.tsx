@@ -118,6 +118,7 @@ function App() {
         />
         <Route path="/complete" element={<InterviewProgress />} />
         <Route path="*" element={<Navigate to="/" replace />} />
+
         <Route path="/jobs/:jobId/apply" element={<JobApplicationPage />} />
         <Route
           path="/jobs/company/:companyId"
