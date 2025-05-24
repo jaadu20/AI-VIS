@@ -93,7 +93,7 @@ class CVAnalyzer:
             'graphql', 'microservices', 'saas', 'devops', 'sre', 'machine learning', 'ai',
             'data science', 'deep learning', 'nlp', 'computer vision', 'tableau', 'power bi',
             'excel', 'word', 'powerpoint', 'photoshop', 'illustrator', 'figma', 'sketch',
-            'ui', 'ux', 'seo', 'web development', 'full stack', 'frontend', 'backend',
+            'ui', 'ux','java','java script,' 'seo', 'web development', 'full stack', 'frontend', 'backend',
             'responsive design', 'accessibility', 'tdd', 'bdd', 'rest api', 'json',
             'xml', 'oauth', 'jwt', 'authentication', 'authorization', 'security',
             'penetration testing', 'encryption', 'cloud', 'serverless', 'etl', 'data warehouse',
