@@ -303,13 +303,13 @@ export function JobApplicationPage() {
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
-  const [eligibilityResult, setEligibilityResult] =
-    useState<EligibilityResult | null>(null);
-  const [processingProgress, setProcessingProgress] = useState(0);
   const [isCheckingEligibility, setIsCheckingEligibility] = useState(false);
   const [showInterviewOptions, setShowInterviewOptions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [eligibilityResult, setEligibilityResult] =
+    useState<EligibilityResult | null>(null);
 
+    
   useEffect(() => {
     if (!jobId) {
       toast.error("Invalid job listing");
@@ -400,91 +400,6 @@ export function JobApplicationPage() {
   const formatEmploymentType = (type: string) => {
     return type.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   };
-
-  // const handleCheckEligibility = async () => {
-  //   if (!cvFile || !jobId) {
-  //     toast.error("Please upload your CV");
-  //     return;
-  //   }
-
-  // try {
-  // setIsCheckingEligibility(true);
-  //   const formData = new FormData();
-  //   formData.append("cv", cvFile);
-  //   formData.append("job", jobId);
-
-  //   const response = await api.post(
-  //     "/applications/check-eligibility",
-  //     formData,
-  //     {
-  //       headers: { "Content-Type": "multipart/form-data" },
-  //     }
-  //   );
-
-  //   if (response.data.match_score >= 70) {
-  // setShowInterviewOptions(true);
-  //   } else {
-  //     setEligibilityResult({
-  //       eligible: false,
-  //       message: "Your skills don't match the job requirements",
-  //       match_score: response.data.match_score,
-  //       missing_skills: response.data.missing_skills?.split(", ") || [],
-  //     });
-  //   }
-  // } catch (error: any) {
-  //   toast.error(error.response?.data?.error || "Eligibility check failed");
-  // } finally {
-  // setIsCheckingEligibility(false);
-  // }
-  // };
-
-  // const handleStartInterviewNow = async () => {
-  //   // navigate("/interview");
-  // if (!cvFile || !jobId) return;
-
-  // try {
-  //   const formData = new FormData();
-  //   formData.append("cv", cvFile);
-  //   formData.append("job", jobId);
-
-  //   const response = await api.post("/applications/", formData, {
-  //     headers: { "Content-Type": "multipart/form-data" },
-  //   });
-
-  //   navigate(`/interview/${response.data.id}`);
-  //   toast.success("Application successful! Starting interview...");
-  // } catch (error: any) {
-  //   toast.error(error.response?.data?.error || "Application failed");
-  // } finally {
-  //   setShowInterviewOptions(false);
-  // }
-  // };
-
-  // const handleScheduleInterview = (date: string, time: string) => {
-  //   // navigate(`/candidate/${user?.id}/dashboard`);
-  // if (!cvFile || !jobId) return;
-  // const formData = new FormData();
-  // formData.append("cv", cvFile);
-  // formData.append("job", jobId);
-  // formData.append("interview_date", date);
-  // formData.append("interview_time", time);
-  // api
-  //   .post("/applications/schedule-interview", formData, {
-  //     headers: { "Content-Type": "multipart/form-data" },
-  //   })
-  //   .then(() => {
-  //     toast.success(
-  //       `Interview scheduled for ${new Date(
-  //         date
-  //       ).toLocaleDateString()} at ${time}`
-  //     );
-  //     navigate("/candidate/dashboard");
-  //   })
-  //   .catch((error) => {
-  //     toast.error(error.response?.data?.error || "Scheduling failed");
-  //   });
-  // };
-
   const handleCheckEligibility = async () => {
     if (!cvFile || !jobId) {
       toast.error("Please upload your CV");
@@ -527,7 +442,6 @@ export function JobApplicationPage() {
     }
   };
 
-  // Similarly update the other methods to use jobId directly without toString()
   const handleStartInterviewNow = async () => {
     if (!cvFile || !jobId) return;
 
