@@ -908,8 +908,8 @@ export function JobApplicationPage() {
                     </motion.button>
 
                     {eligibilityResult && !eligibilityResult.eligible && (
-                      <div className="mt-4 p-4 bg-red-50 rounded-lg">
-                        <h3 className="text-red-600 font-medium">
+                      <div className="mt-4 p-4 bg-white-50 rounded-lg border border-yellow-300">
+                        <h3 className="text-blabk-100 font-medium">
                           Eligibility Score: {eligibilityResult.match_score}%
                         </h3>
                         <p className="text-red-700">

@@ -150,7 +150,7 @@ class CheckEligibilityView(APIView):
             
             response_data = {
                 "match_score": round(match_score, 2),
-                "eligible": match_score >= 70,
+                "eligible": match_score >= 60,
                 "missing_skills": missing_skills if missing_skills else []
             }
             
