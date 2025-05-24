@@ -25,20 +25,10 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
         
 class EligibilityCheckSerializer(serializers.Serializer):
     cv = serializers.FileField()
-    job = serializers.IntegerField()  # Changed from UUIDField to IntegerField
-    def validate_job(self, value):
-        """
-        Validate and convert job ID to UUID format
-        """
-        try:
-            # Try to convert to UUID
-            return uuid.UUID(str(value))
-        except ValueError:
-            # If it fails, raise validation error
-            raise serializers.ValidationError("Invalid job ID format.")
+    job = serializers.IntegerField(min_value=1) 
     
 class ScheduleInterviewSerializer(serializers.Serializer):
     cv = serializers.FileField()
-    job = serializers.UUIDField()
+    job = serializers.IntegerField()  
     interview_date = serializers.DateField()
     interview_time = serializers.CharField()

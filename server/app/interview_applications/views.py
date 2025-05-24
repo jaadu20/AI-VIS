@@ -126,7 +126,7 @@ class CheckEligibilityView(APIView):
             return Response(serializer.errors, status=400)
         
         try:
-            # Get job by integer ID
+            # Get job using integer ID directly
             job = Job.objects.get(id=serializer.validated_data['job'])
         except Job.DoesNotExist:
             return Response({"error": "Job not found"}, status=404)
@@ -164,23 +164,21 @@ class CheckEligibilityView(APIView):
             )
 
 class ScheduleInterviewView(APIView):
-    permission_classes = [IsAuthenticated]
-    
     def post(self, request, format=None):
-        """Schedule an interview for a job application"""
         serializer = ScheduleInterviewSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        cv_file = serializer.validated_data['cv']
-        job_id = serializer.validated_data['job']
-        interview_date = serializer.validated_data['interview_date']
-        interview_time = serializer.validated_data['interview_time']
+            return Response(serializer.errors, status=400)
         
         try:
-            job = Job.objects.get(id=job_id)
+            # Get job using integer ID
+            job = Job.objects.get(id=serializer.validated_data['job'])
         except Job.DoesNotExist:
-            return Response({"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Job not found"}, status=404)
+            
+        
+        cv_file = serializer.validated_data['cv']
+        interview_date = serializer.validated_data['interview_date']
+        interview_time = serializer.validated_data['interview_time']
         
         # Analyze CV and calculate match score
         cv_analyzer = CVAnalyzer()

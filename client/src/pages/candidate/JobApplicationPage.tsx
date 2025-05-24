@@ -309,7 +309,7 @@ export function JobApplicationPage() {
   const [eligibilityResult, setEligibilityResult] =
     useState<EligibilityResult | null>(null);
 
-    
+
   useEffect(() => {
     if (!jobId) {
       toast.error("Invalid job listing");
@@ -340,7 +340,7 @@ export function JobApplicationPage() {
         setJob(processedJob);
       } catch (error) {
         toast.error("Failed to load job details");
-        navigate("/candidate/dashboard");
+        navigate(`/candidate/${user?.id}/dashboard`);
       } finally {
         setIsLoading(false);
       }
@@ -486,7 +486,7 @@ export function JobApplicationPage() {
           date
         ).toLocaleDateString()} at ${time}`
       );
-      navigate("/candidate/dashboard");
+      navigate(`/candidate/${user?.id}/dashboard`);
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Scheduling failed");
     }
