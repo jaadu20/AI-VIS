@@ -109,7 +109,7 @@ function App() {
           }
         />
         <Route
-          path="/interview"
+          path="/interview/:applicationId"
           element={
             <PrivateRoute allowedRoles={["candidate"]}>
               <AIInterview />

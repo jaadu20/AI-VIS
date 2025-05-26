@@ -309,7 +309,6 @@ export function JobApplicationPage() {
   const [eligibilityResult, setEligibilityResult] =
     useState<EligibilityResult | null>(null);
 
-
   useEffect(() => {
     if (!jobId) {
       toast.error("Invalid job listing");
@@ -400,6 +399,8 @@ export function JobApplicationPage() {
   const formatEmploymentType = (type: string) => {
     return type.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   };
+
+// Function to check eligibility for the job based on the uploaded CV
   const handleCheckEligibility = async () => {
     if (!cvFile || !jobId) {
       toast.error("Please upload your CV");
@@ -442,6 +443,8 @@ export function JobApplicationPage() {
     }
   };
 
+  // Function to handle the "Start Interview Now" button click
+
   const handleStartInterviewNow = async () => {
     if (!cvFile || !jobId) return;
 
@@ -450,19 +453,27 @@ export function JobApplicationPage() {
       formData.append("cv", cvFile);
       formData.append("job", jobId);
 
-      const response = await api.post<Application>(
+      setIsCheckingEligibility(true);
+
+      const applicationResponse = await api.post<Application>(
         "/applications/create/",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
-
-      navigate(`/interview/${response.data.id}`);
-      toast.success("Application successful! Starting interview...");
+      if (applicationResponse.data && applicationResponse.data.id) {
+        // 3. Immediately navigate to interview page
+        navigate(`/interview/${applicationResponse.data.id}`);
+        toast.success("Starting your interview...");
+      } else {
+        throw new Error("Failed to create application");
+      }
     } catch (error: any) {
-      toast.error(error.response?.data?.error || "Application failed");
+      console.error("Interview start failed:", error);
+      toast.error(error.response?.data?.error || "Failed to start interview");
     } finally {
+      setIsCheckingEligibility(false);
       setShowInterviewOptions(false);
     }
   };
