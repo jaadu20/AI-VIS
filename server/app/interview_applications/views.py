@@ -14,19 +14,19 @@ from jobs.models import Job
 from .cv_analyzer import CVAnalyzer  
 from .matching import SkillMatcher  
 import logging
-from celery import shared_task
-
-@shared_task
-def async_process_application(application_id):
-    try:
-        application = Application.objects.get(id=application_id)
-        # Perform heavy processing here
-        application.status = 'processed'
-        application.save()
-    except Exception as e:
-        logger.error(f"Error processing application {application_id}: {str(e)}")
 
 logger = logging.getLogger(__name__)
+
+def process_application_sync(application):
+    """Process application synchronously instead of using Celery"""
+    try:
+        # Perform any additional processing here
+        application.status = 'pending'  # Keep as pending initially
+        application.save()
+        logger.info(f"Application {application.id} processed successfully")
+    except Exception as e:
+        logger.error(f"Error processing application {application.id}: {str(e)}")
+        raise
 
 class ApplicationCreateView(generics.CreateAPIView):
     serializer_class = ApplicationCreateSerializer
@@ -39,12 +39,7 @@ class ApplicationCreateView(generics.CreateAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         cv_file = serializer.validated_data['cv']
-        job_id = serializer.validated_data['job']
-        
-        try:
-            job = Job.objects   .get(id=job_id)
-        except Job.DoesNotExist:
-            return Response({"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND)
+        job = serializer.validated_data['job']  # Directly get the Job instance
         
         # Analyze CV and calculate match score
         cv_analyzer = CVAnalyzer()
@@ -60,7 +55,7 @@ class ApplicationCreateView(generics.CreateAPIView):
             missing_skills = match_result['missing_skills']
             
             # Check if the match score meets the threshold
-            if match_score < 70:
+            if match_score < 60:
                 return Response({
                     "error": "Your profile doesn't match the job requirements",
                     "match_score": round(match_score, 2),
@@ -77,8 +72,11 @@ class ApplicationCreateView(generics.CreateAPIView):
                 status='pending'
             )
             application.save()
-            async_process_application.delay(application.id)
-            return Response({"status": "processing"}, status=status.HTTP_202_ACCEPTED)
+            
+            # Process application synchronously instead of using Celery
+            process_application_sync(application)
+            
+            return Response({"id": str(application.id)}, status=status.HTTP_201_CREATED)
             
         except Exception as e:
             logger.error(f"Error creating application: {str(e)}")

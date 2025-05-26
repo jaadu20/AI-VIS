@@ -400,7 +400,7 @@ export function JobApplicationPage() {
     return type.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   };
 
-// Function to check eligibility for the job based on the uploaded CV
+  // Function to check eligibility for the job based on the uploaded CV
   const handleCheckEligibility = async () => {
     if (!cvFile || !jobId) {
       toast.error("Please upload your CV");
@@ -451,7 +451,7 @@ export function JobApplicationPage() {
     try {
       const formData = new FormData();
       formData.append("cv", cvFile);
-      formData.append("job", jobId);
+      formData.append("job", jobId.toString()); // Ensure it's a string
 
       setIsCheckingEligibility(true);
 
@@ -462,8 +462,8 @@ export function JobApplicationPage() {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
+
       if (applicationResponse.data && applicationResponse.data.id) {
-        // 3. Immediately navigate to interview page
         navigate(`/interview/${applicationResponse.data.id}`);
         toast.success("Starting your interview...");
       } else {
