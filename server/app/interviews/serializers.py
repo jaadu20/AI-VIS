@@ -1,76 +1,21 @@
-# from rest_framework import serializers
-# from .models import (
-#     Question, Interview, InterviewQuestion, Answer, 
-#     InterviewResult, JobPosition
-# )
+# serializers.py
+from rest_framework import serializers
+from .models import Interview, Question, Answer, Application
 
+class QuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = ['question_number', 'text', 'difficulty', 'audio_url']
 
-# class QuestionSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Question
-#         fields = ['id', 'text', 'difficulty', 'category', 'is_predefined']
+class AnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Answer
+        fields = ['text', 'score', 'feedback', 'answered_at']
 
-
-# class JobPositionSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = JobPosition
-#         fields = ['id', 'title', 'description']
-
-
-# class AnswerSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Answer
-#         fields = ['id', 'text', 'audio_file', 'timestamp', 'relevance_score', 
-#                  'clarity_score', 'confidence_score', 'technical_accuracy', 
-#                  'overall_score', 'analysis_notes']
-#         read_only_fields = ['relevance_score', 'clarity_score', 'confidence_score', 
-#                           'technical_accuracy', 'overall_score', 'analysis_notes']
-
-
-# class InterviewQuestionSerializer(serializers.ModelSerializer):
-#     question = QuestionSerializer()
-#     answer = AnswerSerializer(read_only=True)
+class InterviewSerializer(serializers.ModelSerializer):
+    questions = QuestionSerializer(many=True, read_only=True)
     
-#     class Meta:
-#         model = InterviewQuestion
-#         fields = ['id', 'position', 'question', 'answer']
-
-
-# class InterviewSerializer(serializers.ModelSerializer):
-#     questions = InterviewQuestionSerializer(many=True, read_only=True)
-#     job_position = JobPositionSerializer(read_only=True)
-    
-#     class Meta:
-#         model = Interview
-#         fields = ['id', 'user', 'job_position', 'start_time', 'end_time', 
-#                  'status', 'application_id', 'overall_score', 'confidence_score',
-#                  'communication_score', 'technical_score', 'duration', 'questions']
-#         read_only_fields = ['start_time', 'end_time', 'overall_score', 
-#                           'confidence_score', 'communication_score', 
-#                           'technical_score', 'duration']
-
-
-# class InterviewResultSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = InterviewResult
-#         fields = ['id', 'interview', 'summary', 'strengths', 
-#                  'areas_for_improvement', 'recommendations', 'generated_at']
-#         read_only_fields = ['generated_at']
-
-
-# class AudioToTextSerializer(serializers.Serializer):
-#     audio = serializers.FileField()
-
-
-# class TextToSpeechSerializer(serializers.Serializer):
-#     text = serializers.CharField()
-
-
-# class AnswerSubmitSerializer(serializers.Serializer):
-#     text = serializers.CharField()
-#     audio = serializers.FileField(required=False)
-
-
-# class InterviewStartSerializer(serializers.Serializer):
-#     application_id = serializers.CharField(required=False)
-#     job_position_id = serializers.IntegerField(required=False)
+    class Meta:
+        model = Interview
+        fields = ['id', 'status', 'current_question_number', 'total_score', 
+                 'average_score', 'started_at', 'completed_at', 'questions']

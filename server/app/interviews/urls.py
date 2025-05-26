@@ -1,16 +1,11 @@
-# # interviews/urls.py
-# from django.urls import path
-# from .views import (
-#     InterviewStartView, InterviewSubmitAnswerView, InterviewResultView,
-#     TextToSpeechView, SpeechToTextView, InterviewListView, QuestionListView
-# )
+# urls.py
+from django.urls import path
+from . import views
 
-# urlpatterns = [
-#     path('interviews/start/', InterviewStartView.as_view(), name='interview-start'),
-#     path('interviews/<str:interview_id>/submit/', InterviewSubmitAnswerView.as_view(), name='submit-answer'),
-#     path('interviews/tts/', TextToSpeechView.as_view(), name='text-to-speech'),
-#     path('interviews/stt/', SpeechToTextView.as_view(), name='speech-to-text'),
-#     path('interviews/<str:interview_id>/result/', InterviewResultView.as_view(), name='interview-result'),
-#     path('interviews/', InterviewListView.as_view(), name='interview-list'),
-#     path('questions/', QuestionListView.as_view(), name='question-list'),
-# ]
+urlpatterns = [
+    path('interviews/start/', views.start_interview, name='start_interview'),
+    path('interviews/<uuid:interview_id>/submit/', views.submit_answer, name='submit_answer'),
+    path('interviews/tts/', views.text_to_speech, name='text_to_speech'),
+    path('interviews/stt/', views.speech_to_text, name='speech_to_text'),
+    path('interviews/<uuid:interview_id>/result/', views.get_interview_result, name='get_interview_result'),
+]
