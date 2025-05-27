@@ -6,6 +6,7 @@ djangorestframework-simplejwt==5.2.2
 django-storages==1.13.2
 boto3==1.28.62  # AWS S3
 python-decouple
+requests>=2.31.0
 
 # FastAPI
 fastapi==0.103.1
