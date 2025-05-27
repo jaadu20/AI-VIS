@@ -703,7 +703,7 @@ export function JobApplicationPage() {
                       htmlFor="cv-upload"
                       className={`relative flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl group transition-colors cursor-pointer ${
                         cvFile
-                          ? "border-green-500 bg-green-50"
+                          ? "border-black-500 bg-green-50"
                           : "border-blue-200 hover:border-blue-500"
                       }`}
                       onDragOver={handleDragOver}

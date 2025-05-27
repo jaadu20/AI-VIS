@@ -2,6 +2,7 @@ from datetime import timedelta
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from decouple import config
 
 load_dotenv()
 
@@ -30,6 +31,17 @@ INSTALLED_APPS = [
     'interviews',
     'interview_applications',
 ]
+
+
+# Azure Speech Services
+AZURE_SPEECH_KEY = config('AZURE_SPEECH_KEY')
+AZURE_SPEECH_REGION = config('AZURE_SPEECH_REGION', default='eastus')
+
+# Hugging Face
+HUGGINGFACE_TOKEN = config('HUGGINGFACE_TOKEN')
+
+# Grok API
+GROK_API_KEY = config('GROK_API_KEY')
 
 # Configure ASGI application
 ASGI_APPLICATION = 'your_project.routing.application'
@@ -173,12 +185,28 @@ CSRF_TRUSTED_ORIGINS = [
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AZURE_SPEECH_KEY =  os.getenv('AZURE_SPEECH_KEY')
-AZURE_SPEECH_REGION = 'eastus' 
-
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
 
-GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'interview.log',
+        },
+    },
+    'loggers': {
+        'interviews': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
