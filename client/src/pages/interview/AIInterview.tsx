@@ -25,9 +25,10 @@ import api from "../../api";
 import toast from "react-hot-toast";
 
 interface QuestionData {
+  id: string;
   text: string;
   difficulty: string;
-  is_predefined?: boolean;
+  audioUrl: string;
 }
 
 const popupVariants = {
@@ -63,6 +64,14 @@ export function AIInterview() {
   const [interviewId, setInterviewId] = useState<string>("");
   const [interviewDuration, setInterviewDuration] = useState(0);
   const [confirmExit, setConfirmExit] = useState(false);
+  const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(
+    null
+  );
+  const [isAnswering, setIsAnswering] = useState(false);
+  const [isPlayingIntro, setIsPlayingIntro] = useState(false);
+  const [interviewStatus, setInterviewStatus] = useState<
+    "intro" | "questions" | "completed"
+  >("intro");
 
   // Media states
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
@@ -107,41 +116,72 @@ export function AIInterview() {
         : {};
 
       const response = await api.post("/interviews/start/", requestPayload);
-      if (!response.data?.interview_id || !response.data?.questions) {
+      if (!response.data?.interview_id) {
         throw new Error("Invalid interview initialization response");
       }
+
       setInterviewId(response.data.interview_id);
-      setQuestions(response.data.questions);
 
-      // Mock data for demonstration
-      setInterviewId("mock-interview-id");
-      setQuestions([
-        {
-          text: "Tell me about your experience with React and how you've used it in previous projects.",
-          difficulty: "medium",
-        },
-        {
-          text: "Describe a challenging problem you faced in your last role and how you solved it.",
-          difficulty: "hard",
-        },
-        {
-          text: "What are your career goals for the next five years?",
-          difficulty: "medium",
-        },
-      ]);
+      // Play introduction audio
+      if (response.data.intro_audio_url) {
+        setIsPlayingIntro(true);
+        const introAudio = new Audio(response.data.intro_audio_url);
+        introAudio.onended = () => {
+          setIsPlayingIntro(false);
+          setInterviewStatus("questions");
+          fetchNextQuestion();
+        };
+        introAudio.play();
+      } else {
+        setInterviewStatus("questions");
+        fetchNextQuestion();
+      }
 
-      setCurrentQuestionIndex(0);
       await initializeMediaStream();
-      // Mock the question audio playback
-      setIsSpeaking(true);
-      setTimeout(() => setIsSpeaking(false), 3000);
-      startVideoRecording();
     } catch (error) {
       console.error("Interview start error:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to start interview"
       );
-      setQuestions([]);
+    }
+  };
+
+  const fetchNextQuestion = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get(
+        `/interviews/${interviewId}/next-question/`
+      );
+
+      if (response.data.completed) {
+        navigate(`/interview-result/${interviewId}`);
+        return;
+      }
+
+      const newQuestion = {
+        id: response.data.question_id,
+        text: response.data.question_text,
+        difficulty: response.data.difficulty,
+        audioUrl: response.data.question_audio_url,
+      };
+
+      setQuestions((prev) => [...prev, newQuestion]);
+      setCurrentQuestionId(response.data.question_id);
+      setCurrentQuestionIndex((prev) => prev + 1);
+
+      // Play question audio
+      setIsSpeaking(true);
+      const questionAudio = new Audio(newQuestion.audioUrl);
+      questionAudio.onended = () => {
+        setIsSpeaking(false);
+        setIsAnswering(true); // Enable answering after question is played
+      };
+      questionAudio.play();
+    } catch (error) {
+      console.error("Error fetching question:", error);
+      toast.error("Failed to load next question");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -157,11 +197,12 @@ export function AIInterview() {
     } catch (error) {
       console.error("Media initialization failed:", error);
       toast.error("Using text-only mode. Media features disabled.");
-      setShowPopup(false);
       setQuestions([
         {
+          id: "error",
           text: "Welcome to text-based interview mode. Please type your answers.",
           difficulty: "easy",
+          audioUrl: "",
         },
       ]);
     }
@@ -188,51 +229,13 @@ export function AIInterview() {
     }
   };
 
-  const playQuestionAudio = async (questionText: string) => {
-    try {
-      setIsSpeaking(true);
-      const response = await api.post(
-        "/interviews/tts/",
-        { text: questionText },
-        { responseType: "blob" }
-      );
-
-      const audioUrl = URL.createObjectURL(response.data);
-      const audio = new Audio(audioUrl);
-      audio.onended = () => setIsSpeaking(false);
-      audio.play();
-
-      // Mock audio playback for demonstration
-      setTimeout(() => setIsSpeaking(false), 3000);
-    } catch (error) {
-      console.error("TTS error:", error);
-      setIsSpeaking(false);
-    }
-  };
-
   const handleStartRecording = () => {
+    if (!isAnswering) return;
+
     if (mediaStream) {
       const recorder = new MediaRecorder(mediaStream);
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) setRecordedChunks((prev) => [...prev, e.data]);
-      };
-      recorder.onstop = async () => {
-        const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
-        const formData = new FormData();
-        formData.append("audio", audioBlob);
-
-        try {
-          const sttResponse = await api.post("/interviews/stt/", formData);
-          setAnswer(sttResponse.data.text);
-
-          // Mock STT response for demonstration
-          setAnswer(
-            "This is a simulated speech-to-text response based on your recording. In a real implementation, this would be the transcribed text from your spoken answer."
-          );
-        } catch (error) {
-          console.error("STT error:", error);
-        }
-        setRecordedChunks([]);
       };
       recorder.start();
       setMediaRecorder(recorder);
@@ -246,78 +249,56 @@ export function AIInterview() {
     }
   };
 
-  const handleStopRecording = () => {
+  const handleStopRecording = async () => {
     if (mediaRecorder) {
       mediaRecorder.stop();
       setIsRecording(false);
 
-      // Stop recording timer
       if (recordingTimer.current) {
         clearInterval(recordingTimer.current);
         recordingTimer.current = null;
+      }
+
+      // Convert speech to text
+      setIsLoading(true);
+      try {
+        const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
+        const formData = new FormData();
+        formData.append("audio", audioBlob);
+
+        const response = await api.post("/interviews/stt/", formData);
+        setAnswer(response.data.text);
+      } catch (error) {
+        console.error("STT error:", error);
+        toast.error("Speech recognition failed");
+      } finally {
+        setIsLoading(false);
+        setRecordedChunks([]);
       }
     }
   };
 
   const handleAnswerSubmit = async () => {
-    if (!answer.trim()) return;
+    if (!answer.trim() || !currentQuestionId) return;
     setIsLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("text", answer);
-
-      if (recordedChunks.length > 0) {
-        formData.append(
-          "audio",
-          new Blob(recordedChunks, { type: "audio/webm" })
-        );
-      }
       const response = await api.post(
-        `/interviews/${interviewId}/submit/`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        }
+        `/interviews/${interviewId}/answer/${currentQuestionId}/`,
+        { text: answer }
       );
 
       if (response.data.completed) {
         navigate(`/interview-result/${interviewId}`);
       } else {
-        setCurrentQuestionIndex((prev) => prev + 1);
-        setQuestions((prev) => [
-          ...prev,
-          {
-            text: response.data.question.text,
-            difficulty: response.data.question.difficulty,
-          },
-        ]);
-        playQuestionAudio(response.data.question.text);
-        startVideoRecording();
-      }
-
-      // Mock response for demonstration
-      setTimeout(() => {
-        if (currentQuestionIndex >= 14) {
-          // Mock completion after 15 questions
-          navigate(`/interview-result/${interviewId}`);
-        } else {
-          setCurrentQuestionIndex((prev) => prev + 1);
-          // Mock the question audio playback
-          setIsSpeaking(true);
-          setTimeout(() => setIsSpeaking(false), 3000);
-          startVideoRecording();
-        }
-
+        // Prepare for next question
         setAnswer("");
-        setRecordedChunks([]);
-        setIsLoading(false);
-      }, 1500);
+        setIsAnswering(false);
+        fetchNextQuestion();
+      }
     } catch (error) {
-      toast.error("Failed to submit answer. Please try again.");
+      toast.error("Failed to submit answer");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -365,7 +346,7 @@ export function AIInterview() {
 
   const calculateProgress = () => {
     // Using a total of 15 questions as mentioned in the welcome screen
-    return (currentQuestionIndex / 14) * 100;
+    return Math.min(100, (currentQuestionIndex / 14) * 100);
   };
 
   return (
@@ -708,14 +689,14 @@ export function AIInterview() {
                 >
                   <div
                     className={`w-48 h-48 rounded-full mb-4 overflow-hidden ${
-                      isSpeaking
+                      isSpeaking || isPlayingIntro
                         ? "ring-4 ring-indigo-400 ring-offset-2 transition-all duration-300"
                         : ""
                     }`}
                   >
                     <div
                       className={`w-full h-full relative ${
-                        isSpeaking ? "animate-pulse" : ""
+                        isSpeaking || isPlayingIntro ? "animate-pulse" : ""
                       }`}
                     >
                       <img
@@ -723,7 +704,7 @@ export function AIInterview() {
                         alt="AI Interviewer"
                         className="rounded-full w-full h-full object-cover"
                       />
-                      {isSpeaking && (
+                      {(isSpeaking || isPlayingIntro) && (
                         <div className="absolute inset-0 bg-gradient-to-t from-indigo-500/20 to-transparent" />
                       )}
                     </div>
@@ -735,13 +716,15 @@ export function AIInterview() {
 
                   <div className="text-gray-600 text-center mb-4">
                     <p className="text-sm">
-                      {isSpeaking
+                      {isPlayingIntro
+                        ? "Welcome message playing..."
+                        : isSpeaking
                         ? "Speaking... please listen carefully"
                         : "Your interview coach and assistant"}
                     </p>
                   </div>
 
-                  {isSpeaking && (
+                  {(isSpeaking || isPlayingIntro) && (
                     <div className="flex justify-center w-full mb-4">
                       <div className="flex space-x-1 items-center">
                         <div className="w-1 h-2 bg-indigo-500 rounded-full animate-bounce"></div>
@@ -764,52 +747,6 @@ export function AIInterview() {
                       </div>
                     </div>
                   )}
-                  <div className="w-full mt-2 space-y-4">
-                    {/* <div className="flex items-center justify-between px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="flex items-center">
-                        <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
-                          <span className="text-indigo-600 font-bold">
-                            {currentQuestionIndex + 1}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">
-                            Current Question
-                          </p>
-                          <p className="text-sm font-medium text-gray-800">
-                            Question {currentQuestionIndex + 1} of 15
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs text-gray-500">Progress</span>
-                        <p className="text-sm font-medium text-gray-800">
-                          {Math.round(calculateProgress())}%
-                        </p>
-                      </div>
-                    </div> */}
-
-                    {/* <div className="flex justify-around items-center w-full">
-                      <div className="text-center">
-                        <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-1">
-                          <Clock className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <p className="text-xs text-gray-500">Duration</p>
-                        <p className="text-sm font-medium text-gray-800">
-                          {formatTime(interviewDuration)}
-                        </p>
-                      </div>
-                      <div className="text-center">
-                        <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-1">
-                          <CheckCircle className="h-5 w-5 text-green-600" />
-                        </div>
-                        <p className="text-xs text-gray-500">Completed</p>
-                        <p className="text-sm font-medium text-gray-800">
-                          {currentQuestionIndex} of 15
-                        </p>
-                      </div>
-                    </div> */}
-                  </div>
                 </motion.div>
                 <motion.div
                   className="bg-white rounded-2xl shadow-xl p-6 relative overflow-hidden border border-gray-100"
@@ -821,52 +758,48 @@ export function AIInterview() {
                   <div className="space-y-4 relative">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex-1">
-                        {/* <div className="flex items-center mb-2">
-                          <h3 className="text-lg font-semibold text-gray-700">
-                            Current Question
-                          </h3>
-                          {questions[currentQuestionIndex]?.difficulty && (
-                            <span
-                              className={`ml-3 px-2.5 py-0.5 rounded-full text-xs font-medium ${getDifficultyColor(
-                                questions[currentQuestionIndex]?.difficulty
-                              )}`}
-                            >
-                              {questions[currentQuestionIndex]?.difficulty}
-                            </span>
-                          )}
-                        </div> */}
                         <p className="text-xl font-medium text-gray-900">
-                          {questions[currentQuestionIndex]?.text ||
-                            "Loading question..."}
+                          {isPlayingIntro
+                            ? "Welcome to your interview! Please wait for the introduction..."
+                            : questions[currentQuestionIndex]?.text ||
+                              "Loading question..."}
                         </p>
                       </div>
 
-                      <button
-                        onClick={() =>
-                          playQuestionAudio(
-                            questions[currentQuestionIndex]?.text
-                          )
-                        }
-                        disabled={isLoading || isSpeaking}
-                        className="ml-4 flex-shrink-0 p-2 rounded-full text-indigo-600 hover:bg-indigo-50 transition-colors"
-                        title="Repeat Question"
-                      >
-                        {isSpeaking ? (
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                        ) : (
-                          <Volume2 className="h-5 w-5" />
-                        )}
-                      </button>
+                      {questions[currentQuestionIndex]?.audioUrl && (
+                        <button
+                          onClick={() => {
+                            const audio = new Audio(
+                              questions[currentQuestionIndex].audioUrl
+                            );
+                            audio.play();
+                          }}
+                          disabled={isLoading || isSpeaking || isPlayingIntro}
+                          className="ml-4 flex-shrink-0 p-2 rounded-full text-indigo-600 hover:bg-indigo-50 transition-colors"
+                          title="Repeat Question"
+                        >
+                          {isSpeaking ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <Volume2 className="h-5 w-5" />
+                          )}
+                        </button>
+                      )}
                     </div>
 
                     {/* Answer Input */}
                     <div className="relative mt-4">
                       <textarea
                         value={answer}
-                        onChange={(e) => setAnswer(e.target.value)}
-                        className="w-full min-h-32 p-4 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none shadow-sm"
-                        placeholder="Enter your answer here or use voice recording..."
-                        disabled={isLoading}
+                        readOnly
+                        className="w-full min-h-32 p-4 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none shadow-sm bg-gray-50"
+                        placeholder={
+                          isRecording
+                            ? "Recording your answer..."
+                            : isAnswering
+                            ? "Press record and speak your answer"
+                            : "Please wait for the question to finish"
+                        }
                       />
 
                       {/* Recording Button */}
@@ -876,12 +809,21 @@ export function AIInterview() {
                             ? handleStopRecording
                             : handleStartRecording
                         }
+                        disabled={!isAnswering || isLoading || isPlayingIntro}
                         className={`absolute top-3 right-3 p-2 rounded-lg shadow-sm ${
                           isRecording
                             ? "bg-red-600 text-white hover:bg-red-700"
-                            : "bg-indigo-600 text-white hover:bg-indigo-700"
+                            : isAnswering
+                            ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                            : "bg-gray-400 text-white cursor-not-allowed"
                         } transition-colors`}
-                        title={isRecording ? "Stop Recording" : "Record Answer"}
+                        title={
+                          isRecording
+                            ? "Stop Recording"
+                            : isAnswering
+                            ? "Record Answer"
+                            : "Please wait for the question"
+                        }
                       >
                         {isRecording ? (
                           <StopIcon className="h-5 w-5" />
@@ -889,13 +831,35 @@ export function AIInterview() {
                           <MicIcon className="h-5 w-5" />
                         )}
                       </button>
+
+                      {/* Recording indicator */}
+                      {isRecording && (
+                        <div className="absolute bottom-3 left-4 flex items-center">
+                          <div className="h-2 w-2 bg-red-600 rounded-full animate-pulse mr-2"></div>
+                          <span className="text-xs text-red-600">
+                            Recording {formatTime(recordingDuration)}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Submit Button */}
                     <Button
                       onClick={handleAnswerSubmit}
-                      disabled={!answer.trim() || isLoading}
-                      className="w-full py-3.5 flex items-center justify-center bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white transition-colors rounded-xl shadow-md mt-4"
+                      disabled={
+                        !answer.trim() ||
+                        isLoading ||
+                        isRecording ||
+                        !isAnswering
+                      }
+                      className={`w-full py-3.5 flex items-center justify-center text-white transition-colors rounded-xl shadow-md mt-4 ${
+                        !answer.trim() ||
+                        isLoading ||
+                        isRecording ||
+                        !isAnswering
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700"
+                      }`}
                     >
                       {isLoading ? (
                         <>
@@ -973,7 +937,7 @@ export function AIInterview() {
                   <button
                     type="button"
                     className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 sm:text-sm"
-                    onClick={() => navigate("/complete")}
+                    onClick={() => navigate("/candidate/dashboard")}
                   >
                     Exit Interview
                   </button>
