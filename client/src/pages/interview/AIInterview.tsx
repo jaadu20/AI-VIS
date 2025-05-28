@@ -115,7 +115,12 @@ export function AIInterview() {
         ? { application_id: applicationId }
         : {};
 
-      const response = await api.post("/interviews/start/", requestPayload);
+      const response = await api.post(
+        applicationId
+          ? `/interviews/start/${applicationId}/`
+          : "/interviews/start/",
+        requestPayload
+      );
       if (!response.data?.interview_id) {
         throw new Error("Invalid interview initialization response");
       }
