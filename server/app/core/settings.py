@@ -41,7 +41,7 @@ AZURE_SPEECH_REGION = config('AZURE_SPEECH_REGION', default='eastus')
 HUGGINGFACE_TOKEN = config('HUGGINGFACE_TOKEN')
 
 # Grok API
-GROQ_API_KEY = config('GROK_API_KEY')
+GROQ_API_KEY = config('GROQ_API_KEY')
 
 # Configure ASGI application
 ASGI_APPLICATION = 'your_project.routing.application'
