@@ -28,7 +28,7 @@ INSTALLED_APPS = [
     # My apps
     'users',
     'jobs',
-    'interviews',
+    # 'interviews',
     'interview_applications',
 ]
 

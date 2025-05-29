@@ -8,14 +8,12 @@ import {
   MicOff,
   Send,
   Loader2,
-  Repeat,
-  Mic as MicIcon,
+  Volume2,
   Square as StopIcon,
   Clock,
   AlertTriangle,
   CheckCircle,
   X,
-  Volume2,
   LogOut,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
@@ -72,6 +70,9 @@ export function AIInterview() {
   const [interviewStatus, setInterviewStatus] = useState<
     "intro" | "questions" | "completed"
   >("intro");
+  const [recordingStatus, setRecordingStatus] = useState<
+    "idle" | "recording" | "processing"
+  >("idle");
 
   // Media states
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
@@ -79,6 +80,9 @@ export function AIInterview() {
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioAnalyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   // Recording states
   const [isRecording, setIsRecording] = useState(false);
@@ -88,6 +92,7 @@ export function AIInterview() {
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const recordingTimer = useRef<NodeJS.Timeout | null>(null);
+  const [audioLevel, setAudioLevel] = useState(0);
 
   // Interview timer
   useEffect(() => {
@@ -115,12 +120,7 @@ export function AIInterview() {
         ? { application_id: applicationId }
         : {};
 
-      const response = await api.post(
-        applicationId
-          ? `/interviews/start/${applicationId}/`
-          : "/interviews/start/",
-        requestPayload
-      );
+      const response = await api.post("/interviews/start/", requestPayload);
       if (!response.data?.interview_id) {
         throw new Error("Invalid interview initialization response");
       }
@@ -199,6 +199,21 @@ export function AIInterview() {
       setMediaStream(stream);
       const videoStream = new MediaStream(stream.getVideoTracks());
       setVideoStream(videoStream);
+
+      // Initialize audio analyzer
+      if (audioContextRef.current === null) {
+        audioContextRef.current = new (window.AudioContext ||
+          (window as any).webkitAudioContext)();
+      }
+
+      const audioContext = audioContextRef.current;
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      audioAnalyserRef.current = analyser;
+
+      startAudioVisualization();
     } catch (error) {
       console.error("Media initialization failed:", error);
       toast.error("Using text-only mode. Media features disabled.");
@@ -213,10 +228,37 @@ export function AIInterview() {
     }
   };
 
+  const startAudioVisualization = () => {
+    const analyser = audioAnalyserRef.current;
+    if (!analyser) return;
+
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    const draw = () => {
+      animationFrameRef.current = requestAnimationFrame(draw);
+      analyser.getByteFrequencyData(dataArray);
+
+      let sum = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        sum += dataArray[i];
+      }
+      const average = sum / dataArray.length;
+      setAudioLevel((average / 256) * 100); // Convert to percentage
+    };
+
+    draw();
+  };
+
   useEffect(() => {
     if (!showPopup && !mediaStream) {
       initializeMediaStream();
     }
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
   }, [showPopup]);
 
   useEffect(() => {
@@ -245,6 +287,7 @@ export function AIInterview() {
       recorder.start();
       setMediaRecorder(recorder);
       setIsRecording(true);
+      setRecordingStatus("recording");
 
       // Start recording timer
       setRecordingDuration(0);
@@ -258,6 +301,7 @@ export function AIInterview() {
     if (mediaRecorder) {
       mediaRecorder.stop();
       setIsRecording(false);
+      setRecordingStatus("processing");
 
       if (recordingTimer.current) {
         clearInterval(recordingTimer.current);
@@ -273,9 +317,11 @@ export function AIInterview() {
 
         const response = await api.post("/interviews/stt/", formData);
         setAnswer(response.data.text);
+        setRecordingStatus("idle");
       } catch (error) {
         console.error("STT error:", error);
         toast.error("Speech recognition failed");
+        setRecordingStatus("idle");
       } finally {
         setIsLoading(false);
         setRecordedChunks([]);
@@ -344,6 +390,12 @@ export function AIInterview() {
       if (recordingTimer.current) {
         clearInterval(recordingTimer.current);
       }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
     };
   }, [mediaStream, videoStream]);
 
@@ -352,6 +404,17 @@ export function AIInterview() {
   const calculateProgress = () => {
     // Using a total of 15 questions as mentioned in the welcome screen
     return Math.min(100, (currentQuestionIndex / 14) * 100);
+  };
+
+  const getRecordingStatusText = () => {
+    switch (recordingStatus) {
+      case "recording":
+        return "Recording your answer...";
+      case "processing":
+        return "Processing your answer...";
+      default:
+        return "Press record and speak your answer";
+    }
   };
 
   return (
@@ -798,13 +861,7 @@ export function AIInterview() {
                         value={answer}
                         readOnly
                         className="w-full min-h-32 p-4 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none shadow-sm bg-gray-50"
-                        placeholder={
-                          isRecording
-                            ? "Recording your answer..."
-                            : isAnswering
-                            ? "Press record and speak your answer"
-                            : "Please wait for the question to finish"
-                        }
+                        placeholder={getRecordingStatusText()}
                       />
 
                       {/* Recording Button */}
@@ -814,7 +871,12 @@ export function AIInterview() {
                             ? handleStopRecording
                             : handleStartRecording
                         }
-                        disabled={!isAnswering || isLoading || isPlayingIntro}
+                        disabled={
+                          !isAnswering ||
+                          isLoading ||
+                          isPlayingIntro ||
+                          recordingStatus === "processing"
+                        }
                         className={`absolute top-3 right-3 p-2 rounded-lg shadow-sm ${
                           isRecording
                             ? "bg-red-600 text-white hover:bg-red-700"
@@ -832,18 +894,28 @@ export function AIInterview() {
                       >
                         {isRecording ? (
                           <StopIcon className="h-5 w-5" />
+                        ) : recordingStatus === "processing" ? (
+                          <Loader2 className="h-5 w-5 animate-spin" />
                         ) : (
-                          <MicIcon className="h-5 w-5" />
+                          <Mic className="h-5 w-5" />
                         )}
                       </button>
 
-                      {/* Recording indicator */}
+                      {/* Audio visualization */}
                       {isRecording && (
-                        <div className="absolute bottom-3 left-4 flex items-center">
-                          <div className="h-2 w-2 bg-red-600 rounded-full animate-pulse mr-2"></div>
-                          <span className="text-xs text-red-600">
-                            Recording {formatTime(recordingDuration)}
-                          </span>
+                        <div className="absolute bottom-3 left-4 right-16">
+                          <div className="flex items-center space-x-1">
+                            {[...Array(8)].map((_, i) => (
+                              <div
+                                key={i}
+                                className="w-1.5 bg-indigo-500 rounded-full transition-all duration-200"
+                                style={{
+                                  height: `${audioLevel * (i / 7 + 0.2)}%`,
+                                  opacity: 0.7 + i * 0.05,
+                                }}
+                              />
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -855,18 +927,20 @@ export function AIInterview() {
                         !answer.trim() ||
                         isLoading ||
                         isRecording ||
-                        !isAnswering
+                        !isAnswering ||
+                        recordingStatus === "processing"
                       }
                       className={`w-full py-3.5 flex items-center justify-center text-white transition-colors rounded-xl shadow-md mt-4 ${
                         !answer.trim() ||
                         isLoading ||
                         isRecording ||
-                        !isAnswering
+                        !isAnswering ||
+                        recordingStatus === "processing"
                           ? "bg-gray-400 cursor-not-allowed"
                           : "bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700"
                       }`}
                     >
-                      {isLoading ? (
+                      {isLoading || recordingStatus === "processing" ? (
                         <>
                           <Loader2 className="h-5 w-5 animate-spin mr-2" />
                           Processing...
