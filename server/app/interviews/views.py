@@ -177,33 +177,26 @@ class InterviewViewSet(viewsets.ModelViewSet):
         )
         
         # Add predefined questions
-        predefined_questions = [
-            {
-                "text": "Please introduce yourself and tell us about your background and experience.",
-                "difficulty": "easy",
-                "is_predefined": True,
-                "order": 0
-            },
-            {
-                "text": "What interests you most about this position and our company?",
-                "difficulty": "easy",
-                "is_predefined": True,
-                "order": 1
-            }
-        ]
+        Question.objects.create(
+            interview=interview,
+            text="Please introduce yourself and tell us about your background and experience.",
+            difficulty="easy",
+            is_predefined=True,
+            order=0
+        )
+        Question.objects.create(
+            interview=interview,
+            text="What interests you most about this position and our company?",
+            difficulty="easy",
+            is_predefined=True,
+            order=1
+        )
         
-        for question_data in predefined_questions:
-            Question.objects.create(
-                interview=interview,
-                **question_data
-            )
-        
-        serializer = self.get_serializer(interview)
         return Response({
-                    "interview_id": str(interview.id),
-                    "questions": QuestionSerializer(interview.questions.all(), many=True).data
-                }, status=status.HTTP_201_CREATED)
-    
+            "interview_id": str(interview.id),
+            "questions": QuestionSerializer(interview.questions.all(), many=True).data
+        }, status=status.HTTP_201_CREATED)
+        
 class TextToSpeechView(APIView):
     def post(self, request):
         try:

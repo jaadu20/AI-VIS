@@ -225,52 +225,26 @@ export function AIInterview() {
       await fetchApplicationData();
 
       // Initialize interview
-      const requestPayload = applicationId
-        ? { application_id: applicationId }
-        : {};
-
-      const response = await api.post("/interviews/start/", requestPayload);
+      const response = await api.post("/interviews/start/", {
+        application_id: applicationId,
+      });
 
       if (!response.data?.interview_id) {
         throw new Error("Invalid interview initialization response");
       }
 
-      setInterviewId(response.data.id); // Or response.data.interview_id if you add it in serializer
+      setInterviewId(response.data.interview_id);
       setQuestions(response.data.questions);
 
-      // Set predefined questions (first two are always the same)
-      const predefinedQuestions = [
-        {
-          text: "Please introduce yourself and tell us about your background and experience.",
-          difficulty: "easy",
-          is_predefined: true,
-        },
-        {
-          text: "What interests you most about this position and our company?",
-          difficulty: "easy",
-          is_predefined: true,
-        },
-      ];
-
-      setQuestions(predefinedQuestions);
-      setCurrentQuestionIndex(0);
-
-      if (response.data.questions.length > 0) {
-        playQuestionAudio(response.data.questions[0].text);
-      }
-      
+      // Initialize media and play introduction
       await initializeMediaStream();
-
-      // Play introduction and first question
       setTimeout(() => {
         playIntroduction();
       }, 1000);
     } catch (error) {
       console.error("Interview start error:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to start interview"
-      );
-      // setShowPopup(true);
+      toast.error(error.response?.data?.error || "Failed to start interview");
+      setShowPopup(true);
     } finally {
       setIsLoading(false);
     }
@@ -283,8 +257,9 @@ export function AIInterview() {
         audio: true,
       });
       setMediaStream(stream);
-      const videoStream = new MediaStream(stream.getVideoTracks());
-      setVideoStream(videoStream);
+      setVideoStream(new MediaStream(stream.getVideoTracks()));
+      setAudioEnabled(true);
+      setCameraEnabled(true);
     } catch (error) {
       console.error("Media initialization failed:", error);
       toast.error("Camera/microphone access required for the interview");
@@ -551,7 +526,6 @@ export function AIInterview() {
   };
 
   useEffect(() => {
-    
     return () => {
       mediaStream?.getTracks().forEach((track) => track.stop());
       videoStream?.getTracks().forEach((track) => track.stop());

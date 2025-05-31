@@ -38,6 +38,9 @@ class Interview(models.Model):
     total_score = models.FloatField(default=0)
     feedback = models.TextField(blank=True, null=True)
 
+    class Meta:
+       db_table = 'interviews_interview' 
+
     def __str__(self):
         return f"Interview for {self.application.job_title} at {self.application.company_name}"
 
