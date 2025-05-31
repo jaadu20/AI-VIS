@@ -89,17 +89,17 @@ export function CompanyProfile() {
   const companyStats = [
     {
       label: "Active Jobs",
-      value: "23",
+      value: "2",
       icon: Briefcase,
     },
     {
       label: "Total Applications",
-      value: "156",
+      value: "3",
       icon: Users,
     },
     {
       label: "Avg. Time to Hire",
-      value: "18 days",
+      value: "7 days",
       icon: Clock,
     },
   ];

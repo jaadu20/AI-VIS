@@ -462,19 +462,19 @@ export function About() {
               // },
               {
                 name: "Muhammad Jawad",
-                role: "Co-Founder & CEO",
+                role: "BSCS (IT)",
                 bio: "AI and machine learning expert with a passion for transforming recruitment through technology.",
                 specialty: "Enterprise Sales",
               },
               {
                 name: "Zainab Jabbar",
-                role: "Director of Customer Success",
+                role: "BSCS (IT)",
                 bio: "Customer experience specialist focused on helping organizations maximize the value of their AI investments.",
                 specialty: "Customer Experience",
               },
               {
                 name: "Muarij Shakeel",
-                role: "Director of Research",
+                role: "BSCS (IT)",
                 bio: "Expertise in sentiment analysis and emotion recognition algorithms.",
                 specialty: "ML Engineering",
               },
@@ -535,17 +535,17 @@ export function About() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
               {
-                metric: "50K+",
+                metric: "0K+",
                 label: "Interviews Conducted",
                 icon: Video,
               },
               {
-                metric: "2,00+",
+                metric: "0+",
                 label: "Corporate Clients",
                 icon: Briefcase,
               },
               {
-                metric: "3+",
+                metric: "1+",
                 label: "Countries Served",
                 icon: Globe,
               },

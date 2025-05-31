@@ -486,19 +486,19 @@ export function Home() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                name: "Sarah Johnson",
+                name: "Muhammad Jawad",
                 role: "HR Director, TechCorp",
                 quote:
                   "AI-VIS has reduced our hiring time by 60% while improving the quality of our hires significantly. The AI analytics provide insights we never had before.",
               },
               {
-                name: "Michael Chang",
+                name: "Zainab Khan",
                 role: "CEO, StartUp Innovations",
                 quote:
                   "As a growing startup, we needed to scale our hiring process efficiently. AI-VIS delivered beyond our expectations with its intelligent analysis and bias-free evaluations.",
               },
               {
-                name: "Jessica Williams",
+                name: "Muarij Shakeel",
                 role: "Recruitment Manager, Global Solutions",
                 quote:
                   "The dynamic questioning system adapts perfectly to each candidate, revealing capabilities that traditional interviews would miss. It's transformed our approach to talent acquisition.",

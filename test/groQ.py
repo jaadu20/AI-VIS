@@ -109,7 +109,7 @@ class GroqQuestionGenerator:
 # Example usage
 if __name__ == "__main__":
     # Directly provide your API key here
-    API_KEY = "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"  # Replace with your actual Groq API key
+    API_KEY = "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"  # Replace with your actual Groq API key
     
     generator = GroqQuestionGenerator(api_key=API_KEY)
     

@@ -8,12 +8,14 @@ import {
   MicOff,
   Send,
   Loader2,
-  Volume2,
+  Repeat,
+  Mic as MicIcon,
   Square as StopIcon,
   Clock,
   AlertTriangle,
   CheckCircle,
   X,
+  Volume2,
   LogOut,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
@@ -23,10 +25,15 @@ import api from "../../api";
 import toast from "react-hot-toast";
 
 interface QuestionData {
-  id: string;
   text: string;
   difficulty: string;
-  audioUrl: string;
+  is_predefined?: boolean;
+}
+
+interface ApplicationData {
+  job_title: string;
+  company_name: string;
+  job_description: string;
 }
 
 const popupVariants = {
@@ -62,17 +69,11 @@ export function AIInterview() {
   const [interviewId, setInterviewId] = useState<string>("");
   const [interviewDuration, setInterviewDuration] = useState(0);
   const [confirmExit, setConfirmExit] = useState(false);
-  const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(
-    null
-  );
-  const [isAnswering, setIsAnswering] = useState(false);
-  const [isPlayingIntro, setIsPlayingIntro] = useState(false);
-  const [interviewStatus, setInterviewStatus] = useState<
-    "intro" | "questions" | "completed"
-  >("intro");
-  const [recordingStatus, setRecordingStatus] = useState<
-    "idle" | "recording" | "processing"
-  >("idle");
+  const [applicationData, setApplicationData] =
+    useState<ApplicationData | null>(null);
+  const [currentQuestionScore, setCurrentQuestionScore] = useState<number>(0);
+  const [isProcessingAnswer, setIsProcessingAnswer] = useState(false);
+  const [hasIntroductionPlayed, setHasIntroductionPlayed] = useState(false);
 
   // Media states
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
@@ -80,9 +81,6 @@ export function AIInterview() {
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const audioAnalyserRef = useRef<AnalyserNode | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
 
   // Recording states
   const [isRecording, setIsRecording] = useState(false);
@@ -92,7 +90,62 @@ export function AIInterview() {
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const recordingTimer = useRef<NodeJS.Timeout | null>(null);
-  const [audioLevel, setAudioLevel] = useState(0);
+  const [canEditAnswer, setCanEditAnswer] = useState(false);
+
+  // Prevent navigation and tab switching
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!showPopup) {
+        e.preventDefault();
+        e.returnValue =
+          "Your interview progress will be lost. Are you sure you want to leave?";
+        return e.returnValue;
+      }
+    };
+
+    const handlePopState = (e: PopStateEvent) => {
+      if (!showPopup) {
+        e.preventDefault();
+        window.history.pushState(null, "", window.location.href);
+        setConfirmExit(true);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (!showPopup && document.hidden) {
+        toast.error("Please stay on this tab during the interview");
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent F5, Ctrl+R, Ctrl+W, Alt+F4, etc.
+      if (
+        !showPopup &&
+        (e.key === "F5" ||
+          (e.ctrlKey && e.key === "r") ||
+          (e.ctrlKey && e.key === "w") ||
+          (e.altKey && e.key === "F4"))
+      ) {
+        e.preventDefault();
+        toast.error("Navigation is disabled during the interview");
+      }
+    };
+
+    if (!showPopup) {
+      window.addEventListener("beforeunload", handleBeforeUnload);
+      window.addEventListener("popstate", handlePopState);
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+      document.addEventListener("keydown", handleKeyDown);
+      window.history.pushState(null, "", window.location.href);
+    }
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showPopup]);
 
   // Interview timer
   useEffect(() => {
@@ -113,78 +166,111 @@ export function AIInterview() {
     return `${mins}:${secs < 10 ? "0" + secs : secs}`;
   };
 
+  const fetchApplicationData = async () => {
+    try {
+      const response = await api.get(`/applications/${applicationId}/`);
+      setApplicationData(response.data);
+    } catch (error) {
+      console.error("Failed to fetch application data:", error);
+      toast.error("Failed to load application details");
+    }
+  };
+
+  const playIntroduction = async () => {
+    if (!applicationData || hasIntroductionPlayed) return;
+
+    const introductionText = `Welcome to your interview for the ${applicationData.job_title} position at ${applicationData.company_name}. This interview will consist of several questions to assess your qualifications and fit for the role. Please take your time to answer each question thoughtfully. Let's begin with the first question.`;
+
+    try {
+      setIsSpeaking(true);
+      const response = await api.post(
+        "/interviews/tts/",
+        { text: introductionText },
+        { responseType: "blob" }
+      );
+
+      const audioUrl = URL.createObjectURL(response.data);
+      const audio = new Audio(audioUrl);
+
+      audio.onended = () => {
+        setIsSpeaking(false);
+        setHasIntroductionPlayed(true);
+        // Play first question after introduction
+        if (questions.length > 0) {
+          playQuestionAudio(questions[0].text);
+        }
+      };
+
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        setHasIntroductionPlayed(true);
+        toast.error("Audio playback failed, continuing with text");
+      };
+
+      await audio.play();
+    } catch (error) {
+      console.error("TTS error:", error);
+      setIsSpeaking(false);
+      setHasIntroductionPlayed(true);
+      toast.error("Speech synthesis failed, continuing with text");
+    }
+  };
+
   const startInterview = async () => {
     setShowPopup(false);
+    setIsLoading(true);
+
     try {
+      // Fetch application data first
+      await fetchApplicationData();
+
+      // Initialize interview
       const requestPayload = applicationId
         ? { application_id: applicationId }
         : {};
 
       const response = await api.post("/interviews/start/", requestPayload);
+
       if (!response.data?.interview_id) {
         throw new Error("Invalid interview initialization response");
       }
 
-      setInterviewId(response.data.interview_id);
+      setInterviewId(response.data.id); // Or response.data.interview_id if you add it in serializer
+      setQuestions(response.data.questions);
 
-      // Play introduction audio
-      if (response.data.intro_audio_url) {
-        setIsPlayingIntro(true);
-        const introAudio = new Audio(response.data.intro_audio_url);
-        introAudio.onended = () => {
-          setIsPlayingIntro(false);
-          setInterviewStatus("questions");
-          fetchNextQuestion();
-        };
-        introAudio.play();
-      } else {
-        setInterviewStatus("questions");
-        fetchNextQuestion();
+      // Set predefined questions (first two are always the same)
+      const predefinedQuestions = [
+        {
+          text: "Please introduce yourself and tell us about your background and experience.",
+          difficulty: "easy",
+          is_predefined: true,
+        },
+        {
+          text: "What interests you most about this position and our company?",
+          difficulty: "easy",
+          is_predefined: true,
+        },
+      ];
+
+      setQuestions(predefinedQuestions);
+      setCurrentQuestionIndex(0);
+
+      if (response.data.questions.length > 0) {
+        playQuestionAudio(response.data.questions[0].text);
       }
-
+      
       await initializeMediaStream();
+
+      // Play introduction and first question
+      setTimeout(() => {
+        playIntroduction();
+      }, 1000);
     } catch (error) {
       console.error("Interview start error:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to start interview"
       );
-    }
-  };
-
-  const fetchNextQuestion = async () => {
-    try {
-      setIsLoading(true);
-      const response = await api.get(
-        `/interviews/${interviewId}/next-question/`
-      );
-
-      if (response.data.completed) {
-        navigate(`/interview-result/${interviewId}`);
-        return;
-      }
-
-      const newQuestion = {
-        id: response.data.question_id,
-        text: response.data.question_text,
-        difficulty: response.data.difficulty,
-        audioUrl: response.data.question_audio_url,
-      };
-
-      setQuestions((prev) => [...prev, newQuestion]);
-      setCurrentQuestionId(response.data.question_id);
-      setCurrentQuestionIndex((prev) => prev + 1);
-
-      // Play question audio
-      setIsSpeaking(true);
-      const questionAudio = new Audio(newQuestion.audioUrl);
-      questionAudio.onended = () => {
-        setIsSpeaking(false);
-        setIsAnswering(true); // Enable answering after question is played
-      };
-      questionAudio.play();
-    } catch (error) {
-      console.error("Error fetching question:", error);
-      toast.error("Failed to load next question");
+      // setShowPopup(true);
     } finally {
       setIsLoading(false);
     }
@@ -199,67 +285,12 @@ export function AIInterview() {
       setMediaStream(stream);
       const videoStream = new MediaStream(stream.getVideoTracks());
       setVideoStream(videoStream);
-
-      // Initialize audio analyzer
-      if (audioContextRef.current === null) {
-        audioContextRef.current = new (window.AudioContext ||
-          (window as any).webkitAudioContext)();
-      }
-
-      const audioContext = audioContextRef.current;
-      const source = audioContext.createMediaStreamSource(stream);
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      source.connect(analyser);
-      audioAnalyserRef.current = analyser;
-
-      startAudioVisualization();
     } catch (error) {
       console.error("Media initialization failed:", error);
-      toast.error("Using text-only mode. Media features disabled.");
-      setQuestions([
-        {
-          id: "error",
-          text: "Welcome to text-based interview mode. Please type your answers.",
-          difficulty: "easy",
-          audioUrl: "",
-        },
-      ]);
+      toast.error("Camera/microphone access required for the interview");
+      throw error;
     }
   };
-
-  const startAudioVisualization = () => {
-    const analyser = audioAnalyserRef.current;
-    if (!analyser) return;
-
-    const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-    const draw = () => {
-      animationFrameRef.current = requestAnimationFrame(draw);
-      analyser.getByteFrequencyData(dataArray);
-
-      let sum = 0;
-      for (let i = 0; i < dataArray.length; i++) {
-        sum += dataArray[i];
-      }
-      const average = sum / dataArray.length;
-      setAudioLevel((average / 256) * 100); // Convert to percentage
-    };
-
-    draw();
-  };
-
-  useEffect(() => {
-    if (!showPopup && !mediaStream) {
-      initializeMediaStream();
-    }
-
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [showPopup]);
 
   useEffect(() => {
     if (videoRef.current && videoStream) {
@@ -268,89 +299,224 @@ export function AIInterview() {
     }
   }, [videoStream]);
 
-  const startVideoRecording = () => {
-    if (mediaStream) {
-      const recorder = new MediaRecorder(mediaStream);
-      recorder.start();
-      setMediaRecorder(recorder);
+  const playQuestionAudio = async (questionText: string) => {
+    try {
+      setIsSpeaking(true);
+      const response = await api.post(
+        "/interviews/tts/",
+        { text: questionText },
+        { responseType: "blob" }
+      );
+
+      const audioUrl = URL.createObjectURL(response.data);
+      const audio = new Audio(audioUrl);
+
+      audio.onended = () => {
+        setIsSpeaking(false);
+        setCanEditAnswer(true); // Allow recording after question is played
+      };
+
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        setCanEditAnswer(true);
+        toast.error("Audio playback failed");
+      };
+
+      await audio.play();
+    } catch (error) {
+      console.error("TTS error:", error);
+      setIsSpeaking(false);
+      setCanEditAnswer(true);
     }
   };
 
   const handleStartRecording = () => {
-    if (!isAnswering) return;
-
-    if (mediaStream) {
-      const recorder = new MediaRecorder(mediaStream);
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) setRecordedChunks((prev) => [...prev, e.data]);
-      };
-      recorder.start();
-      setMediaRecorder(recorder);
-      setIsRecording(true);
-      setRecordingStatus("recording");
-
-      // Start recording timer
-      setRecordingDuration(0);
-      recordingTimer.current = setInterval(() => {
-        setRecordingDuration((prev) => prev + 1);
-      }, 1000);
+    if (!mediaStream || !canEditAnswer) {
+      toast.error("Please wait for the question to finish playing");
+      return;
     }
+
+    const recorder = new MediaRecorder(mediaStream);
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) setRecordedChunks((prev) => [...prev, e.data]);
+    };
+
+    recorder.onstop = async () => {
+      const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
+      await processRecordedAnswer(audioBlob);
+    };
+
+    recorder.start();
+    setMediaRecorder(recorder);
+    setIsRecording(true);
+    setAnswer(""); // Clear previous answer
+
+    // Start recording timer
+    setRecordingDuration(0);
+    recordingTimer.current = setInterval(() => {
+      setRecordingDuration((prev) => prev + 1);
+    }, 1000);
   };
 
-  const handleStopRecording = async () => {
-    if (mediaRecorder) {
+  const handleStopRecording = () => {
+    if (mediaRecorder && isRecording) {
       mediaRecorder.stop();
       setIsRecording(false);
-      setRecordingStatus("processing");
 
+      // Stop recording timer
       if (recordingTimer.current) {
         clearInterval(recordingTimer.current);
         recordingTimer.current = null;
       }
+    }
+  };
+
+  const processRecordedAnswer = async (audioBlob: Blob) => {
+    try {
+      setIsLoading(true);
 
       // Convert speech to text
-      setIsLoading(true);
-      try {
-        const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
-        const formData = new FormData();
-        formData.append("audio", audioBlob);
+      const formData = new FormData();
+      formData.append("audio", audioBlob);
 
-        const response = await api.post("/interviews/stt/", formData);
-        setAnswer(response.data.text);
-        setRecordingStatus("idle");
-      } catch (error) {
-        console.error("STT error:", error);
-        toast.error("Speech recognition failed");
-        setRecordingStatus("idle");
-      } finally {
-        setIsLoading(false);
-        setRecordedChunks([]);
+      const sttResponse = await api.post("/interviews/stt/", formData);
+      const transcribedText = sttResponse.data.text;
+
+      setAnswer(transcribedText);
+      setCanEditAnswer(false); // Disable editing after transcription
+    } catch (error) {
+      console.error("STT error:", error);
+      toast.error("Failed to process recorded answer");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const generateNextQuestion = async (score: number) => {
+    try {
+      let difficulty = "medium";
+
+      // Select difficulty based on score
+      if (score >= 8) {
+        difficulty = "hard";
+      } else if (score >= 5) {
+        difficulty = "medium";
+      } else {
+        difficulty = "easy";
       }
+
+      const response = await api.post("/interviews/generate-question/", {
+        job_description: applicationData?.job_description,
+        difficulty: difficulty,
+        interview_id: interviewId,
+        previous_questions: questions.map((q) => q.text),
+      });
+
+      return {
+        text: response.data.question,
+        difficulty: difficulty,
+        is_predefined: false,
+      };
+    } catch (error) {
+      console.error("Question generation error:", error);
+      // Fallback question
+      return {
+        text: "Can you describe a challenging project you've worked on and how you overcame obstacles?",
+        difficulty: "medium",
+        is_predefined: false,
+      };
     }
   };
 
   const handleAnswerSubmit = async () => {
-    if (!answer.trim() || !currentQuestionId) return;
+    if (!answer.trim() || isProcessingAnswer) return;
+
+    setIsProcessingAnswer(true);
     setIsLoading(true);
 
     try {
+      // Prepare form data with answer and media
+      const formData = new FormData();
+      formData.append("question", questions[currentQuestionIndex]?.text || "");
+      formData.append("answer_text", answer);
+      formData.append("question_index", currentQuestionIndex.toString());
+
+      // Add audio if available
+      if (recordedChunks.length > 0) {
+        const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
+        formData.append("answer_audio", audioBlob);
+      }
+
+      // Add video frame for analysis (capture current frame)
+      if (videoRef.current) {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        ctx?.drawImage(videoRef.current, 0, 0);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              formData.append("video_frame", blob);
+            }
+          },
+          "image/jpeg",
+          0.8
+        );
+      }
+
+      // Submit answer and get score
       const response = await api.post(
-        `/interviews/${interviewId}/answer/${currentQuestionId}/`,
-        { text: answer }
+        `/interviews/${interviewId}/submit-answer/`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
       );
 
-      if (response.data.completed) {
+      const answerScore = response.data.score || 5; // Default score if not provided
+      setCurrentQuestionScore(answerScore);
+
+      // Check if interview is complete (after 15 questions or specific conditions)
+      if (currentQuestionIndex >= 14 || response.data.completed) {
+        // Interview completed
         navigate(`/interview-result/${interviewId}`);
-      } else {
-        // Prepare for next question
-        setAnswer("");
-        setIsAnswering(false);
-        fetchNextQuestion();
+        return;
       }
+
+      // Generate next question based on score
+      let nextQuestion;
+      if (currentQuestionIndex === 1) {
+        // Third question - first generated question
+        nextQuestion = await generateNextQuestion(5); // Start with medium difficulty
+      } else {
+        // Subsequent questions based on previous answer score
+        nextQuestion = await generateNextQuestion(answerScore);
+      }
+
+      // Add next question and move to it
+      setQuestions((prev) => [...prev, nextQuestion]);
+      setCurrentQuestionIndex((prev) => prev + 1);
+
+      // Reset states
+      setAnswer("");
+      setRecordedChunks([]);
+      setCanEditAnswer(false);
+
+      // Play next question
+      setTimeout(() => {
+        playQuestionAudio(nextQuestion.text);
+      }, 1000);
     } catch (error) {
-      toast.error("Failed to submit answer");
+      console.error("Answer submission error:", error);
+      toast.error("Failed to submit answer. Please try again.");
     } finally {
       setIsLoading(false);
+      setIsProcessingAnswer(false);
     }
   };
 
@@ -379,22 +545,18 @@ export function AIInterview() {
         }
       } catch (error) {
         console.error("Error reactivating camera:", error);
+        toast.error("Failed to reactivate camera");
       }
     }
   };
 
   useEffect(() => {
+    
     return () => {
       mediaStream?.getTracks().forEach((track) => track.stop());
       videoStream?.getTracks().forEach((track) => track.stop());
       if (recordingTimer.current) {
         clearInterval(recordingTimer.current);
-      }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
       }
     };
   }, [mediaStream, videoStream]);
@@ -402,18 +564,19 @@ export function AIInterview() {
   const showWarning = !audioEnabled || !cameraEnabled;
 
   const calculateProgress = () => {
-    // Using a total of 15 questions as mentioned in the welcome screen
-    return Math.min(100, (currentQuestionIndex / 14) * 100);
+    return (currentQuestionIndex / 14) * 100;
   };
 
-  const getRecordingStatusText = () => {
-    switch (recordingStatus) {
-      case "recording":
-        return "Recording your answer...";
-      case "processing":
-        return "Processing your answer...";
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case "easy":
+        return "bg-green-100 text-green-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "hard":
+        return "bg-red-100 text-red-800";
       default:
-        return "Press record and speak your answer";
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -468,7 +631,7 @@ export function AIInterview() {
                       <div className="p-2 bg-amber-100 rounded-full mb-2">
                         <Volume2 className="h-6 w-6 text-amber-600" />
                       </div>
-                      <span className="text-sm font-medium">Audio Enabled</span>
+                      <span className="text-sm font-medium">Voice Enabled</span>
                     </div>
                   </div>
 
@@ -518,7 +681,7 @@ export function AIInterview() {
                     <ul className="space-y-2 text-green-800">
                       <li className="flex items-center">
                         <div className="h-1.5 w-1.5 rounded-full bg-green-500 mr-2"></div>
-                        Dress professionally
+                        Speak clearly and confidently
                       </li>
                       <li className="flex items-center">
                         <div className="h-1.5 w-1.5 rounded-full bg-green-500 mr-2"></div>
@@ -526,7 +689,7 @@ export function AIInterview() {
                       </li>
                       <li className="flex items-center">
                         <div className="h-1.5 w-1.5 rounded-full bg-green-500 mr-2"></div>
-                        Speak clearly and confidently
+                        Record your answers using voice
                       </li>
                     </ul>
                   </div>
@@ -582,7 +745,7 @@ export function AIInterview() {
                     <Video className="h-5 w-5 text-blue-700" />
                   </div>
                   <h1 className="text-xl font-semibold tracking-tight">
-                    AI-VIS Professional Interview
+                    AI Interview - {applicationData?.job_title}
                   </h1>
                 </div>
 
@@ -757,14 +920,14 @@ export function AIInterview() {
                 >
                   <div
                     className={`w-48 h-48 rounded-full mb-4 overflow-hidden ${
-                      isSpeaking || isPlayingIntro
+                      isSpeaking
                         ? "ring-4 ring-indigo-400 ring-offset-2 transition-all duration-300"
                         : ""
                     }`}
                   >
                     <div
                       className={`w-full h-full relative ${
-                        isSpeaking || isPlayingIntro ? "animate-pulse" : ""
+                        isSpeaking ? "animate-pulse" : ""
                       }`}
                     >
                       <img
@@ -772,7 +935,7 @@ export function AIInterview() {
                         alt="AI Interviewer"
                         className="rounded-full w-full h-full object-cover"
                       />
-                      {(isSpeaking || isPlayingIntro) && (
+                      {isSpeaking && (
                         <div className="absolute inset-0 bg-gradient-to-t from-indigo-500/20 to-transparent" />
                       )}
                     </div>
@@ -784,15 +947,13 @@ export function AIInterview() {
 
                   <div className="text-gray-600 text-center mb-4">
                     <p className="text-sm">
-                      {isPlayingIntro
-                        ? "Welcome message playing..."
-                        : isSpeaking
+                      {isSpeaking
                         ? "Speaking... please listen carefully"
                         : "Your interview coach and assistant"}
                     </p>
                   </div>
 
-                  {(isSpeaking || isPlayingIntro) && (
+                  {isSpeaking && (
                     <div className="flex justify-center w-full mb-4">
                       <div className="flex space-x-1 items-center">
                         <div className="w-1 h-2 bg-indigo-500 rounded-full animate-bounce"></div>
@@ -826,42 +987,58 @@ export function AIInterview() {
                   <div className="space-y-4 relative">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex-1">
+                        <div className="flex items-center mb-2">
+                          <h3 className="text-lg font-semibold text-gray-700">
+                            Current Question
+                          </h3>
+                          {questions[currentQuestionIndex]?.difficulty && (
+                            <span
+                              className={`ml-3 px-2.5 py-0.5 rounded-full text-xs font-medium ${getDifficultyColor(
+                                questions[currentQuestionIndex]?.difficulty
+                              )}`}
+                            >
+                              {questions[currentQuestionIndex]?.difficulty}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xl font-medium text-gray-900">
-                          {isPlayingIntro
-                            ? "Welcome to your interview! Please wait for the introduction..."
-                            : questions[currentQuestionIndex]?.text ||
-                              "Loading question..."}
+                          {questions[currentQuestionIndex]?.text ||
+                            "Loading question..."}
                         </p>
                       </div>
 
-                      {questions[currentQuestionIndex]?.audioUrl && (
-                        <button
-                          onClick={() => {
-                            const audio = new Audio(
-                              questions[currentQuestionIndex].audioUrl
-                            );
-                            audio.play();
-                          }}
-                          disabled={isLoading || isSpeaking || isPlayingIntro}
-                          className="ml-4 flex-shrink-0 p-2 rounded-full text-indigo-600 hover:bg-indigo-50 transition-colors"
-                          title="Repeat Question"
-                        >
-                          {isSpeaking ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                          ) : (
-                            <Volume2 className="h-5 w-5" />
-                          )}
-                        </button>
-                      )}
+                      <button
+                        onClick={() =>
+                          playQuestionAudio(
+                            questions[currentQuestionIndex]?.text
+                          )
+                        }
+                        disabled={isLoading || isSpeaking}
+                        className="ml-4 flex-shrink-0 p-2 rounded-full text-indigo-600 hover:bg-indigo-50 transition-colors"
+                        title="Repeat Question"
+                      >
+                        {isSpeaking ? (
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : (
+                          <Volume2 className="h-5 w-5" />
+                        )}
+                      </button>
                     </div>
 
                     {/* Answer Input */}
                     <div className="relative mt-4">
                       <textarea
                         value={answer}
-                        readOnly
-                        className="w-full min-h-32 p-4 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none shadow-sm bg-gray-50"
-                        placeholder={getRecordingStatusText()}
+                        onChange={(e) => {
+                          if (canEditAnswer) setAnswer(e.target.value);
+                        }}
+                        className="w-full min-h-32 p-4 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none shadow-sm"
+                        placeholder={
+                          canEditAnswer
+                            ? "Enter your answer here or use voice recording..."
+                            : "Please record your answer or wait..."
+                        }
+                        disabled={isLoading || !canEditAnswer}
                       />
 
                       {/* Recording Button */}
@@ -871,76 +1048,33 @@ export function AIInterview() {
                             ? handleStopRecording
                             : handleStartRecording
                         }
-                        disabled={
-                          !isAnswering ||
-                          isLoading ||
-                          isPlayingIntro ||
-                          recordingStatus === "processing"
-                        }
+                        disabled={isSpeaking || !canEditAnswer}
                         className={`absolute top-3 right-3 p-2 rounded-lg shadow-sm ${
                           isRecording
                             ? "bg-red-600 text-white hover:bg-red-700"
-                            : isAnswering
-                            ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                            : "bg-gray-400 text-white cursor-not-allowed"
-                        } transition-colors`}
-                        title={
-                          isRecording
-                            ? "Stop Recording"
-                            : isAnswering
-                            ? "Record Answer"
-                            : "Please wait for the question"
-                        }
+                            : "bg-indigo-600 text-white hover:bg-indigo-700"
+                        } transition-colors ${
+                          isSpeaking || !canEditAnswer
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
+                        title={isRecording ? "Stop Recording" : "Record Answer"}
                       >
                         {isRecording ? (
                           <StopIcon className="h-5 w-5" />
-                        ) : recordingStatus === "processing" ? (
-                          <Loader2 className="h-5 w-5 animate-spin" />
                         ) : (
-                          <Mic className="h-5 w-5" />
+                          <MicIcon className="h-5 w-5" />
                         )}
                       </button>
-
-                      {/* Audio visualization */}
-                      {isRecording && (
-                        <div className="absolute bottom-3 left-4 right-16">
-                          <div className="flex items-center space-x-1">
-                            {[...Array(8)].map((_, i) => (
-                              <div
-                                key={i}
-                                className="w-1.5 bg-indigo-500 rounded-full transition-all duration-200"
-                                style={{
-                                  height: `${audioLevel * (i / 7 + 0.2)}%`,
-                                  opacity: 0.7 + i * 0.05,
-                                }}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      )}
                     </div>
 
                     {/* Submit Button */}
                     <Button
                       onClick={handleAnswerSubmit}
-                      disabled={
-                        !answer.trim() ||
-                        isLoading ||
-                        isRecording ||
-                        !isAnswering ||
-                        recordingStatus === "processing"
-                      }
-                      className={`w-full py-3.5 flex items-center justify-center text-white transition-colors rounded-xl shadow-md mt-4 ${
-                        !answer.trim() ||
-                        isLoading ||
-                        isRecording ||
-                        !isAnswering ||
-                        recordingStatus === "processing"
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700"
-                      }`}
+                      disabled={!answer.trim() || isLoading || isSpeaking}
+                      className="w-full py-3.5 flex items-center justify-center bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white transition-colors rounded-xl shadow-md mt-4"
                     >
-                      {isLoading || recordingStatus === "processing" ? (
+                      {isLoading ? (
                         <>
                           <Loader2 className="h-5 w-5 animate-spin mr-2" />
                           Processing...
@@ -1016,7 +1150,7 @@ export function AIInterview() {
                   <button
                     type="button"
                     className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 sm:text-sm"
-                    onClick={() => navigate("/candidate/dashboard")}
+                    onClick={() => navigate("/complete")}
                   >
                     Exit Interview
                   </button>
@@ -1031,4 +1165,3 @@ export function AIInterview() {
 }
 
 export default AIInterview;
-

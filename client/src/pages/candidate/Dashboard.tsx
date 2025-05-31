@@ -96,14 +96,14 @@ const scheduledInterviews: ScheduledInterview[] = [
       new Date().getTime() + 2 * 24 * 60 * 60 * 1000
     ).toISOString(),
   },
-  {
-    id: "interview-2",
-    jobTitle: "React Developer",
-    companyName: "InnoSoft Solutions",
-    dateTime: new Date(
-      new Date().getTime() + 5 * 24 * 60 * 60 * 1000
-    ).toISOString(),
-  },
+  // {
+  //   id: "interview-2",
+  //   jobTitle: "React Developer",
+  //   companyName: "InnoSoft Solutions",
+  //   dateTime: new Date(
+  //     new Date().getTime() + 5 * 24 * 60 * 60 * 1000
+  //   ).toISOString(),
+  // },
 ];
 
 export function CandidateDashboard() {
@@ -122,10 +122,10 @@ export function CandidateDashboard() {
 
   // Mock data for dashboard stats
   const dashboardStats = {
-    applicationsSubmitted: 7,
-    interviewsScheduled: 3,
-    savedJobs: 12,
-    profileViews: 24,
+    applicationsSubmitted: 3,
+    interviewsScheduled: 2,
+    savedJobs: 0,
+    profileViews: 2,
   };
 
   useEffect(() => {

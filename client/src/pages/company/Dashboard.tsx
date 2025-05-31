@@ -30,6 +30,7 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
+import { Job } from "../../types";
 
 // Animation variants
 const fadeInUp = {
@@ -46,6 +47,8 @@ export function CompanyDashboard() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  
 
   // Simulate loading state
   useEffect(() => {
@@ -59,7 +62,7 @@ export function CompanyDashboard() {
   const stats = [
     {
       label: "Total Applications",
-      value: "156",
+      value: "2",
       icon: Users,
       change: "+12%",
       color: "bg-blue-600",
@@ -67,7 +70,7 @@ export function CompanyDashboard() {
     },
     {
       label: "Active Jobs",
-      value: "23",
+      value: "3",
       icon: Briefcase,
       change: "+5%",
       color: "bg-green-500",
@@ -83,7 +86,7 @@ export function CompanyDashboard() {
     },
     {
       label: "Hiring Rate",
-      value: "68%",
+      value: "6%",
       icon: TrendingUp,
       change: "+3%",
       color: "bg-yellow-500",

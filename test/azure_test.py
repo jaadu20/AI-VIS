@@ -44,7 +44,7 @@ def speech_to_text():
 # Example usage
 if __name__ == "__main__":
     # TTS
-    # text_to_speech("Hello! This is Azure Text to Speech in action.")
+    text_to_speech("Hello! This is Azure Text to Speech in action.")
 
     # STT
     recognized_text = speech_to_text()

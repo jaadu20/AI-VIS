@@ -28,20 +28,30 @@ INSTALLED_APPS = [
     # My apps
     'users',
     'jobs',
-    # 'interviews',
     'interview_applications',
+    'interviews',
 ]
 
+# # Azure Speech Services
+AZURE_SPEECH_KEY = 'CJWsbzwSAOkCVJbDh1qcMHmMAb9lZP2Y9iQkqjIf26WtMt7GHYsOJQQJ99BDACYeBjFXJ3w3AAAYACOGumQH'
+AZURE_SPEECH_REGION = 'eastus'
 
-# Azure Speech Services
-AZURE_SPEECH_KEY = config('AZURE_SPEECH_KEY')
-AZURE_SPEECH_REGION = config('AZURE_SPEECH_REGION', default='eastus')
+# Groq API Configuration
+GROQ_API_KEY = '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'
 
-# Hugging Face
-HUGGINGFACE_TOKEN = config('HUGGINGFACE_TOKEN')
+# Hugging Face Configuration
+HF_TOKEN = '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'
 
-# Grok API
-GROQ_API_KEY = config('GROQ_API_KEY')
+
+# # Azure Speech Services
+# AZURE_SPEECH_KEY = config('AZURE_SPEECH_KEY')
+# AZURE_SPEECH_REGION = config('AZURE_SPEECH_REGION', default='eastus')
+
+# # Hugging Face
+# HUGGINGFACE_TOKEN = config('HUGGINGFACE_TOKEN')
+
+# # Grok API
+# GROQ_API_KEY = config('GROQ_API_KEY')
 
 # Configure ASGI application
 ASGI_APPLICATION = 'your_project.routing.application'

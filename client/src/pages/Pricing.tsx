@@ -139,7 +139,7 @@ export function Pricing() {
     {
       quote:
         "AI-VIS has reduced our time-to-hire by 67% while improving candidate quality. The ROI on this platform has been incredible for our company.",
-      name: "Jennifer Murphy",
+      name: "Muhammad Jawad",
       title: "Head of Talent Acquisition",
       company: "TechGrowth Inc.",
       rating: 5,
@@ -147,7 +147,7 @@ export function Pricing() {
     {
       quote:
         "The AI-powered interviews helped us eliminate bias and find better cultural fits. Our hiring manager satisfaction scores increased by 40% since implementation.",
-      name: "Michael Chen",
+      name: "Zainab Khan",
       title: "HR Director",
       company: "FutureTech Corp",
       rating: 5,
@@ -155,7 +155,7 @@ export function Pricing() {
     {
       quote:
         "Switching to AI-VIS was the best decision we made for our high-volume hiring. The platform scales effortlessly with our growing recruitment needs.",
-      name: "Sarah Johnson",
+      name: "Muarij Shakeel",
       title: "Global Talent Lead",
       company: "InnovateX Solutions",
       rating: 5,
