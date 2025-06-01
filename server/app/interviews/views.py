@@ -14,43 +14,47 @@ from .serializers import InterviewSerializer, QuestionSerializer, AnswerSerializ
 from interview_applications.models import Application
 
 # Azure Speech Service Integration
-class SpeechService:
-    def __init__(self):
-        self.speech_config = speechsdk.SpeechConfig(
-            subscription=settings.AZURE_SPEECH_KEY,
-            region=settings.AZURE_SPEECH_REGION
-        )
-        self.speech_config.speech_synthesis_voice_name = "en-US-JennyNeural"
+# class SpeechService:
+#     def __init__(self):
+#         self.speech_config = speechsdk.SpeechConfig(
+#             subscription=os.environ.get('AZURE_SPEECH_KEY'),
+#             region=os.environ.get('AZURE_SPEECH_REGION')
+#         )
+#         self.speech_config.speech_synthesis_voice_name = "en-US-JennyNeural"
     
-    def text_to_speech(self, text):
-        synthesizer = speechsdk.SpeechSynthesizer(speech_config=self.speech_config)
-        result = synthesizer.speak_text_async(text).get()
+#     def text_to_speech(self, text):
+#         synthesizer = speechsdk.SpeechSynthesizer(speech_config=self.speech_config)
+#         result = synthesizer.speak_text_async(text).get()
         
-        if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-            return result.audio_data
-        elif result.reason == speechsdk.ResultReason.Canceled:
-            cancellation = result.cancellation_details
-            error_msg = f"Speech synthesis canceled: {cancellation.reason}"
-            if cancellation.reason == speechsdk.CancellationReason.Error:
-                error_msg += f"\nError details: {cancellation.error_details}"
-            raise Exception(error_msg)
+#         if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+#             return result.audio_data
+#         elif result.reason == speechsdk.ResultReason.Canceled:
+#             cancellation = result.cancellation_details
+#             error_msg = f"Speech synthesis canceled: {cancellation.reason}"
+#             if cancellation.reason == speechsdk.CancellationReason.Error:
+#                 if cancellation.ErrorCode:
+#                     error_msg += f", ErrorCode={cancellation.ErrorCode}"
+#                 if cancellation.ErrorDetails:
+#                     error_msg += f", ErrorDetails={cancellation.ErrorDetails}"
+#             raise Exception(error_msg)
+#         return None
     
-    def speech_to_text(self, audio_data):
-        audio_stream = speechsdk.AudioInputStream(audio_data)
-        audio_config = speechsdk.audio.AudioConfig(stream=audio_stream)
-        recognizer = speechsdk.SpeechRecognizer(speech_config=self.speech_config, audio_config=audio_config)
+#     def speech_to_text(self, audio_data):
+#         audio_stream = speechsdk.AudioInputStream(audio_data)
+#         audio_config = speechsdk.audio.AudioConfig(stream=audio_stream)
+#         recognizer = speechsdk.SpeechRecognizer(speech_config=self.speech_config, audio_config=audio_config)
         
-        result = recognizer.recognize_once_async().get()
-        if result.reason == speechsdk.ResultReason.RecognizedSpeech:
-            return result.text
-        elif result.reason == speechsdk.ResultReason.NoMatch:
-            raise Exception("No speech could be recognized")
-        elif result.reason == speechsdk.ResultReason.Canceled:
-            cancellation = result.cancellation_details
-            error_msg = f"Speech recognition canceled: {cancellation.reason}"
-            if cancellation.reason == speechsdk.CancellationReason.Error:
-                error_msg += f"\nError details: {cancellation.error_details}"
-            raise Exception(error_msg)
+#         result = recognizer.recognize_once_async().get()
+#         if result.reason == speechsdk.ResultReason.RecognizedSpeech:
+#             return result.text
+#         elif result.reason == speechsdk.ResultReason.NoMatch:
+#             raise Exception("No speech could be recognized")
+#         elif result.reason == speechsdk.ResultReason.Canceled:
+#             cancellation = result.cancellation_details
+#             error_msg = f"Speech recognition canceled: {cancellation.reason}"
+#             if cancellation.reason == speechsdk.CancellationReason.Error:
+#                 error_msg += f"\nError details: {cancellation.error_details}"
+#             raise Exception(error_msg)
 
 # Groq API Integration
 class GroqScorer:
@@ -197,40 +201,96 @@ class InterviewViewSet(viewsets.ModelViewSet):
             "questions": QuestionSerializer(interview.questions.all(), many=True).data
         }, status=status.HTTP_201_CREATED)
         
-class TextToSpeechView(APIView):
-    def post(self, request):
-        try:
-            data = request.data
-            text = data.get('text')
-            
-            if not text:
-                return Response({"error": "Text is required"}, status=400)
-            
-            speech_service = SpeechService()
-            audio_data = speech_service.text_to_speech(text)
-            
-            response = HttpResponse(audio_data, content_type='audio/wav')
-            response['Content-Disposition'] = 'attachment; filename="speech.wav"'
-            return response
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
 
+class TextToSpeechView(APIView):
+    permission_classes = [permissions.IsAuthenticated]  # Require authentication
+
+    def post(self, request):
+        text = request.data.get('text')
+        if not text:
+            return Response({'error': 'Text is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Initialize Azure Speech Service
+            speech_config = speechsdk.SpeechConfig(
+                subscription=settings.AZURE_SPEECH_KEY,
+                region=settings.AZURE_SPEECH_REGION
+            )
+            speech_config.speech_synthesis_voice_name = "en-US-JennyNeural"
+            
+            # Create synthesizer with in-memory output
+            audio_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=False)
+            synthesizer = speechsdk.SpeechSynthesizer(
+                speech_config=speech_config, 
+                audio_config=audio_config
+            )
+            
+            # Synthesize text to audio
+            result = synthesizer.speak_text_async(text).get()
+            
+            if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+                # Get audio data as bytes
+                audio_data = result.audio_data
+                return HttpResponse(audio_data, content_type='audio/mpeg')
+                
+            elif result.reason == speechsdk.ResultReason.Canceled:
+                cancellation = result.cancellation_details
+                error_msg = f"Speech synthesis canceled: {cancellation.reason}"
+                if cancellation.reason == speechsdk.CancellationReason.Error:
+                    error_msg += f"\nError details: {cancellation.error_details}"
+                return Response({'error': error_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            return Response({'error': 'Speech synthesis failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
 class SpeechToTextView(APIView):
+    # permission_classes = []  # Adjust permissions as needed
+
     def post(self, request):
         try:
             audio_file = request.FILES.get('audio')
             if not audio_file:
-                return Response({"error": "Audio file is required"}, status=400)
+                return Response({"error": "Audio file is required"}, status=status.HTTP_400_BAD_REQUEST)
             
-            # Read audio data
+            # Initialize Azure Speech Service
+            speech_config = speechsdk.SpeechConfig(
+                subscription=settings.AZURE_SPEECH_KEY,
+                region=settings.AZURE_SPEECH_REGION
+            )
+            
+            # Configure audio input
+            audio_stream = speechsdk.audio.PushAudioInputStream()
+            audio_config = speechsdk.audio.AudioConfig(stream=audio_stream)
+            recognizer = speechsdk.SpeechRecognizer(
+                speech_config=speech_config, 
+                audio_config=audio_config
+            )
+            
+            # Write audio data to stream
             audio_data = audio_file.read()
+            audio_stream.write(audio_data)
+            audio_stream.close()
             
-            speech_service = SpeechService()
-            text = speech_service.speech_to_text(audio_data)
+            # Recognize speech
+            result = recognizer.recognize_once_async().get()
             
-            return Response({"text": text})
+            if result.reason == speechsdk.ResultReason.RecognizedSpeech:
+                return Response({"text": result.text})
+                
+            elif result.reason == speechsdk.ResultReason.NoMatch:
+                return Response({"error": "No speech could be recognized"}, status=status.HTTP_400_BAD_REQUEST)
+                
+            elif result.reason == speechsdk.ResultReason.Canceled:
+                cancellation = result.cancellation_details
+                error_msg = f"Speech recognition canceled: {cancellation.reason}"
+                if cancellation.reason == speechsdk.CancellationReason.Error:
+                    error_msg += f"\nError details: {cancellation.error_details}"
+                return Response({"error": error_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
         except Exception as e:
-            return Response({"error": str(e)}, status=500)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class SubmitAnswerView(APIView):
     permission_classes = [permissions.IsAuthenticated]

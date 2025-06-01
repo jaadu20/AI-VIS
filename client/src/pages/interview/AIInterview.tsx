@@ -176,45 +176,92 @@ export function AIInterview() {
     }
   };
 
-  const playIntroduction = async () => {
-    if (!applicationData || hasIntroductionPlayed) return;
-
-    const introductionText = `Welcome to your interview for the ${applicationData.job_title} position at ${applicationData.company_name}. This interview will consist of several questions to assess your qualifications and fit for the role. Please take your time to answer each question thoughtfully. Let's begin with the first question.`;
-
+  const playAudio = async (text: string) => {
     try {
       setIsSpeaking(true);
       const response = await api.post(
         "/interviews/tts/",
-        { text: introductionText },
+        { text },
         { responseType: "blob" }
       );
 
-      const audioUrl = URL.createObjectURL(response.data);
+      // Create a new Blob from the response data
+      const audioBlob = new Blob([response.data], { type: "audio/mpeg" });
+      const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
 
-      audio.onended = () => {
-        setIsSpeaking(false);
-        setHasIntroductionPlayed(true);
-        // Play first question after introduction
-        if (questions.length > 0) {
-          playQuestionAudio(questions[0].text);
-        }
-      };
-
+      audio.onended = () => setIsSpeaking(false);
       audio.onerror = () => {
         setIsSpeaking(false);
-        setHasIntroductionPlayed(true);
-        toast.error("Audio playback failed, continuing with text");
+        toast.error("Audio playback failed");
       };
 
       await audio.play();
     } catch (error) {
       console.error("TTS error:", error);
       setIsSpeaking(false);
-      setHasIntroductionPlayed(true);
-      toast.error("Speech synthesis failed, continuing with text");
+      toast.error("Speech synthesis failed");
     }
   };
+
+  const playIntroduction = async () => {
+    // if (!applicationData || hasIntroductionPlayed) return;
+
+    const introductionText = `Welcome to your interview for the position at . This interview will consist of several questions to assess your qualifications and fit for the role. Please take your time to answer each question thoughtfully. Let's begin with the first question.`;
+
+    await playAudio(introductionText);
+    setHasIntroductionPlayed(true);
+
+    // Play first question after introduction
+    if (questions.length > 0) {
+      await playAudio(questions[0].text);
+    }
+  };
+
+//   const playQuestionAudio = async (questionText: string) => {
+//   await playAudio(questionText);
+//   setCanEditAnswer(true); // Allow recording after question is played
+// };
+
+  // const playIntroduction = async () => {
+  //   if (!applicationData || hasIntroductionPlayed) return;
+
+  //   const introductionText = `Welcome to your interview for the ${applicationData.job_title} position at ${applicationData.company_name}. This interview will consist of several questions to assess your qualifications and fit for the role. Please take your time to answer each question thoughtfully. Let's begin with the first question.`;
+
+  //   try {
+  //     setIsSpeaking(true);
+  //     const response = await api.post(
+  //       "/interviews/tts/",
+  //       { text: introductionText },
+  //       { responseType: "blob" }
+  //     );
+
+  //     const audioUrl = URL.createObjectURL(response.data);
+  //     const audio = new Audio(audioUrl);
+
+  //     audio.onended = () => {
+  //       setIsSpeaking(false);
+  //       setHasIntroductionPlayed(true);
+  //       // Play first question after introduction
+  //       if (questions.length > 0) {
+  //         playQuestionAudio(questions[0].text);
+  //       }
+  //     };
+
+  //     audio.onerror = () => {
+  //       setIsSpeaking(false);
+  //       setHasIntroductionPlayed(true);
+  //       toast.error("Audio playback failed, continuing with text");
+  //     };
+
+  //     await audio.play();
+  //   } catch (error) {
+  //     console.error("TTS error:", error);
+  //     setIsSpeaking(false);
+  //     setHasIntroductionPlayed(true);
+  //     toast.error("Speech synthesis failed, continuing with text");
+  //   }
+  // };
 
   const startInterview = async () => {
     setShowPopup(false);

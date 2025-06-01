@@ -39,7 +39,7 @@ class Interview(models.Model):
     feedback = models.TextField(blank=True, null=True)
 
     class Meta:
-       db_table = 'interview_interview' 
+       db_table = 'interviews_interview' 
 
     def __str__(self):
         return f"Interview for {self.application.job_title} at {self.application.company_name}"
