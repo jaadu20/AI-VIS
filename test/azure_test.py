@@ -1,7 +1,7 @@
 import azure.cognitiveservices.speech as speechsdk
 import os
 # Configuration
-API_KEY = 'CJWsbzwSAOkCVJbDh1qcMHmMAb9lZP2Y9iQkqjIf26WtMt7GHYsOJQQJ99BDACYeBjFXJ3w3AAAYACOGumQH'
+API_KEY = 'EEXQ9EhmfvqsRWRZizHKcK5wDARKu5ZLCqAhTuSGClh6m6g1BSPgJQQJ99BFACYeBjFXJ3w3AAAYACOGgq4p'
 REGION = 'eastus'
 
 # Create a speech config

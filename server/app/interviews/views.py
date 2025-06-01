@@ -1,6 +1,8 @@
 # interviews/views.py
+import logging
 import os
 import json
+from venv import logger
 import requests
 import azure.cognitiveservices.speech as speechsdk
 from django.conf import settings
@@ -12,6 +14,11 @@ from rest_framework.views import APIView
 from .models import Interview, Question, Answer
 from .serializers import InterviewSerializer, QuestionSerializer, AnswerSerializer
 from interview_applications.models import Application
+from azure.cognitiveservices.speech import SpeechConfig, SpeechSynthesizer
+from azure.cognitiveservices.speech.audio import AudioOutputConfig
+import io
+
+logger = logging.getLogger(__name__) # Setup logger for the view
 
 # Azure Speech Service Integration
 # class SpeechService:
@@ -57,6 +64,7 @@ from interview_applications.models import Application
 #             raise Exception(error_msg)
 
 # Groq API Integration
+
 class GroqScorer:
     def __init__(self):
         self.api_url = "https://api.groq.com/openai/v1/chat/completions"
@@ -203,7 +211,7 @@ class InterviewViewSet(viewsets.ModelViewSet):
         
 
 class TextToSpeechView(APIView):
-    permission_classes = [permissions.IsAuthenticated]  # Require authentication
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         text = request.data.get('text')
@@ -212,38 +220,44 @@ class TextToSpeechView(APIView):
         
         try:
             # Initialize Azure Speech Service
-            speech_config = speechsdk.SpeechConfig(
+            speech_config = SpeechConfig(
                 subscription=settings.AZURE_SPEECH_KEY,
                 region=settings.AZURE_SPEECH_REGION
             )
             speech_config.speech_synthesis_voice_name = "en-US-JennyNeural"
             
-            # Create synthesizer with in-memory output
-            audio_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=False)
-            synthesizer = speechsdk.SpeechSynthesizer(
+            # Synthesize text to audio in memory.
+            # By not providing an audio_config or setting it to None,
+            # the SDK makes the audio data available in result.audio_data.
+            synthesizer = SpeechSynthesizer(
                 speech_config=speech_config, 
-                audio_config=audio_config
+                audio_config=None # Let the SDK handle in-memory synthesis
             )
             
-            # Synthesize text to audio
             result = synthesizer.speak_text_async(text).get()
             
             if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-                # Get audio data as bytes
-                audio_data = result.audio_data
+                audio_data = result.audio_data # Get audio data directly from the result object
                 return HttpResponse(audio_data, content_type='audio/mpeg')
                 
             elif result.reason == speechsdk.ResultReason.Canceled:
                 cancellation = result.cancellation_details
                 error_msg = f"Speech synthesis canceled: {cancellation.reason}"
                 if cancellation.reason == speechsdk.CancellationReason.Error:
-                    error_msg += f"\nError details: {cancellation.error_details}"
-                return Response({'error': error_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    if cancellation.error_details: # Check if error_details is not None
+                        error_msg += f"\nError details: {cancellation.error_details}"
+                logger.error(error_msg) # Log the detailed error
+                return Response({'error': 'Speech synthesis canceled. ' + str(cancellation.reason)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
-            return Response({'error': 'Speech synthesis failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            else: # Other unexpected reasons
+                error_msg = f"Speech synthesis failed for an unexpected reason: {result.reason}"
+                logger.error(error_msg)
+                return Response({'error': error_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            import traceback
+            logger.error(f"TTS Error: {str(e)}\n{traceback.format_exc()}")
+            return Response({'error': f'Internal server error during TTS: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 class SpeechToTextView(APIView):
     # permission_classes = []  # Adjust permissions as needed

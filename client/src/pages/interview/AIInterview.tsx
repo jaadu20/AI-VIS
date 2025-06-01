@@ -57,6 +57,7 @@ const fadeInVariants = {
   visible: { opacity: 1, transition: { duration: 0.5 } },
 };
 
+
 export function AIInterview() {
   const { applicationId } = useParams();
   const navigate = useNavigate();
@@ -95,7 +96,8 @@ export function AIInterview() {
   // Prevent navigation and tab switching
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (!showPopup && !confirmExit) { // Allow unload if exit confirmed
+      if (!showPopup && !confirmExit) {
+        // Allow unload if exit confirmed
         e.preventDefault();
         e.returnValue =
           "Your interview progress will be lost. Are you sure you want to leave?";
@@ -177,8 +179,6 @@ export function AIInterview() {
   };
 
   const playAudio = async (text: string) => {
-    // Generic audio player, sets isSpeaking
-    // Specific logic like setCanEditAnswer should be in calling function or playQuestionAudio
     try {
       setIsSpeaking(true);
       const response = await api.post(
@@ -186,6 +186,14 @@ export function AIInterview() {
         { text },
         { responseType: "blob" }
       );
+
+      if (response.data.size === 0) {
+        throw new Error("Empty audio response from server");
+      }
+      if (response.status !== 200) {
+        const errorData = await response.data.text();
+        throw new Error(`TTS Error: ${errorData}`);
+      }
 
       const audioBlob = new Blob([response.data], { type: "audio/mpeg" });
       const audioUrl = URL.createObjectURL(audioBlob);
@@ -201,18 +209,31 @@ export function AIInterview() {
           toast.error("Audio playback failed");
           reject(new Error("Audio playback failed"));
         };
-        audio.play().catch(err => {
-            setIsSpeaking(false);
-            toast.error("Audio playback failed");
-            reject(err);
+        audio.play().catch((err) => {
+          setIsSpeaking(false);
+          toast.error("Audio playback failed");
+          reject(err);
         });
       });
-
     } catch (error) {
       console.error("TTS error:", error);
       setIsSpeaking(false);
-      toast.error("Speech synthesis failed");
-      throw error; // Re-throw to be caught by caller
+      let message = "Speech synthesis failed";
+      if (typeof error === "object" && error !== null) {
+        if (
+          "response" in error &&
+          typeof (error as any).response?.data?.error === "string"
+        ) {
+          message = (error as any).response.data.error;
+        } else if (
+          "message" in error &&
+          typeof (error as any).message === "string"
+        ) {
+          message = (error as any).message;
+        }
+      }
+      toast.error(message);
+      throw error;
     }
   };
 
@@ -223,7 +244,10 @@ export function AIInterview() {
       setCanEditAnswer(true);
     } catch (error) {
       // Error already handled by playAudio, but ensure canEditAnswer is true for manual input
-      console.error("Error in playQuestionAudio, enabling answer edit as fallback:", error);
+      console.error(
+        "Error in playQuestionAudio, enabling answer edit as fallback:",
+        error
+      );
       setCanEditAnswer(true); // Fallback to allow typing answer
     }
   };
@@ -252,7 +276,6 @@ export function AIInterview() {
     }
   };
 
-
   const startInterview = async () => {
     setShowPopup(false);
     setIsLoading(true);
@@ -265,15 +288,20 @@ export function AIInterview() {
       });
 
       if (!response.data?.interview_id || !response.data?.questions?.length) {
-        throw new Error("Invalid interview initialization response from server.");
+        throw new Error(
+          "Invalid interview initialization response from server."
+        );
       }
 
       setInterviewId(response.data.interview_id);
-      const fetchedQuestions: QuestionData[] = response.data.questions.map((q: any) => ({ // Ensure mapping if backend structure differs slightly
-        text: q.text,
-        difficulty: q.difficulty,
-        is_predefined: q.is_predefined !== undefined ? q.is_predefined : true, // Assuming initial are predefined
-      }));
+      const fetchedQuestions: QuestionData[] = response.data.questions.map(
+        (q: any) => ({
+          // Ensure mapping if backend structure differs slightly
+          text: q.text,
+          difficulty: q.difficulty,
+          is_predefined: q.is_predefined !== undefined ? q.is_predefined : true, // Assuming initial are predefined
+        })
+      );
       setQuestions(fetchedQuestions);
       setCurrentQuestionIndex(0); // Start at the first question
 
@@ -283,11 +311,12 @@ export function AIInterview() {
       setTimeout(() => {
         playIntroductionAndFirstQuestion();
       }, 1000);
-
     } catch (error) {
       console.error("Interview start error:", error);
       const errMsg =
-        (error as any)?.response?.data?.error || (error as Error).message || "Failed to start interview";
+        (error as any)?.response?.data?.error ||
+        (error as Error).message ||
+        "Failed to start interview";
       toast.error(errMsg);
       setShowPopup(true); // Revert to popup on critical error
     } finally {
@@ -307,7 +336,9 @@ export function AIInterview() {
       setCameraEnabled(true);
     } catch (error) {
       console.error("Media initialization failed:", error);
-      toast.error("Camera and microphone access are required for the interview. Please grant permissions and refresh.");
+      toast.error(
+        "Camera and microphone access are required for the interview. Please grant permissions and refresh."
+      );
       throw error; // Propagate error to stop interview start if critical
     }
   };
@@ -319,21 +350,23 @@ export function AIInterview() {
     }
   }, [videoStream]);
 
-
   const handleStartRecording = () => {
     if (!mediaStream) {
-        toast.error("Media stream not available. Please check camera/microphone permissions.");
-        return;
+      toast.error(
+        "Media stream not available. Please check camera/microphone permissions."
+      );
+      return;
     }
     if (!canEditAnswer) {
-      toast.error("Please wait for the question to finish playing or for recording to be enabled.");
+      toast.error(
+        "Please wait for the question to finish playing or for recording to be enabled."
+      );
       return;
     }
     if (isSpeaking) {
-        toast.error("Please wait for the AI to finish speaking.");
-        return;
+      toast.error("Please wait for the AI to finish speaking.");
+      return;
     }
-
 
     const recorder = new MediaRecorder(mediaStream);
     setRecordedChunks([]); // Clear previous chunks
@@ -347,17 +380,16 @@ export function AIInterview() {
       // Process recorded answer after chunks are finalized.
       // The state `recordedChunks` will be used in `processRecordedAnswer`.
     };
-    
-    recorder.onerror = (e) => {
-        console.error("MediaRecorder error:", e);
-        toast.error("Recording failed. Please try again.");
-        setIsRecording(false);
-        if (recordingTimer.current) {
-            clearInterval(recordingTimer.current);
-            recordingTimer.current = null;
-        }
-    };
 
+    recorder.onerror = (e) => {
+      console.error("MediaRecorder error:", e);
+      toast.error("Recording failed. Please try again.");
+      setIsRecording(false);
+      if (recordingTimer.current) {
+        clearInterval(recordingTimer.current);
+        recordingTimer.current = null;
+      }
+    };
 
     recorder.start();
     setMediaRecorder(recorder);
@@ -371,7 +403,8 @@ export function AIInterview() {
     }, 1000);
   };
 
-  const handleStopRecording = async () => { // Make async to await processing
+  const handleStopRecording = async () => {
+    // Make async to await processing
     if (mediaRecorder && isRecording) {
       mediaRecorder.stop(); // This will trigger ondataavailable and then onstop for the recorder instance
       setIsRecording(false);
@@ -385,13 +418,17 @@ export function AIInterview() {
       // For now, assume onstop will update recordedChunks state before this proceeds too far.
       // Better: process inside the onstop handler or pass the blob from there.
       // Let's make processRecordedAnswer take the chunks directly.
-      if (recordedChunks.length > 0 || (mediaRecorder.stream.active && mediaRecorder.state === "inactive")) { // Check if there are chunks to process
+      if (
+        recordedChunks.length > 0 ||
+        (mediaRecorder.stream.active && mediaRecorder.state === "inactive")
+      ) {
+        // Check if there are chunks to process
         // Creating blob here as recorder.onstop might not have set the state yet if called immediately
         const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
         if (audioBlob.size > 0) {
-            await processRecordedAnswer(audioBlob);
+          await processRecordedAnswer(audioBlob);
         } else {
-            toast("No audio recorded or recording was too short.");
+          toast("No audio recorded or recording was too short.");
         }
       } else {
         // This case means stop was called but no data was recorded or available yet.
@@ -403,8 +440,8 @@ export function AIInterview() {
 
   const processRecordedAnswer = async (audioBlob: Blob) => {
     if (audioBlob.size === 0) {
-        toast("Recorded audio is empty.");
-        return;
+      toast("Recorded audio is empty.");
+      return;
     }
     try {
       setIsLoading(true); // Use general loading or a specific STT loading
@@ -419,10 +456,11 @@ export function AIInterview() {
       setAnswer(transcribedText);
       setCanEditAnswer(true); // Allow editing of transcribed text
       setRecordedChunks([]); // Clear chunks after processing
-
     } catch (error) {
       console.error("STT error:", error);
-      toast.error("Failed to process recorded answer. You can try typing your answer.");
+      toast.error(
+        "Failed to process recorded answer. You can try typing your answer."
+      );
       setCanEditAnswer(true); // Allow manual input on error
     } finally {
       setIsLoading(false);
@@ -463,7 +501,10 @@ export function AIInterview() {
       // If not, this part of the backend contract is not met by current frontend state.
       // The backend `QuestionSerializer` sends `__all__` fields, so `id` should be there.
       // formData.append("question_id", questions[currentQuestionIndex]?.id); // This would be correct if 'id' exists on QuestionData
-      formData.append("question_text", questions[currentQuestionIndex]?.text || "Unknown question"); // Fallback, backend should primarily use ID
+      formData.append(
+        "question_text",
+        questions[currentQuestionIndex]?.text || "Unknown question"
+      ); // Fallback, backend should primarily use ID
       formData.append("question_index", currentQuestionIndex.toString()); // For backend to identify if ID is not primary
 
       if (recordedChunks.length > 0) {
@@ -471,39 +512,44 @@ export function AIInterview() {
         formData.append("answer_audio", audioBlob, "answer.webm");
       }
 
-      if (videoRef.current && videoRef.current.readyState === 4 && cameraEnabled) { // Ensure video is ready
+      if (
+        videoRef.current &&
+        videoRef.current.readyState === 4 &&
+        cameraEnabled
+      ) {
+        // Ensure video is ready
         const canvas = document.createElement("canvas");
         canvas.width = videoRef.current.videoWidth;
         canvas.height = videoRef.current.videoHeight;
         const ctx = canvas.getContext("2d");
         if (ctx) {
-            ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-            const imageQuality = 0.8;
-            canvas.toBlob(
-                (blob) => {
-                    if (blob) {
-                        formData.append("video_frame", blob, "frame.jpg");
-                    }
-                    // Submit after blob processing (or handle async nature better)
-                    // For simplicity, this assumes blob processing is quick enough.
-                    // A more robust way is to chain this into another async step.
-                    // For now, continuing the submission logic here.
-                    // This immediate continuation might send the form before the blob is appended.
-                    // It's better to await this or make API call inside the callback.
-                    // Let's refactor to send form data after blob is ready
-                    sendFormData(formData); 
-                },
-                "image/jpeg",
-                imageQuality
-            );
+          ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+          const imageQuality = 0.8;
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                formData.append("video_frame", blob, "frame.jpg");
+              }
+              // Submit after blob processing (or handle async nature better)
+              // For simplicity, this assumes blob processing is quick enough.
+              // A more robust way is to chain this into another async step.
+              // For now, continuing the submission logic here.
+              // This immediate continuation might send the form before the blob is appended.
+              // It's better to await this or make API call inside the callback.
+              // Let's refactor to send form data after blob is ready
+              sendFormData(formData);
+            },
+            "image/jpeg",
+            imageQuality
+          );
         } else {
-           await sendFormData(formData); // Send without video if canvas context fails
+          await sendFormData(formData); // Send without video if canvas context fails
         }
       } else {
         await sendFormData(formData); // Send without video if not available/ready
       }
-
-    } catch (error) { // This outer catch is for immediate errors before sendFormData
+    } catch (error) {
+      // This outer catch is for immediate errors before sendFormData
       console.error("Answer submission preparation error:", error);
       toast.error("Failed to prepare answer for submission. Please try again.");
       setIsLoading(false);
@@ -528,7 +574,8 @@ export function AIInterview() {
       // const answerScore = response.data.score || 5; // Score from Groq
       // setCurrentQuestionScore(answerScore); // Not directly used for frontend generation anymore
 
-      if (response.data.completed || currentQuestionIndex >= 14) { // 15 questions total (0-14)
+      if (response.data.completed || currentQuestionIndex >= 14) {
+        // 15 questions total (0-14)
         toast.success("Interview completed!");
         navigate(`/interview-result/${interviewId}`);
         return;
@@ -555,11 +602,12 @@ export function AIInterview() {
       } else {
         // This means no next question, and not completed - potentially an error or unexpected end.
         // The backend should ideally always send 'completed:true' if it's the end.
-        console.warn("No next question received, but interview not marked as completed. Navigating to results.");
+        console.warn(
+          "No next question received, but interview not marked as completed. Navigating to results."
+        );
         toast("Reached the end of available questions.");
         navigate(`/interview-result/${interviewId}`);
       }
-
     } catch (error) {
       console.error("Answer submission error:", error);
       toast.error("Failed to submit answer. Please try again.");
@@ -570,19 +618,20 @@ export function AIInterview() {
     }
   };
 
-
   const toggleAudio = () => {
     if (mediaStream) {
       mediaStream.getAudioTracks().forEach((track) => {
         track.enabled = !track.enabled;
         setAudioEnabled(track.enabled);
       });
-      if (!audioEnabled) toast.success("Microphone enabled"); else toast.error("Microphone disabled");
+      if (!audioEnabled) toast.success("Microphone enabled");
+      else toast.error("Microphone disabled");
     }
   };
 
   const toggleCamera = async () => {
-    if (cameraEnabled && mediaStream) { // Check mediaStream as well
+    if (cameraEnabled && mediaStream) {
+      // Check mediaStream as well
       mediaStream.getVideoTracks().forEach((track) => track.stop()); // Stop tracks in main mediaStream
       if (videoStream) videoStream.getTracks().forEach((track) => track.stop()); // Stop tracks in video-only stream
       setVideoStream(null);
@@ -590,13 +639,15 @@ export function AIInterview() {
       toast.error("Camera disabled");
     } else {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-         // If main mediaStream exists and has a video track, re-enable it.
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
+        // If main mediaStream exists and has a video track, re-enable it.
         // Otherwise, use the new stream. This logic can be complex if mixing streams.
         // For simplicity, re-init the video part of the main stream or the video-only stream.
         setVideoStream(stream); // Display new video stream
         setCameraEnabled(true);
-        
+
         // Also ensure the video track in the main mediaStream (if used for recording) is handled.
         // The current setup uses one mediaStream for recording and a separate videoStream for display.
         // If mediaStream's video track was stopped, it needs re-adding or stream re-init.
@@ -607,18 +658,18 @@ export function AIInterview() {
         // The current logic stops tracks, so they need to be replaced.
         // Re-initializing the specific track for video:
         if (mediaStream) {
-            const videoTrack = stream.getVideoTracks()[0];
-            const existingVideoTrack = mediaStream.getVideoTracks()[0];
-            if (existingVideoTrack) {
-                mediaStream.removeTrack(existingVideoTrack);
-                existingVideoTrack.stop();
-            }
-            mediaStream.addTrack(videoTrack);
-        } else { // If no main media stream, re-initialize fully
-            await initializeMediaStream();
+          const videoTrack = stream.getVideoTracks()[0];
+          const existingVideoTrack = mediaStream.getVideoTracks()[0];
+          if (existingVideoTrack) {
+            mediaStream.removeTrack(existingVideoTrack);
+            existingVideoTrack.stop();
+          }
+          mediaStream.addTrack(videoTrack);
+        } else {
+          // If no main media stream, re-initialize fully
+          await initializeMediaStream();
         }
         toast.success("Camera enabled");
-
       } catch (error) {
         console.error("Error reactivating camera:", error);
         toast.error("Failed to reactivate camera. Please check permissions.");
@@ -639,9 +690,9 @@ export function AIInterview() {
         clearInterval(recordingTimer.current);
       }
       // Release MediaRecorder if active
-        if (mediaRecorder && mediaRecorder.state !== "inactive") {
-            mediaRecorder.stop();
-        }
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
     };
   }, [mediaStream, videoStream, mediaRecorder]);
 
@@ -653,11 +704,11 @@ export function AIInterview() {
     // Progress should be based on number of questions answered / total questions.
     // If currentQuestionIndex is the index of the *current* question being displayed:
     return (currentQuestionIndex / 15) * 100; // e.g. for Q1 (index 0), 0/15=0%. After Q1, index becomes 1 (for Q2), so 1/15 progress.
-                                            // For Q15 (index 14), it shows 14/15 progress.
+    // For Q15 (index 14), it shows 14/15 progress.
   };
 
   const currentDisplayedQuestion = questions[currentQuestionIndex];
-return (
+  return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-sky-50 flex flex-col">
       {/* Popup JSX remains the same */}
       <AnimatePresence mode="wait">
@@ -691,26 +742,33 @@ return (
 
                 <div className="space-y-4 text-gray-600">
                   <p className="text-md sm:text-lg">
-                    This AI-powered interview will contain 15 questions to assess your skills.
+                    This AI-powered interview will contain 15 questions to
+                    assess your skills.
                   </p>
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 my-4 sm:my-6">
                     <div className="flex flex-col items-center">
                       <div className="p-2 bg-blue-100 rounded-full mb-1 sm:mb-2">
                         <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                       </div>
-                      <span className="text-xs sm:text-sm font-medium">Approx. 20-30 min</span>
+                      <span className="text-xs sm:text-sm font-medium">
+                        Approx. 20-30 min
+                      </span>
                     </div>
                     <div className="flex flex-col items-center">
                       <div className="p-2 bg-green-100 rounded-full mb-1 sm:mb-2">
                         <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                       </div>
-                      <span className="text-xs sm:text-sm font-medium">15 Questions</span>
+                      <span className="text-xs sm:text-sm font-medium">
+                        15 Questions
+                      </span>
                     </div>
                     <div className="flex flex-col items-center">
                       <div className="p-2 bg-amber-100 rounded-full mb-1 sm:mb-2">
                         <Volume2 className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600" />
                       </div>
-                      <span className="text-xs sm:text-sm font-medium">Voice Enabled</span>
+                      <span className="text-xs sm:text-sm font-medium">
+                        Voice Enabled
+                      </span>
                     </div>
                   </div>
 
@@ -720,7 +778,7 @@ return (
                       <span>Question 15</span>
                     </div>
                     <Progress
-                      value={0} 
+                      value={0}
                       className="h-2 rounded-full bg-gray-200"
                     />
                   </div>
@@ -789,7 +847,8 @@ return (
                 </Button>
 
                 <p className="text-xs text-gray-500 mt-3 sm:mt-4">
-                  By continuing, you agree to our terms for automated interviews.
+                  By continuing, you agree to our terms for automated
+                  interviews.
                 </p>
               </motion.div>
             </div>
@@ -805,7 +864,7 @@ return (
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="flex-1 flex flex-col" 
+            className="flex-1 flex flex-col"
           >
             {/* Navbar JSX remains the same */}
             <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 py-3 shadow-sm">
@@ -821,7 +880,7 @@ return (
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2 text-indigo-700"> 
+                <div className="flex items-center gap-2 text-indigo-700">
                   <div className="bg-indigo-50 p-1.5 sm:p-2 rounded-full">
                     <Video className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-700" />
                   </div>
@@ -854,14 +913,18 @@ return (
             </nav>
 
             {/* THIS IS THE SECTION WITH REVERTED GRID CLASSES */}
-            <main className="flex-grow max-w-8xl w-full mx-auto px-4 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"> {/* Reverted to lg:grid-cols-2 */}
-              <section className="lg:col-span-1 space-y-4 sm:space-y-6"> {/* Reverted to lg:col-span-1 */}
+            <main className="flex-grow max-w-8xl w-full mx-auto px-4 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              {" "}
+              {/* Reverted to lg:grid-cols-2 */}
+              <section className="lg:col-span-1 space-y-4 sm:space-y-6">
+                {" "}
+                {/* Reverted to lg:col-span-1 */}
                 {/* Video player and media warnings/tips JSX remains the same */}
                 {/* ... motion.div for video ... */}
                 {/* ... motion.div for warnings/tips ... */}
                 {/* (These parts are identical to the previous full code response) */}
-                  <motion.div
-                  className="relative bg-gradient-to-b from-gray-800 to-gray-700 rounded-xl sm:rounded-2xl overflow-hidden shadow-lg aspect-video" 
+                <motion.div
+                  className="relative bg-gradient-to-b from-gray-800 to-gray-700 rounded-xl sm:rounded-2xl overflow-hidden shadow-lg aspect-video"
                   variants={fadeInVariants}
                 >
                   {cameraEnabled && videoStream ? (
@@ -870,7 +933,7 @@ return (
                       className="object-cover w-full h-full"
                       autoPlay
                       muted
-                      playsInline 
+                      playsInline
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
@@ -883,7 +946,7 @@ return (
                     </div>
                   )}
 
-                  <div className="absolute bottom-0 inset-x-0 p-2 sm:p-4"> 
+                  <div className="absolute bottom-0 inset-x-0 p-2 sm:p-4">
                     <div className="flex justify-between items-center">
                       <div className="flex gap-1.5 sm:gap-2">
                         <button
@@ -891,9 +954,11 @@ return (
                           className={`p-2 sm:p-2.5 rounded-full focus:outline-none transition-all ${
                             cameraEnabled
                               ? "bg-indigo-600 hover:bg-indigo-700 text-white"
-                              : "bg-gray-600 hover:bg-gray-500 text-gray-200" 
+                              : "bg-gray-600 hover:bg-gray-500 text-gray-200"
                           }`}
-                          title={cameraEnabled ? "Turn Camera Off" : "Turn Camera On"}
+                          title={
+                            cameraEnabled ? "Turn Camera Off" : "Turn Camera On"
+                          }
                         >
                           {cameraEnabled ? (
                             <Video className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -909,7 +974,11 @@ return (
                               ? "bg-indigo-600 hover:bg-indigo-700 text-white"
                               : "bg-gray-600 hover:bg-gray-500 text-gray-200"
                           }`}
-                          title={audioEnabled ? "Mute Microphone" : "Unmute Microphone"}
+                          title={
+                            audioEnabled
+                              ? "Mute Microphone"
+                              : "Unmute Microphone"
+                          }
                         >
                           {audioEnabled ? (
                             <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -948,14 +1017,15 @@ return (
                             <p>
                               Please enable your {!audioEnabled && "microphone"}
                               {!audioEnabled && !cameraEnabled && " and "}
-                              {!cameraEnabled && "camera"} for the best experience.
+                              {!cameraEnabled && "camera"} for the best
+                              experience.
                             </p>
                           </div>
                         </div>
                       </div>
                     </div>
                   )}
-                  {cameraEnabled && audioEnabled && !showWarning && ( 
+                  {cameraEnabled && audioEnabled && !showWarning && (
                     <div className="px-4 py-3 sm:px-5 sm:py-4 bg-green-50 border border-green-200 rounded-xl shadow-sm">
                       <div className="flex items-start">
                         <div className="flex-shrink-0 pt-0.5">
@@ -967,7 +1037,8 @@ return (
                           </h3>
                           <div className="mt-1 text-xs sm:text-sm text-green-700">
                             <p>
-                              Your camera and microphone are active. Focus on the questions.
+                              Your camera and microphone are active. Focus on
+                              the questions.
                             </p>
                           </div>
                         </div>
@@ -977,7 +1048,7 @@ return (
                   <div className="px-4 py-3 sm:px-5 sm:py-4 bg-blue-50 border border-blue-200 rounded-xl shadow-sm">
                     <div className="flex items-start">
                       <div className="flex-shrink-0 pt-0.5">
-                        <MicIcon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" /> 
+                        <MicIcon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
                       </div>
                       <div className="ml-2 sm:ml-3">
                         <h3 className="text-sm font-medium text-blue-800">
@@ -985,7 +1056,8 @@ return (
                         </h3>
                         <div className="mt-1 text-xs sm:text-sm text-blue-700">
                           <p>
-                            Speak clearly. Look at the camera. Record answers via voice.
+                            Speak clearly. Look at the camera. Record answers
+                            via voice.
                           </p>
                         </div>
                       </div>
@@ -993,8 +1065,9 @@ return (
                   </div>
                 </motion.div>
               </section>
-
-              <aside className="lg:col-span-1 flex flex-col gap-4 sm:gap-6"> {/* This remains lg:col-span-1 */}
+              <aside className="lg:col-span-1 flex flex-col gap-4 sm:gap-6">
+                {" "}
+                {/* This remains lg:col-span-1 */}
                 {/* AI assistant and Question/Answer JSX remains the same */}
                 {/* ... motion.div for AI assistant ... */}
                 {/* ... motion.div for Question/Answer ... */}
@@ -1009,12 +1082,12 @@ return (
                     className={`w-32 h-32 sm:w-40 sm:h-40 rounded-full mb-3 sm:mb-4 overflow-hidden transition-all duration-300 ${
                       isSpeaking
                         ? "ring-4 ring-indigo-400 ring-offset-2"
-                        : "ring-1 ring-gray-200" 
+                        : "ring-1 ring-gray-200"
                     }`}
                   >
                     <div
                       className={`w-full h-full relative ${
-                        isSpeaking ? "animate-pulse" : "" 
+                        isSpeaking ? "animate-pulse" : ""
                       }`}
                     >
                       <img
@@ -1028,15 +1101,15 @@ return (
                     </div>
                   </div>
 
-                  <h2 className="text-lg sm:text-xl font-bold text-indigo-700 mb-1"> 
+                  <h2 className="text-lg sm:text-xl font-bold text-indigo-700 mb-1">
                     AI Interview Assistant
                   </h2>
 
-                  <div className="text-gray-600 text-center mb-3 sm:mb-4 h-10"> 
+                  <div className="text-gray-600 text-center mb-3 sm:mb-4 h-10">
                     <p className="text-xs sm:text-sm">
                       {isSpeaking
                         ? "Listening to the question..."
-                        : isLoading 
+                        : isLoading
                         ? "Processing your answer..."
                         : isRecording
                         ? "Recording your answer..."
@@ -1048,18 +1121,18 @@ return (
                     <div className="flex justify-center w-full mb-3 sm:mb-4">
                       <div className="flex space-x-1 items-center">
                         {[...Array(5)].map((_, i) => (
-                            <div
+                          <div
                             key={i}
                             className="w-1 h-1.5 sm:w-1.5 sm:h-2 bg-indigo-500 rounded-full animate-bounce"
                             style={{ animationDelay: `${i * 0.15}s` }}
-                            ></div>
+                          ></div>
                         ))}
                       </div>
                     </div>
                   )}
                 </motion.div>
                 <motion.div
-                  className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 relative overflow-hidden border border-gray-100 flex-grow flex flex-col" 
+                  className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 relative overflow-hidden border border-gray-100 flex-grow flex flex-col"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
@@ -1081,23 +1154,29 @@ return (
                             </span>
                           )}
                         </div> */}
-                        <p className="text-md sm:text-lg font-medium text-gray-800 leading-relaxed"> 
+                        <p className="text-md sm:text-lg font-medium text-gray-800 leading-relaxed">
                           {currentDisplayedQuestion?.text ||
-                            (isLoading && !isProcessingAnswer ? "Loading interview..." : "Waiting for question...")}
+                            (isLoading && !isProcessingAnswer
+                              ? "Loading interview..."
+                              : "Waiting for question...")}
                         </p>
                       </div>
 
                       <button
                         onClick={() => {
-                            if (currentDisplayedQuestion?.text) {
-                                playQuestionAudio(currentDisplayedQuestion.text);
-                            }
+                          if (currentDisplayedQuestion?.text) {
+                            playQuestionAudio(currentDisplayedQuestion.text);
+                          }
                         }}
-                        disabled={isLoading || isSpeaking || !currentDisplayedQuestion?.text}
+                        disabled={
+                          isLoading ||
+                          isSpeaking ||
+                          !currentDisplayedQuestion?.text
+                        }
                         className="ml-2 sm:ml-4 flex-shrink-0 p-1.5 sm:p-2 rounded-full text-indigo-600 hover:bg-indigo-50 disabled:text-gray-400 disabled:hover:bg-transparent transition-colors"
                         title="Repeat Question"
                       >
-                        {isSpeaking && !isLoading ? ( 
+                        {isSpeaking && !isLoading ? (
                           <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                         ) : (
                           <Volume2 className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -1105,7 +1184,7 @@ return (
                       </button>
                     </div>
 
-                    <div className="relative mt-2 sm:mt-4 flex-grow flex flex-col"> 
+                    <div className="relative mt-2 sm:mt-4 flex-grow flex flex-col">
                       <textarea
                         value={answer}
                         onChange={(e) => {
@@ -1121,8 +1200,13 @@ return (
                             ? "Listen to the question..."
                             : "Please wait..."
                         }
-                        disabled={isLoading || !canEditAnswer || isRecording || isSpeaking}
-                        rows={5} 
+                        disabled={
+                          isLoading ||
+                          !canEditAnswer ||
+                          isRecording ||
+                          isSpeaking
+                        }
+                        rows={5}
                       />
 
                       <button
@@ -1131,14 +1215,14 @@ return (
                             ? handleStopRecording
                             : handleStartRecording
                         }
-                        disabled={isSpeaking || !canEditAnswer || isLoading} 
+                        disabled={isSpeaking || !canEditAnswer || isLoading}
                         className={`absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 rounded-lg shadow-sm transition-all duration-200 ease-in-out transform hover:scale-105 ${
                           isRecording
                             ? "bg-red-500 text-white hover:bg-red-600"
                             : "bg-indigo-500 text-white hover:bg-indigo-600"
                         } ${
                           isSpeaking || !canEditAnswer || isLoading
-                            ? "opacity-50 cursor-not-allowed scale-100" 
+                            ? "opacity-50 cursor-not-allowed scale-100"
                             : ""
                         }`}
                         title={isRecording ? "Stop Recording" : "Record Answer"}
@@ -1153,10 +1237,16 @@ return (
 
                     <Button
                       onClick={handleAnswerSubmit}
-                      disabled={!answer.trim() || isLoading || isSpeaking || isRecording || isProcessingAnswer}
+                      disabled={
+                        !answer.trim() ||
+                        isLoading ||
+                        isSpeaking ||
+                        isRecording ||
+                        isProcessingAnswer
+                      }
                       className="w-full py-2.5 sm:py-3 flex items-center justify-center bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white transition-colors rounded-xl shadow-md mt-2 sm:mt-4 text-sm sm:text-base"
                     >
-                      {isProcessingAnswer || (isLoading && !isSpeaking) ? ( 
+                      {isProcessingAnswer || (isLoading && !isSpeaking) ? (
                         <>
                           <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin mr-2" />
                           Processing...
@@ -1184,9 +1274,9 @@ return (
       {/* Exit confirmation popup JSX remains the same */}
       <AnimatePresence>
         {confirmExit && (
-            // ... Exit confirmation motion.div and content ...
-            // (This part is identical to the previous full code response)
-            <motion.div
+          // ... Exit confirmation motion.div and content ...
+          // (This part is identical to the previous full code response)
+          <motion.div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1218,7 +1308,8 @@ return (
 
               <div className="mt-2 sm:mt-3">
                 <p className="text-sm text-gray-600">
-                  Are you sure? Your progress will be lost. You'll need to restart if you return.
+                  Are you sure? Your progress will be lost. You'll need to
+                  restart if you return.
                 </p>
 
                 <div className="mt-4 sm:mt-6 flex flex-col-reverse sm:flex-row sm:gap-3">
@@ -1233,8 +1324,8 @@ return (
                     type="button"
                     className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-sm sm:text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     onClick={() => {
-                        setConfirmExit(false); 
-                        navigate("/complete"); 
+                      setConfirmExit(false);
+                      navigate("/complete");
                     }}
                   >
                     Exit Interview
