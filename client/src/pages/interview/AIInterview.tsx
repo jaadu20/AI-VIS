@@ -243,7 +243,9 @@ export function AIInterview() {
       }, 1000);
     } catch (error) {
       console.error("Interview start error:", error);
-      toast.error(error.response?.data?.error || "Failed to start interview");
+      const errMsg =
+        (error as any)?.response?.data?.error || "Failed to start interview";
+      toast.error(errMsg);
       setShowPopup(true);
     } finally {
       setIsLoading(false);
