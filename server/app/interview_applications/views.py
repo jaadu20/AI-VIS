@@ -2,7 +2,7 @@
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Application
 from .serializers import (
     ApplicationSerializer, 
@@ -231,3 +231,8 @@ class UserApplicationsView(generics.ListAPIView):
     
     def get_queryset(self):
         return Application.objects.filter(user=self.request.user)
+    
+class AllApplicationsView(generics.ListAPIView):
+    serializer_class = ApplicationSerializer
+    queryset = Application.objects.all()
+    permission_classes = [AllowAny] 

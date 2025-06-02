@@ -1,6 +1,7 @@
 # applications/urls.py
 from django.urls import path
 from .views import (
+    AllApplicationsView,
     ApplicationCreateView,
     ApplicationListView,
     ApplicationDetailView,
@@ -22,4 +23,6 @@ urlpatterns = [
     path('<uuid:pk>/delete/', ApplicationDeleteView.as_view(), name='application_delete'),
     path('check-eligibility/', CheckEligibilityView.as_view(), name='check_eligibility'),
     path('schedule-interview/', ScheduleInterviewView.as_view(), name='schedule_interview'),
+    path('all/', AllApplicationsView.as_view(), name='all_applications'),
+
 ]
