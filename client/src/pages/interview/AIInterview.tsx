@@ -23,6 +23,7 @@ import { Progress } from "../../components/ui/progress";
 import aibot from "../../assets/public/images/aibot.jpg";
 import api from "../../api";
 import toast from "react-hot-toast";
+import { useAuthStore } from "../../store/authStore";
 
 interface QuestionData {
   text: string;
@@ -72,6 +73,7 @@ export function AIInterview() {
   const [applicationData, setApplicationData] =
     useState<ApplicationData | null>(null);
   const [isProcessingAnswer, setIsProcessingAnswer] = useState(false);
+  const { user } = useAuthStore();
 
   // Media states
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
@@ -194,7 +196,8 @@ export function AIInterview() {
       }
 
       await playAudio(
-        `Welcome to your interview at ${appData.job_details.company_name} ` +
+        `Hell0 ${user?.name}` +
+          `Welcome to your interview at ${appData.job_details.company_name} ` +
           `for the ${appData.job_details.title} position. ` +
           `We will start with the first question.`
       );
