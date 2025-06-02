@@ -57,7 +57,6 @@ const fadeInVariants = {
   visible: { opacity: 1, transition: { duration: 0.5 } },
 };
 
-
 export function AIInterview() {
   const { applicationId } = useParams();
   const navigate = useNavigate();
@@ -72,9 +71,7 @@ export function AIInterview() {
   const [confirmExit, setConfirmExit] = useState(false);
   const [applicationData, setApplicationData] =
     useState<ApplicationData | null>(null);
-  // const [currentQuestionScore, setCurrentQuestionScore] = useState<number>(0); // Not directly used for generation on frontend anymore
   const [isProcessingAnswer, setIsProcessingAnswer] = useState(false);
-  const [hasIntroductionPlayed, setHasIntroductionPlayed] = useState(false);
 
   // Media states
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
@@ -178,6 +175,58 @@ export function AIInterview() {
     }
   };
 
+  const startInterview = async () => {
+    setShowPopup(false);
+    setIsLoading(true);
+
+    try {
+      await fetchApplicationData(); // Fetch application data
+
+      const response = await api.post("/interviews/start/", {
+        application_id: applicationId,
+      });
+
+      if (!response.data?.interview_id || !response.data?.questions?.length) {
+        throw new Error(
+          "Invalid interview initialization response from server."
+        );
+      }
+
+      await playAudio("Welcome to your interview at AI VIS for" + applicationData?.job_title + " Job at "+ applicationData?.company_name + ". We will start with the first question."); 
+      setInterviewId(response.data.interview_id);// Play Interoduction
+      const fetchedQuestions: QuestionData[] = response.data.questions.map(
+        (q: any) => ({
+          text: q.text,
+          difficulty: q.difficulty,
+          is_predefined: q.is_predefined !== undefined ? q.is_predefined : true,
+        })
+      );
+      setQuestions(fetchedQuestions);
+      setCurrentQuestionIndex(0); // Start at the first question
+
+      await initializeMediaStream(); // Setup camera/mic
+
+      if (fetchedQuestions.length > 0) {
+        await playQuestionAudio(fetchedQuestions[0].text); // Play first question audio directly
+      } else {
+        toast.error("No questions were loaded, cannot play introduction.");
+      }
+    } catch (error) {
+      console.error("Interview start error:", error);
+      const errMsg =
+        (error as any)?.response?.data?.error ||
+        (error as Error).message ||
+        "Failed to start interview";
+      toast.error(errMsg);
+      setShowPopup(true); // Revert to popup on critical error
+      setQuestions([]);
+      setInterviewId("");
+    } finally {
+      setIsLoading(false); // This will now run after intro/first question attempt
+    }
+  };
+
+
   const playAudio = async (text: string) => {
     try {
       setIsSpeaking(true);
@@ -241,88 +290,17 @@ export function AIInterview() {
     // Plays question and enables answer input afterwards
     try {
       await playAudio(questionText); // playAudio handles setIsSpeaking true/false
-      setCanEditAnswer(true);
+      // setCanEditAnswer(true);
     } catch (error) {
       // Error already handled by playAudio, but ensure canEditAnswer is true for manual input
       console.error(
         "Error in playQuestionAudio, enabling answer edit as fallback:",
         error
       );
-      setCanEditAnswer(true); // Fallback to allow typing answer
+      // setCanEditAnswer(true); // Fallback to allow typing answer
     }
   };
 
-  const playIntroductionAndFirstQuestion = async () => {
-    if (hasIntroductionPlayed || !questions.length) return;
-
-    // Use applicationData.company_name in the intro if available and desired.
-    // The prompt mentioned "Welcome to your interview for the position at ." which is generic.
-    // Sticking to the generic intro as per the provided code's original intention for speech.
-    const introductionText = `Welcome to your interview for the position at . This interview will consist of several questions to assess your qualifications and fit for the role. Please take your time to answer each question thoughtfully. Let's begin with the first question.`;
-
-    try {
-      await playAudio(introductionText);
-      setHasIntroductionPlayed(true);
-
-      if (questions.length > 0 && currentQuestionIndex === 0) {
-        await playQuestionAudio(questions[0].text);
-      }
-    } catch (error) {
-      toast.error("Failed to play introduction or first question.");
-      // Allow user to proceed or retry? For now, they can try to record if question text is visible.
-      if (questions.length > 0 && currentQuestionIndex === 0) {
-        setCanEditAnswer(true); // Allow answering even if audio failed
-      }
-    }
-  };
-
-  const startInterview = async () => {
-    setShowPopup(false);
-    setIsLoading(true);
-
-    try {
-      await fetchApplicationData(); // Fetch application data for display title etc.
-
-      const response = await api.post("/interviews/start/", {
-        application_id: applicationId,
-      });
-
-      if (!response.data?.interview_id || !response.data?.questions?.length) {
-        throw new Error(
-          "Invalid interview initialization response from server."
-        );
-      }
-
-      setInterviewId(response.data.interview_id);
-      const fetchedQuestions: QuestionData[] = response.data.questions.map(
-        (q: any) => ({
-          // Ensure mapping if backend structure differs slightly
-          text: q.text,
-          difficulty: q.difficulty,
-          is_predefined: q.is_predefined !== undefined ? q.is_predefined : true, // Assuming initial are predefined
-        })
-      );
-      setQuestions(fetchedQuestions);
-      setCurrentQuestionIndex(0); // Start at the first question
-
-      await initializeMediaStream(); // Setup camera/mic
-
-      // Wait a moment for media to initialize and then play intro & first question
-      setTimeout(() => {
-        playIntroductionAndFirstQuestion();
-      }, 1000);
-    } catch (error) {
-      console.error("Interview start error:", error);
-      const errMsg =
-        (error as any)?.response?.data?.error ||
-        (error as Error).message ||
-        "Failed to start interview";
-      toast.error(errMsg);
-      setShowPopup(true); // Revert to popup on critical error
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const initializeMediaStream = async () => {
     try {
