@@ -95,11 +95,9 @@ class ApplicationListView(generics.ListAPIView):
 
 class ApplicationDetailView(generics.RetrieveAPIView):
     serializer_class = ApplicationSerializer
-    permission_classes = [IsAuthenticated]
+    queryset = Application.objects.all()
     lookup_field = 'pk'
-    
-    def get_queryset(self):
-        return Application.objects.filter(user=self.request.user)
+    permission_classes = [AllowAny]
 
 class ApplicationUpdateView(generics.UpdateAPIView):
     serializer_class = ApplicationSerializer

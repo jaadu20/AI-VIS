@@ -168,10 +168,11 @@ export function AIInterview() {
     try {
       const response = await api.get(`/applications/${applicationId}/`);
       setApplicationData(response.data);
+      return response.data; // Return the data directly
     } catch (error) {
       console.error("Failed to fetch application data:", error);
       toast.error("Failed to load application details");
-      // Potentially navigate back or show critical error
+      throw error; // Rethrow to handle in startInterview
     }
   };
 
@@ -180,7 +181,7 @@ export function AIInterview() {
     setIsLoading(true);
 
     try {
-      await fetchApplicationData(); // Fetch application data
+      const appData = await fetchApplicationData();
 
       const response = await api.post("/interviews/start/", {
         application_id: applicationId,
@@ -192,8 +193,12 @@ export function AIInterview() {
         );
       }
 
-      await playAudio("Welcome to your interview at AI VIS for" + applicationData?.job_title + " Job at "+ applicationData?.company_name + ". We will start with the first question."); 
-      setInterviewId(response.data.interview_id);// Play Interoduction
+      await playAudio(
+        `Welcome to your interview at ${appData.job_details.company_name} ` +
+          `for the ${appData.job_details.title} position. ` +
+          `We will start with the first question.`
+      );
+      setInterviewId(response.data.interview_id); // Play Interoduction
       const fetchedQuestions: QuestionData[] = response.data.questions.map(
         (q: any) => ({
           text: q.text,
@@ -225,7 +230,6 @@ export function AIInterview() {
       setIsLoading(false); // This will now run after intro/first question attempt
     }
   };
-
 
   const playAudio = async (text: string) => {
     try {
@@ -300,7 +304,6 @@ export function AIInterview() {
       // setCanEditAnswer(true); // Fallback to allow typing answer
     }
   };
-
 
   const initializeMediaStream = async () => {
     try {
