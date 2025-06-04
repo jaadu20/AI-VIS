@@ -91,7 +91,7 @@ export function AIInterview() {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const recordingTimer = useRef<NodeJS.Timeout | null>(null);
   const [canEditAnswer, setCanEditAnswer] = useState(false);
-
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   // Prevent navigation and tab switching
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -237,6 +237,8 @@ export function AIInterview() {
   const playAudio = async (text: string) => {
     try {
       setIsSpeaking(true);
+      setIsAudioPlaying(true);
+
       const response = await api.post(
         "/interviews/tts/",
         { text },
@@ -258,15 +260,20 @@ export function AIInterview() {
       return new Promise<void>((resolve, reject) => {
         audio.onended = () => {
           setIsSpeaking(false);
+          setIsAudioPlaying(false);
           resolve();
         };
+
         audio.onerror = () => {
           setIsSpeaking(false);
+          setIsAudioPlaying(false);
           toast.error("Audio playback failed");
           reject(new Error("Audio playback failed"));
         };
+
         audio.play().catch((err) => {
           setIsSpeaking(false);
+          setIsAudioPlaying(false);
           toast.error("Audio playback failed");
           reject(err);
         });
@@ -274,6 +281,8 @@ export function AIInterview() {
     } catch (error) {
       console.error("TTS error:", error);
       setIsSpeaking(false);
+      setIsAudioPlaying(false);
+
       let message = "Speech synthesis failed";
       if (typeof error === "object" && error !== null) {
         if (
@@ -288,16 +297,16 @@ export function AIInterview() {
           message = (error as any).message;
         }
       }
+
       toast.error(message);
       throw error;
     }
   };
 
   const playQuestionAudio = async (questionText: string) => {
-    // Plays question and enables answer input afterwards
     try {
       await playAudio(questionText); // playAudio handles setIsSpeaking true/false
-      // setCanEditAnswer(true);
+      setCanEditAnswer(true);
     } catch (error) {
       // Error already handled by playAudio, but ensure canEditAnswer is true for manual input
       console.error(
@@ -388,66 +397,43 @@ export function AIInterview() {
   };
 
   const handleStopRecording = async () => {
-    // Make async to await processing
     if (mediaRecorder && isRecording) {
-      mediaRecorder.stop(); // This will trigger ondataavailable and then onstop for the recorder instance
+      mediaRecorder.stop();
       setIsRecording(false);
 
       if (recordingTimer.current) {
         clearInterval(recordingTimer.current);
         recordingTimer.current = null;
       }
-      // Process the recorded answer *after* recorder has stopped and chunks are collected.
-      // A slight delay or a more robust state management might be needed if recordedChunks isn't updated immediately.
-      // For now, assume onstop will update recordedChunks state before this proceeds too far.
-      // Better: process inside the onstop handler or pass the blob from there.
-      // Let's make processRecordedAnswer take the chunks directly.
-      if (
-        recordedChunks.length > 0 ||
-        (mediaRecorder.stream.active && mediaRecorder.state === "inactive")
-      ) {
-        // Check if there are chunks to process
-        // Creating blob here as recorder.onstop might not have set the state yet if called immediately
-        const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
-        if (audioBlob.size > 0) {
-          await processRecordedAnswer(audioBlob);
-        } else {
-          toast("No audio recorded or recording was too short.");
-        }
+
+      // Create audio blob from recorded chunks
+      const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
+
+      if (audioBlob.size > 0) {
+        await processRecordedAnswer(audioBlob);
       } else {
-        // This case means stop was called but no data was recorded or available yet.
-        // This might happen if stopped too quickly.
-        toast.error("No audio data to process. Please try recording again.");
+        toast("No audio recorded. Please try again.");
+        setCanEditAnswer(true);
       }
     }
   };
 
   const processRecordedAnswer = async (audioBlob: Blob) => {
-    if (audioBlob.size === 0) {
-      toast("Recorded audio is empty.");
-      return;
-    }
     try {
-      setIsLoading(true); // Use general loading or a specific STT loading
-      setIsProcessingAnswer(true); // More specific flag
-
+      setIsProcessingAnswer(true);
       const formData = new FormData();
-      formData.append("audio", audioBlob, "interview_answer.webm");
+      formData.append("audio", audioBlob, "answer.webm");
 
       const sttResponse = await api.post("/interviews/stt/", formData);
       const transcribedText = sttResponse.data.text;
 
       setAnswer(transcribedText);
       setCanEditAnswer(true); // Allow editing of transcribed text
-      setRecordedChunks([]); // Clear chunks after processing
     } catch (error) {
       console.error("STT error:", error);
-      toast.error(
-        "Failed to process recorded answer. You can try typing your answer."
-      );
-      setCanEditAnswer(true); // Allow manual input on error
+      toast.error("Voice-to-text failed. Please type your answer.");
+      setCanEditAnswer(true);
     } finally {
-      setIsLoading(false);
       setIsProcessingAnswer(false);
     }
   };
@@ -1177,11 +1163,11 @@ export function AIInterview() {
                         className="w-full flex-grow p-3 sm:p-4 pr-10 sm:pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none shadow-sm text-sm sm:text-base"
                         placeholder={
                           isRecording
-                            ? "Recording... click stop when done."
+                            ? "Recording... Speak now"
+                            : isAudioPlaying
+                            ? "Listening to question..."
                             : canEditAnswer
                             ? "Type or record your answer..."
-                            : isSpeaking
-                            ? "Listen to the question..."
                             : "Please wait..."
                         }
                         disabled={
@@ -1199,22 +1185,21 @@ export function AIInterview() {
                             ? handleStopRecording
                             : handleStartRecording
                         }
-                        disabled={isSpeaking || !canEditAnswer || isLoading}
-                        className={`absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 rounded-lg shadow-sm transition-all duration-200 ease-in-out transform hover:scale-105 ${
+                        disabled={isAudioPlaying || !canEditAnswer || isLoading}
+                        className={`absolute top-2 right-2 p-2 rounded-lg ${
                           isRecording
                             ? "bg-red-500 text-white hover:bg-red-600"
                             : "bg-indigo-500 text-white hover:bg-indigo-600"
                         } ${
-                          isSpeaking || !canEditAnswer || isLoading
-                            ? "opacity-50 cursor-not-allowed scale-100"
+                          isAudioPlaying || !canEditAnswer || isLoading
+                            ? "opacity-50 cursor-not-allowed"
                             : ""
                         }`}
-                        title={isRecording ? "Stop Recording" : "Record Answer"}
                       >
                         {isRecording ? (
-                          <StopIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                          <StopIcon className="h-4 w-4" />
                         ) : (
-                          <MicIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                          <MicIcon className="h-4 w-4" />
                         )}
                       </button>
                     </div>

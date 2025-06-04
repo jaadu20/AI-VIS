@@ -1,0 +1,8 @@
+Speech synthesis canceled: CancellationReason.Error
+Error details: Connection failed (no connection to the remote host). Internal error: 1. Error details: Failed with error: WS_OPEN_ERROR_UNDERLYING_IO_OPEN_FAILED
+wss://eastus.tts.speech.microsoft.com/tts/cognitiveservices/websocket/v1
+X-ConnectionId: 530386cd2cf74936a39788110c6f6796 USP state: Sending. Received audio size: 0 bytes.
+Speech synthesis canceled: CancellationReason.Error
+Error details: Connection failed (no connection to the remote host). Internal error: 1. Error details: Failed with error: WS_OPEN_ERROR_UNDERLYING_IO_OPEN_FAILED
+wss://eastus.tts.speech.microsoft.com/tts/cognitiveservices/websocket/v1
+X-ConnectionId: 71027fbcf8f046108a3eb33c983e1195 USP state: Sending. Received audio size: 0 bytes.
