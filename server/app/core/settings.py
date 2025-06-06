@@ -42,17 +42,6 @@ GROQ_API_KEY = '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'
 # Hugging Face Configuration
 HF_TOKEN = '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'
 
-
-# # Azure Speech Services
-# AZURE_SPEECH_KEY = config('AZURE_SPEECH_KEY')
-# AZURE_SPEECH_REGION = config('AZURE_SPEECH_REGION', default='eastus')
-
-# # Hugging Face
-# HUGGINGFACE_TOKEN = config('HUGGINGFACE_TOKEN')
-
-# # Grok API
-# GROQ_API_KEY = config('GROQ_API_KEY')
-
 # Configure ASGI application
 ASGI_APPLICATION = 'your_project.routing.application'
 
@@ -114,8 +103,8 @@ REST_FRAMEWORK = {
 
 # Add proper JWT settings
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=2),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=2),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=2),
     'AUTH_HEADER_TYPES': ('Bearer',),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
