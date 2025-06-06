@@ -1,5 +1,0 @@
-Scoring algo 
-
-def calculate_final_score(answer_scores, voice_score, facial_score):
-    answer_avg = sum(answer_scores) / len(answer_scores)
-    return (answer_avg * 0.6) + (voice_score * 0.2) + (facial_score * 0.2)
