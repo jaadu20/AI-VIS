@@ -196,7 +196,7 @@ export function AIInterview() {
       }
 
       await playAudio(
-        `  Hello ${user?.name}` +
+        `Hello ${user?.name}` +
           `Welcome to your interview at ${appData.job_details.company_name} ` +
           `for the ${appData.job_details.title} position. ` +
           `We will start with the first question.`
@@ -356,8 +356,8 @@ export function AIInterview() {
     }
 
     console.log("handleStartRecording: Creating MediaRecorder.");
+    const localRecordedChunks: Blob[] = [];
     const recorder = new MediaRecorder(mediaStream);
-    setRecordedChunks([]);
 
     recorder.ondataavailable = (e) => {
       console.log(
@@ -365,19 +365,28 @@ export function AIInterview() {
         e.data.size
       );
       if (e.data.size > 0) {
-        setRecordedChunks((prev) => {
-          const newChunks = [...prev, e.data];
-          console.log(
-            "recorder.ondataavailable: New recordedChunks state:",
-            newChunks
-          );
-          return newChunks;
-        });
+        localRecordedChunks.push(e.data);
       }
     };
 
     recorder.onstop = async () => {
       console.log("recorder.onstop event fired.");
+      setRecordedChunks(localRecordedChunks);
+      const audioBlob = new Blob(localRecordedChunks, { type: "audio/webm" });
+      console.log("onstop: audioBlob created. Size:", audioBlob.size);
+
+      if (audioBlob.size > 0) {
+        console.log(
+          "onstop: audioBlob size is > 0. Calling processRecordedAnswer."
+        );
+        await processRecordedAnswer(audioBlob);
+      } else {
+        console.log(
+          "onstop: audioBlob size is 0. Not calling processRecordedAnswer. Chunks were empty."
+        );
+        toast("No audio recorded. Please try again.");
+        setCanEditAnswer(true);
+      }
     };
 
     recorder.onerror = (e) => {
@@ -390,11 +399,14 @@ export function AIInterview() {
       }
     };
 
+    // Reset state for the new recording
+    setRecordedChunks([]);
+    setAnswer("");
+    setMediaRecorder(recorder);
+
     recorder.start();
     console.log("recorder.start() called.");
-    setMediaRecorder(recorder);
     setIsRecording(true);
-    setAnswer("");
 
     setRecordingDuration(0);
     if (recordingTimer.current) clearInterval(recordingTimer.current);
@@ -405,58 +417,16 @@ export function AIInterview() {
 
   const handleStopRecording = async () => {
     console.log("handleStopRecording: Function called.");
-    console.log("handleStopRecording: mediaRecorder instance:", mediaRecorder);
-    console.log("handleStopRecording: isRecording state:", isRecording);
-
     if (mediaRecorder && isRecording) {
-      console.log(
-        "handleStopRecording: Condition (mediaRecorder && isRecording) is TRUE."
-      );
+      console.log("handleStopRecording: Stopping recorder.");
       mediaRecorder.stop();
       setIsRecording(false);
-
       if (recordingTimer.current) {
         clearInterval(recordingTimer.current);
         recordingTimer.current = null;
       }
-
-      console.log(
-        "handleStopRecording: recordedChunks before creating Blob:",
-        recordedChunks
-      );
-      const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
-      console.log(
-        "handleStopRecording: audioBlob created. Size:",
-        audioBlob.size
-      );
-
-      if (audioBlob.size > 0) {
-        console.log(
-          "handleStopRecording: audioBlob size is > 0. Calling processRecordedAnswer."
-        );
-        await processRecordedAnswer(audioBlob);
-      } else {
-        console.log(
-          "handleStopRecording: audioBlob size is 0. Not calling processRecordedAnswer. Chunks were:",
-          recordedChunks
-        );
-        toast("No audio recorded. Please try again.");
-        setCanEditAnswer(true);
-      }
     } else {
-      console.log(
-        "handleStopRecording: Condition (mediaRecorder && isRecording) is FALSE."
-      );
-      if (!mediaRecorder) {
-        console.error(
-          "handleStopRecording: mediaRecorder is null or undefined!"
-        );
-      }
-      if (!isRecording) {
-        console.warn(
-          "handleStopRecording: isRecording is false, but tried to stop."
-        );
-      }
+      console.warn("handleStopRecording called but no active recorder found.");
     }
   };
 
@@ -527,7 +497,8 @@ export function AIInterview() {
   };
 
   const handleAnswerSubmit = async () => {
-    if (!answer.trim() || isProcessingAnswer || isLoading) return;
+    if (!answer.trim() || isProcessingAnswer || isLoading || isRecording)
+      return;
 
     setIsProcessingAnswer(true);
     setIsLoading(true);
@@ -1179,16 +1150,16 @@ export function AIInterview() {
                         isAudioPlaying ||
                         !canEditAnswer ||
                         isLoading ||
-                        isProcessingAnswer
+                        isProcessingAnswer ||
+                        isRecording
                       }
                     >
-                      {isProcessingAnswer ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : isRecording ? (
-                        <StopIcon className="h-4 w-4" />
+                      {isLoading || isProcessingAnswer ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       ) : (
-                        <MicIcon className="h-4 w-4" />
+                        <Send className="h-4 w-4 mr-2" />
                       )}
+                      Submit Answer
                     </Button>
                   </div>
                 </motion.div>
