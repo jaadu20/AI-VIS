@@ -6,3 +6,15 @@ Speech synthesis canceled: CancellationReason.Error
 Error details: Connection failed (no connection to the remote host). Internal error: 1. Error details: Failed with error: WS_OPEN_ERROR_UNDERLYING_IO_OPEN_FAILED
 wss://eastus.tts.speech.microsoft.com/tts/cognitiveservices/websocket/v1
 X-ConnectionId: 71027fbcf8f046108a3eb33c983e1195 USP state: Sending. Received audio size: 0 bytes.
+Speech synthesis canceled: CancellationReason.Error
+Error details: Timeout while synthesizing. Current RTF: 2.64107 (threshold 2), frame interval 3061ms (threshold 3000ms). USP state: ReceivingData. Received audio size: 37088 bytes.
+Speech synthesis canceled: CancellationReason.Error
+Error details: Timeout while synthesizing. Current RTF: 2.63676 (threshold 2), frame interval 3056ms (threshold 3000ms). USP state: ReceivingData. Received audio size: 37088 bytes.
+Speech synthesis canceled: CancellationReason.Error
+Error details: WebSocket operation failed. Internal error: 3. Error details: WS_ERROR_UNDERLYING_IO_ERROR USP state: Sending. Received audio size: 0 bytes.
+Speech synthesis canceled: CancellationReason.Error
+Error details: USP error: timeout waiting for the first audio chunk
+Speech synthesis canceled: CancellationReason.Error
+Error details: Connection failed (no connection to the remote host). Internal error: 1. Error details: Failed with error: WS_OPEN_ERROR_UNDERLYING_IO_OPEN_FAILED
+wss://eastus.tts.speech.microsoft.com/tts/cognitiveservices/websocket/v1
+X-ConnectionId: 71e05294d8084e1497367ec09a6b8f8c USP state: Sending. Received audio size: 0 bytes.

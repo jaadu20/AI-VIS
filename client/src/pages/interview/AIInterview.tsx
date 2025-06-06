@@ -195,12 +195,12 @@ export function AIInterview() {
         );
       }
 
-      await playAudio(
-        `Hell0 ${user?.name}` +
-          `Welcome to your interview at ${appData.job_details.company_name} ` +
-          `for the ${appData.job_details.title} position. ` +
-          `We will start with the first question.`
-      );
+      // await playAudio(
+      //   `Hell0 ${user?.name}` +
+      //     `Welcome to your interview at ${appData.job_details.company_name} ` +
+      //     `for the ${appData.job_details.title} position. ` +
+      //     `We will start with the first question.`
+      // );
       setInterviewId(response.data.interview_id); // Play Interoduction
       const fetchedQuestions: QuestionData[] = response.data.questions.map(
         (q: any) => ({
@@ -324,7 +324,7 @@ export function AIInterview() {
         audio: true,
       });
       setMediaStream(stream);
-      setVideoStream(new MediaStream(stream.getVideoTracks())); // Separate stream for video element
+      setVideoStream(new MediaStream(stream.getVideoTracks()));
       setAudioEnabled(true);
       setCameraEnabled(true);
     } catch (error) {
@@ -332,7 +332,7 @@ export function AIInterview() {
       toast.error(
         "Camera and microphone access are required for the interview. Please grant permissions and refresh."
       );
-      throw error; // Propagate error to stop interview start if critical
+      throw error;
     }
   };
 
@@ -361,17 +361,31 @@ export function AIInterview() {
       return;
     }
 
+    console.log("handleStartRecording: Creating MediaRecorder.");
     const recorder = new MediaRecorder(mediaStream);
     setRecordedChunks([]); // Clear previous chunks
 
     recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) setRecordedChunks((prev) => [...prev, e.data]);
+      console.log(
+        "recorder.ondataavailable event fired. e.data.size:",
+        e.data.size
+      ); // <-- ADD THIS
+      if (e.data.size > 0) {
+        setRecordedChunks((prev) => {
+          const newChunks = [...prev, e.data];
+          console.log(
+            "recorder.ondataavailable: New recordedChunks state:",
+            newChunks
+          ); // <-- ADD THIS
+          return newChunks;
+        });
+      }
     };
 
     recorder.onstop = async () => {
-      // This will be triggered by handleStopRecording.
-      // Process recorded answer after chunks are finalized.
-      // The state `recordedChunks` will be used in `processRecordedAnswer`.
+      console.log("recorder.onstop event fired."); // <-- ADD THIS
+      // The main logic for processing is now in handleStopRecording after the blob is created.
+      // Ensure recordedChunks are finalized before processRecordedAnswer is called.
     };
 
     recorder.onerror = (e) => {
@@ -385,20 +399,28 @@ export function AIInterview() {
     };
 
     recorder.start();
+    console.log("recorder.start() called."); // <-- ADD THIS
     setMediaRecorder(recorder);
     setIsRecording(true);
     setAnswer(""); // Clear previous typed answer if any
 
     setRecordingDuration(0);
-    if (recordingTimer.current) clearInterval(recordingTimer.current); // Clear any existing timer
+    if (recordingTimer.current) clearInterval(recordingTimer.current);
     recordingTimer.current = setInterval(() => {
       setRecordingDuration((prev) => prev + 1);
     }, 1000);
   };
 
   const handleStopRecording = async () => {
+    console.log("handleStopRecording: Function called."); // <-- ADD THIS (1)
+    console.log("handleStopRecording: mediaRecorder instance:", mediaRecorder); // <-- ADD THIS (2)
+    console.log("handleStopRecording: isRecording state:", isRecording); // <-- ADD THIS (3)
+
     if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
+      console.log(
+        "handleStopRecording: Condition (mediaRecorder && isRecording) is TRUE."
+      ); // <-- ADD THIS (4)
+      mediaRecorder.stop(); // This will trigger ondataavailable one last time, then onstop
       setIsRecording(false);
 
       if (recordingTimer.current) {
@@ -406,37 +428,243 @@ export function AIInterview() {
         recordingTimer.current = null;
       }
 
-      // Create audio blob from recorded chunks
+      // Give a brief moment for ondataavailable and onstop to fully complete and update recordedChunks
+      // This is a common pattern if state updates from events are not immediately reflected.
+      // However, a more robust solution might involve promises or callbacks if `onstop` directly triggered processing.
+      // For now, let's assume `recordedChunks` state is up-to-date here or shortly after.
+      // The critical part is that `recordedChunks` must be populated by `recorder.ondataavailable`.
+
+      // Let's log the chunks just before creating the Blob.
+      // Note: `recordedChunks` is a state variable. Its update might be asynchronous.
+      // The `onstop` handler itself is where you might ideally want to initiate processing,
+      // once you are certain all data chunks have been collected.
+      // However, your current structure calls processRecordedAnswer directly from handleStopRecording.
+
+      console.log(
+        "handleStopRecording: recordedChunks before creating Blob:",
+        recordedChunks
+      ); // <-- ADD THIS (5)
+
       const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
+      console.log(
+        "handleStopRecording: audioBlob created. Size:",
+        audioBlob.size
+      ); // <-- ADD THIS (6)
 
       if (audioBlob.size > 0) {
+        console.log(
+          "handleStopRecording: audioBlob size is > 0. Calling processRecordedAnswer."
+        ); // <-- ADD THIS (7)
         await processRecordedAnswer(audioBlob);
       } else {
+        console.log(
+          "handleStopRecording: audioBlob size is 0. Not calling processRecordedAnswer. Chunks were:",
+          recordedChunks
+        ); // <-- ADD THIS (8)
         toast("No audio recorded. Please try again.");
         setCanEditAnswer(true);
+      }
+    } else {
+      console.log(
+        "handleStopRecording: Condition (mediaRecorder && isRecording) is FALSE."
+      ); // <-- ADD THIS (9)
+      if (!mediaRecorder) {
+        console.error(
+          "handleStopRecording: mediaRecorder is null or undefined!"
+        );
+      }
+      if (!isRecording) {
+        console.warn(
+          "handleStopRecording: isRecording is false, but tried to stop."
+        );
       }
     }
   };
 
   const processRecordedAnswer = async (audioBlob: Blob) => {
+    console.log("processRecordedAnswer: Function called with blob:", audioBlob); // <-- ADD THIS (10)
     try {
       setIsProcessingAnswer(true);
       const formData = new FormData();
       formData.append("audio", audioBlob, "answer.webm");
+      console.log(
+        "processRecordedAnswer: FormData created. 'audio' entry:",
+        formData.get("audio")
+      ); // <-- ADD THIS (11)
 
+      console.log(
+        "processRecordedAnswer: Attempting api.post to /interviews/stt/"
+      ); // <-- ADD THIS (12)
       const sttResponse = await api.post("/interviews/stt/", formData);
-      const transcribedText = sttResponse.data.text;
+      console.log(
+        "processRecordedAnswer: api.post successful. Response:",
+        sttResponse
+      ); // <-- ADD THIS (13)
 
+      const transcribedText = sttResponse.data.text;
       setAnswer(transcribedText);
-      setCanEditAnswer(true); // Allow editing of transcribed text
+      setCanEditAnswer(true);
     } catch (error) {
-      console.error("STT error:", error);
+      console.error("processRecordedAnswer: Error during STT call:", error); // <-- ADD THIS (14)
+      if (typeof error === "object" && error !== null && "response" in error) {
+        // Axios-specific error handling
+        const errObj = error as { response: any };
+        console.error(
+          "processRecordedAnswer: Error response data:",
+          errObj.response.data
+        );
+        console.error(
+          "processRecordedAnswer: Error response status:",
+          errObj.response.status
+        );
+        console.error(
+          "processRecordedAnswer: Error response headers:",
+          errObj.response.headers
+        );
+      } else if (
+        typeof error === "object" &&
+        error !== null &&
+        "request" in error
+      ) {
+        // Axios-specific error handling
+        const errObj = error as { request: any };
+        console.error(
+          "processRecordedAnswer: Error request data:",
+          errObj.request
+        );
+      } else if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error
+      ) {
+        const errObj = error as { message: string };
+        console.error("processRecordedAnswer: Error message:", errObj.message);
+      } else {
+        console.error("processRecordedAnswer: Unknown error:", error);
+      }
       toast.error("Voice-to-text failed. Please type your answer.");
       setCanEditAnswer(true);
     } finally {
       setIsProcessingAnswer(false);
     }
   };
+
+  // const handleStartRecording = () => {
+  //   if (!mediaStream) {
+  //     toast.error(
+  //       "Media stream not available. Please check camera/microphone permissions."
+  //     );
+  //     return;
+  //   }
+  //   if (!canEditAnswer) {
+  //     toast.error(
+  //       "Please wait for the question to finish playing or for recording to be enabled."
+  //     );
+  //     return;
+  //   }
+  //   if (isSpeaking) {
+  //     toast.error("Please wait for the AI to finish speaking.");
+  //     return;
+  //   }
+
+  //   const recorder = new MediaRecorder(mediaStream);
+  //   setRecordedChunks([]); // Clear previous chunks
+
+  //   recorder.ondataavailable = (e) => {
+  //     if (e.data.size > 0) setRecordedChunks((prev) => [...prev, e.data]);
+  //   };
+
+  //   recorder.onstop = async () => {
+  //     // This will be triggered by handleStopRecording.
+  //     // Process recorded answer after chunks are finalized.
+  //     // The state `recordedChunks` will be used in `processRecordedAnswer`.
+  //   };
+
+  //   recorder.onerror = (e) => {
+  //     console.error("MediaRecorder error:", e);
+  //     toast.error("Recording failed. Please try again.");
+  //     setIsRecording(false);
+  //     if (recordingTimer.current) {
+  //       clearInterval(recordingTimer.current);
+  //       recordingTimer.current = null;
+  //     }
+  //   };
+
+  //   recorder.start();
+  //   setMediaRecorder(recorder);
+  //   setIsRecording(true);
+  //   setAnswer(""); // Clear previous typed answer if any
+
+  //   setRecordingDuration(0);
+  //   if (recordingTimer.current) clearInterval(recordingTimer.current); // Clear any existing timer
+  //   recordingTimer.current = setInterval(() => {
+  //     setRecordingDuration((prev) => prev + 1);
+  //   }, 1000);
+  // };
+
+  // const handleStopRecording = async () => {
+  //   if (mediaRecorder && isRecording) {
+  //     mediaRecorder.stop();
+  //     setIsRecording(false);
+
+  //     if (recordingTimer.current) {
+  //       clearInterval(recordingTimer.current);
+  //       recordingTimer.current = null;
+  //     }
+
+  //     // Create audio blob from recorded chunks
+  //     const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
+
+  //     if (audioBlob.size > 0) {
+  //       await processRecordedAnswer(audioBlob);
+  //     } else {
+  //       toast("No audio recorded. Please try again.");
+  //       setCanEditAnswer(true);
+  //     }
+  //   }
+  // };
+
+  // const processRecordedAnswer = async (audioBlob: Blob) => {
+  //   try {
+  //     setIsProcessingAnswer(true);
+  //     const formData = new FormData();
+  //     formData.append("audio", audioBlob, "answer.webm");
+
+  //     // Send to backend for speech-to-text conversion
+  //     const sttResponse = await api.post("/interviews/stt/", formData);
+  //     const transcribedText = sttResponse.data.text;
+
+  //     // Display transcribed text in answer box
+  //     setAnswer(transcribedText);
+  //     setCanEditAnswer(true); // Allow editing of transcribed text
+  //   } catch (error) {
+  //     console.error("STT error:", error);
+  //     toast.error("Voice-to-text failed. Please type your answer.");
+  //     setCanEditAnswer(true);
+  //   } finally {
+  //     setIsProcessingAnswer(false);
+  //   }
+  // };
+
+  // const processRecordedAnswer = async (audioBlob: Blob) => {
+  //   try {
+  //     setIsProcessingAnswer(true);
+  //     const formData = new FormData();
+  //     formData.append("audio", audioBlob, "answer.webm");
+
+  //     const sttResponse = await api.post("/interviews/stt/", formData);
+  //     const transcribedText = sttResponse.data.text;
+
+  //     setAnswer(transcribedText);
+  //     setCanEditAnswer(true); // Allow editing of transcribed text
+  //   } catch (error) {
+  //     console.error("STT error:", error);
+  //     toast.error("Voice-to-text failed. Please type your answer.");
+  //     setCanEditAnswer(true);
+  //   } finally {
+  //     setIsProcessingAnswer(false);
+  //   }
+  // };
 
   const handleAnswerSubmit = async () => {
     if (!answer.trim() || isProcessingAnswer || isLoading) return;
@@ -601,10 +829,9 @@ export function AIInterview() {
 
   const toggleCamera = async () => {
     if (cameraEnabled && mediaStream) {
-      // Check mediaStream as well
-      mediaStream.getVideoTracks().forEach((track) => track.stop()); // Stop tracks in main mediaStream
-      if (videoStream) videoStream.getTracks().forEach((track) => track.stop()); // Stop tracks in video-only stream
-      setVideoStream(null);
+      // Only stop video tracks
+      mediaStream.getVideoTracks().forEach((track) => track.stop());
+      if (videoStream) videoStream.getTracks().forEach((track) => track.stop());
       setCameraEnabled(false);
       toast.error("Camera disabled");
     } else {
@@ -612,33 +839,8 @@ export function AIInterview() {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
         });
-        // If main mediaStream exists and has a video track, re-enable it.
-        // Otherwise, use the new stream. This logic can be complex if mixing streams.
-        // For simplicity, re-init the video part of the main stream or the video-only stream.
-        setVideoStream(stream); // Display new video stream
+        setVideoStream(stream);
         setCameraEnabled(true);
-
-        // Also ensure the video track in the main mediaStream (if used for recording) is handled.
-        // The current setup uses one mediaStream for recording and a separate videoStream for display.
-        // If mediaStream's video track was stopped, it needs re-adding or stream re-init.
-        // For now, this just re-enables the preview. Recording might need a full stream re-init if tracks were stopped.
-        // A robust solution might involve re-initializing the entire mediaStream.
-        // Let's assume initializeMediaStream correctly sets up for recording if called again.
-        // Or, more simply, re-enable tracks on the original mediaStream if they were only disabled.
-        // The current logic stops tracks, so they need to be replaced.
-        // Re-initializing the specific track for video:
-        if (mediaStream) {
-          const videoTrack = stream.getVideoTracks()[0];
-          const existingVideoTrack = mediaStream.getVideoTracks()[0];
-          if (existingVideoTrack) {
-            mediaStream.removeTrack(existingVideoTrack);
-            existingVideoTrack.stop();
-          }
-          mediaStream.addTrack(videoTrack);
-        } else {
-          // If no main media stream, re-initialize fully
-          await initializeMediaStream();
-        }
         toast.success("Camera enabled");
       } catch (error) {
         console.error("Error reactivating camera:", error);
@@ -647,24 +849,24 @@ export function AIInterview() {
     }
   };
 
-  useEffect(() => {
-    // Cleanup media streams on component unmount
-    return () => {
-      if (mediaStream) {
-        mediaStream.getTracks().forEach((track) => track.stop());
-      }
-      if (videoStream) {
-        videoStream.getTracks().forEach((track) => track.stop());
-      }
-      if (recordingTimer.current) {
-        clearInterval(recordingTimer.current);
-      }
-      // Release MediaRecorder if active
-      if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        mediaRecorder.stop();
-      }
-    };
-  }, [mediaStream, videoStream, mediaRecorder]);
+  //  useEffect(() => {
+  //   return () => {
+  //     if (cameraEnabled) {
+  //       if (mediaStream) {
+  //         mediaStream.getTracks().forEach((track) => track.stop());
+  //       }
+  //       if (videoStream) {
+  //         videoStream.getTracks().forEach((track) => track.stop());
+  //       }
+  //     }
+  //     if (recordingTimer.current) {
+  //       clearInterval(recordingTimer.current);
+  //     }
+  //     if (mediaRecorder && mediaRecorder.state !== "inactive") {
+  //       mediaRecorder.stop();
+  //     }
+  //   };
+  // }, [mediaStream, videoStream, mediaRecorder, cameraEnabled]); // Add cameraEnabled to dependency array
 
   const showWarning = !audioEnabled || !cameraEnabled;
 
@@ -1162,10 +1364,10 @@ export function AIInterview() {
                         }}
                         className="w-full flex-grow p-3 sm:p-4 pr-10 sm:pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none shadow-sm text-sm sm:text-base"
                         placeholder={
-                          isRecording
+                          isProcessingAnswer
+                            ? "Converting speech to text..."
+                            : isRecording
                             ? "Recording... Speak now"
-                            : isAudioPlaying
-                            ? "Listening to question..."
                             : canEditAnswer
                             ? "Type or record your answer..."
                             : "Please wait..."
@@ -1207,29 +1409,18 @@ export function AIInterview() {
                     <Button
                       onClick={handleAnswerSubmit}
                       disabled={
-                        !answer.trim() ||
+                        isAudioPlaying ||
+                        !canEditAnswer ||
                         isLoading ||
-                        isSpeaking ||
-                        isRecording ||
                         isProcessingAnswer
                       }
-                      className="w-full py-2.5 sm:py-3 flex items-center justify-center bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white transition-colors rounded-xl shadow-md mt-2 sm:mt-4 text-sm sm:text-base"
                     >
-                      {isProcessingAnswer || (isLoading && !isSpeaking) ? (
-                        <>
-                          <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin mr-2" />
-                          Processing...
-                        </>
-                      ) : currentQuestionIndex < 14 ? (
-                        <>
-                          <Send className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                          Submit & Next
-                        </>
+                      {isProcessingAnswer ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : isRecording ? (
+                        <StopIcon className="h-4 w-4" />
                       ) : (
-                        <>
-                          <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                          Complete Interview
-                        </>
+                        <MicIcon className="h-4 w-4" />
                       )}
                     </Button>
                   </div>

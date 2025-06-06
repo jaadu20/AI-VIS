@@ -2,6 +2,7 @@
 import logging
 import os
 import json
+import tempfile
 from venv import logger
 import requests
 import azure.cognitiveservices.speech as speechsdk
@@ -17,8 +18,9 @@ from interview_applications.models import Application
 from azure.cognitiveservices.speech import SpeechConfig, SpeechSynthesizer
 from azure.cognitiveservices.speech.audio import AudioOutputConfig
 import io
+from django.views.decorators.csrf import csrf_exempt
 
-logger = logging.getLogger(__name__) # Setup logger for the view
+logger = logging.getLogger(__name__) 
 
 # Azure Speech Service Integration
 # class SpeechService:
@@ -64,6 +66,7 @@ logger = logging.getLogger(__name__) # Setup logger for the view
 #             raise Exception(error_msg)
 
 # Groq API Integration
+
 
 class GroqScorer:
     def __init__(self):
@@ -191,7 +194,7 @@ class InterviewViewSet(viewsets.ModelViewSet):
         # Add predefined questions
         Question.objects.create(
             interview=interview,
-            text="Please introduce yourself and tell us about your background and experience.",
+            text="introduce yourself",
             difficulty="easy",
             is_predefined=True,
             order=0
@@ -260,51 +263,90 @@ class TextToSpeechView(APIView):
             return Response({'error': f'Internal server error during TTS: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 class SpeechToTextView(APIView):
-    # permission_classes = []  # Adjust permissions as needed
-
-    def post(self, request):
+    @csrf_exempt
+    def post(self, request, format=None):
         try:
-            audio_file = request.FILES.get('audio')
-            if not audio_file:
-                return Response({"error": "Audio file is required"}, status=status.HTTP_400_BAD_REQUEST)
+            # Check if audio file exists in request
+            if 'audio' not in request.FILES:
+                return Response({"error": "No audio file provided"}, status=status.HTTP_400_BAD_REQUEST)
             
-            # Initialize Azure Speech Service
+            audio_file = request.FILES['audio']
+            
+            MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+            # Add this check after getting the audio file:
+            if audio_file.size > MAX_FILE_SIZE:
+                return Response(
+                    {"error": "Audio file too large (max 10MB)"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Create a temporary file to store the audio
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.webm') as tmp_audio:
+                for chunk in audio_file.chunks():
+                    tmp_audio.write(chunk)
+                tmp_audio_path = tmp_audio.name
+            
+            # Azure Speech-to-Text configuration
+            speech_key = os.getenv("AZURE_SPEECH_KEY")
+            service_region = os.getenv("AZURE_SERVICE_REGION")
+            
+            if not speech_key or not service_region:
+                return Response(
+                    {"error": "Azure credentials not configured"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # Configure speech recognition
             speech_config = speechsdk.SpeechConfig(
-                subscription=settings.AZURE_SPEECH_KEY,
-                region=settings.AZURE_SPEECH_REGION
+                subscription=speech_key, 
+                region=service_region
             )
+            speech_config.speech_recognition_language = "en-US"
             
-            # Configure audio input
-            audio_stream = speechsdk.audio.PushAudioInputStream()
-            audio_config = speechsdk.audio.AudioConfig(stream=audio_stream)
-            recognizer = speechsdk.SpeechRecognizer(
+            # Configure audio input from temporary file
+            audio_config = speechsdk.audio.AudioConfig(filename=tmp_audio_path)
+
+            
+            if tmp_audio_path.endswith('.wav'):
+                audio_config = speechsdk.audio.AudioConfig(filename=tmp_audio_path)
+            else:
+                # For non-WAV formats, use the audio stream directly
+                audio_stream = speechsdk.audio.PushAudioInputStream()
+                with open(tmp_audio_path, 'rb') as audio_file:
+                    audio_stream.write(audio_file.read())
+                audio_config = speechsdk.audio.AudioConfig(stream=audio_stream) 
+
+            # Create speech recognizer
+            speech_recognizer = speechsdk.SpeechRecognizer(
                 speech_config=speech_config, 
                 audio_config=audio_config
             )
             
-            # Write audio data to stream
-            audio_data = audio_file.read()
-            audio_stream.write(audio_data)
-            audio_stream.close()
+            # Perform speech recognition
+            result = speech_recognizer.recognize_once()
             
-            # Recognize speech
-            result = recognizer.recognize_once_async().get()
+            # Clean up temporary file
+            os.unlink(tmp_audio_path)
             
+            # Handle recognition results
             if result.reason == speechsdk.ResultReason.RecognizedSpeech:
-                return Response({"text": result.text})
-                
+                return Response({"text": result.text}, status=status.HTTP_200_OK)
             elif result.reason == speechsdk.ResultReason.NoMatch:
-                return Response({"error": "No speech could be recognized"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "No speech could be recognized"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            else:
+                return Response(
+                    {"error": f"Speech recognition canceled: {result.cancellation_details.reason}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
                 
-            elif result.reason == speechsdk.ResultReason.Canceled:
-                cancellation = result.cancellation_details
-                error_msg = f"Speech recognition canceled: {cancellation.reason}"
-                if cancellation.reason == speechsdk.CancellationReason.Error:
-                    error_msg += f"\nError details: {cancellation.error_details}"
-                return Response({"error": error_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"error": f"Speech recognition failed: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class SubmitAnswerView(APIView):
     permission_classes = [permissions.IsAuthenticated]
