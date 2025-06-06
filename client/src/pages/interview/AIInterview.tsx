@@ -93,10 +93,10 @@ export function AIInterview() {
   const [canEditAnswer, setCanEditAnswer] = useState(false);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   // Prevent navigation and tab switching
+
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!showPopup && !confirmExit) {
-        // Allow unload if exit confirmed
         e.preventDefault();
         e.returnValue =
           "Your interview progress will be lost. Are you sure you want to leave?";
@@ -136,7 +136,7 @@ export function AIInterview() {
       window.addEventListener("popstate", handlePopState);
       document.addEventListener("visibilitychange", handleVisibilityChange);
       document.addEventListener("keydown", handleKeyDown);
-      window.history.pushState(null, "", window.location.href); // Prevent back navigation initially
+      window.history.pushState(null, "", window.location.href);
     }
 
     return () => {
@@ -170,11 +170,11 @@ export function AIInterview() {
     try {
       const response = await api.get(`/applications/${applicationId}/`);
       setApplicationData(response.data);
-      return response.data; // Return the data directly
+      return response.data;
     } catch (error) {
       console.error("Failed to fetch application data:", error);
       toast.error("Failed to load application details");
-      throw error; // Rethrow to handle in startInterview
+      throw error;
     }
   };
 
@@ -195,12 +195,12 @@ export function AIInterview() {
         );
       }
 
-      // await playAudio(
-      //   `Hell0 ${user?.name}` +
-      //     `Welcome to your interview at ${appData.job_details.company_name} ` +
-      //     `for the ${appData.job_details.title} position. ` +
-      //     `We will start with the first question.`
-      // );
+      await playAudio(
+        `  Hello ${user?.name}` +
+          `Welcome to your interview at ${appData.job_details.company_name} ` +
+          `for the ${appData.job_details.title} position. ` +
+          `We will start with the first question.`
+      );
       setInterviewId(response.data.interview_id); // Play Interoduction
       const fetchedQuestions: QuestionData[] = response.data.questions.map(
         (q: any) => ({
@@ -210,12 +210,12 @@ export function AIInterview() {
         })
       );
       setQuestions(fetchedQuestions);
-      setCurrentQuestionIndex(0); // Start at the first question
+      setCurrentQuestionIndex(0);
 
-      await initializeMediaStream(); // Setup camera/mic
+      await initializeMediaStream();
 
       if (fetchedQuestions.length > 0) {
-        await playQuestionAudio(fetchedQuestions[0].text); // Play first question audio directly
+        await playQuestionAudio(fetchedQuestions[0].text);
       } else {
         toast.error("No questions were loaded, cannot play introduction.");
       }
@@ -226,11 +226,11 @@ export function AIInterview() {
         (error as Error).message ||
         "Failed to start interview";
       toast.error(errMsg);
-      setShowPopup(true); // Revert to popup on critical error
+      setShowPopup(true);
       setQuestions([]);
       setInterviewId("");
     } finally {
-      setIsLoading(false); // This will now run after intro/first question attempt
+      setIsLoading(false);
     }
   };
 
@@ -305,15 +305,15 @@ export function AIInterview() {
 
   const playQuestionAudio = async (questionText: string) => {
     try {
-      await playAudio(questionText); // playAudio handles setIsSpeaking true/false
+      await playAudio(questionText);
       setCanEditAnswer(true);
+      handleStartRecording();
     } catch (error) {
-      // Error already handled by playAudio, but ensure canEditAnswer is true for manual input
       console.error(
         "Error in playQuestionAudio, enabling answer edit as fallback:",
         error
       );
-      // setCanEditAnswer(true); // Fallback to allow typing answer
+      setCanEditAnswer(true);
     }
   };
 
@@ -350,12 +350,6 @@ export function AIInterview() {
       );
       return;
     }
-    if (!canEditAnswer) {
-      toast.error(
-        "Please wait for the question to finish playing or for recording to be enabled."
-      );
-      return;
-    }
     if (isSpeaking) {
       toast.error("Please wait for the AI to finish speaking.");
       return;
@@ -363,29 +357,27 @@ export function AIInterview() {
 
     console.log("handleStartRecording: Creating MediaRecorder.");
     const recorder = new MediaRecorder(mediaStream);
-    setRecordedChunks([]); // Clear previous chunks
+    setRecordedChunks([]);
 
     recorder.ondataavailable = (e) => {
       console.log(
         "recorder.ondataavailable event fired. e.data.size:",
         e.data.size
-      ); // <-- ADD THIS
+      );
       if (e.data.size > 0) {
         setRecordedChunks((prev) => {
           const newChunks = [...prev, e.data];
           console.log(
             "recorder.ondataavailable: New recordedChunks state:",
             newChunks
-          ); // <-- ADD THIS
+          );
           return newChunks;
         });
       }
     };
 
     recorder.onstop = async () => {
-      console.log("recorder.onstop event fired."); // <-- ADD THIS
-      // The main logic for processing is now in handleStopRecording after the blob is created.
-      // Ensure recordedChunks are finalized before processRecordedAnswer is called.
+      console.log("recorder.onstop event fired.");
     };
 
     recorder.onerror = (e) => {
@@ -399,10 +391,10 @@ export function AIInterview() {
     };
 
     recorder.start();
-    console.log("recorder.start() called."); // <-- ADD THIS
+    console.log("recorder.start() called.");
     setMediaRecorder(recorder);
     setIsRecording(true);
-    setAnswer(""); // Clear previous typed answer if any
+    setAnswer("");
 
     setRecordingDuration(0);
     if (recordingTimer.current) clearInterval(recordingTimer.current);
@@ -412,15 +404,15 @@ export function AIInterview() {
   };
 
   const handleStopRecording = async () => {
-    console.log("handleStopRecording: Function called."); // <-- ADD THIS (1)
-    console.log("handleStopRecording: mediaRecorder instance:", mediaRecorder); // <-- ADD THIS (2)
-    console.log("handleStopRecording: isRecording state:", isRecording); // <-- ADD THIS (3)
+    console.log("handleStopRecording: Function called.");
+    console.log("handleStopRecording: mediaRecorder instance:", mediaRecorder);
+    console.log("handleStopRecording: isRecording state:", isRecording);
 
     if (mediaRecorder && isRecording) {
       console.log(
         "handleStopRecording: Condition (mediaRecorder && isRecording) is TRUE."
-      ); // <-- ADD THIS (4)
-      mediaRecorder.stop(); // This will trigger ondataavailable one last time, then onstop
+      );
+      mediaRecorder.stop();
       setIsRecording(false);
 
       if (recordingTimer.current) {
@@ -428,46 +420,33 @@ export function AIInterview() {
         recordingTimer.current = null;
       }
 
-      // Give a brief moment for ondataavailable and onstop to fully complete and update recordedChunks
-      // This is a common pattern if state updates from events are not immediately reflected.
-      // However, a more robust solution might involve promises or callbacks if `onstop` directly triggered processing.
-      // For now, let's assume `recordedChunks` state is up-to-date here or shortly after.
-      // The critical part is that `recordedChunks` must be populated by `recorder.ondataavailable`.
-
-      // Let's log the chunks just before creating the Blob.
-      // Note: `recordedChunks` is a state variable. Its update might be asynchronous.
-      // The `onstop` handler itself is where you might ideally want to initiate processing,
-      // once you are certain all data chunks have been collected.
-      // However, your current structure calls processRecordedAnswer directly from handleStopRecording.
-
       console.log(
         "handleStopRecording: recordedChunks before creating Blob:",
         recordedChunks
-      ); // <-- ADD THIS (5)
-
+      );
       const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
       console.log(
         "handleStopRecording: audioBlob created. Size:",
         audioBlob.size
-      ); // <-- ADD THIS (6)
+      );
 
       if (audioBlob.size > 0) {
         console.log(
           "handleStopRecording: audioBlob size is > 0. Calling processRecordedAnswer."
-        ); // <-- ADD THIS (7)
+        );
         await processRecordedAnswer(audioBlob);
       } else {
         console.log(
           "handleStopRecording: audioBlob size is 0. Not calling processRecordedAnswer. Chunks were:",
           recordedChunks
-        ); // <-- ADD THIS (8)
+        );
         toast("No audio recorded. Please try again.");
         setCanEditAnswer(true);
       }
     } else {
       console.log(
         "handleStopRecording: Condition (mediaRecorder && isRecording) is FALSE."
-      ); // <-- ADD THIS (9)
+      );
       if (!mediaRecorder) {
         console.error(
           "handleStopRecording: mediaRecorder is null or undefined!"
@@ -482,7 +461,7 @@ export function AIInterview() {
   };
 
   const processRecordedAnswer = async (audioBlob: Blob) => {
-    console.log("processRecordedAnswer: Function called with blob:", audioBlob); // <-- ADD THIS (10)
+    console.log("processRecordedAnswer: Function called with blob:", audioBlob);
     try {
       setIsProcessingAnswer(true);
       const formData = new FormData();
@@ -490,24 +469,23 @@ export function AIInterview() {
       console.log(
         "processRecordedAnswer: FormData created. 'audio' entry:",
         formData.get("audio")
-      ); // <-- ADD THIS (11)
+      );
 
       console.log(
         "processRecordedAnswer: Attempting api.post to /interviews/stt/"
-      ); // <-- ADD THIS (12)
+      );
       const sttResponse = await api.post("/interviews/stt/", formData);
       console.log(
         "processRecordedAnswer: api.post successful. Response:",
         sttResponse
-      ); // <-- ADD THIS (13)
+      );
 
       const transcribedText = sttResponse.data.text;
       setAnswer(transcribedText);
       setCanEditAnswer(true);
     } catch (error) {
-      console.error("processRecordedAnswer: Error during STT call:", error); // <-- ADD THIS (14)
+      console.error("processRecordedAnswer: Error during STT call:", error);
       if (typeof error === "object" && error !== null && "response" in error) {
-        // Axios-specific error handling
         const errObj = error as { response: any };
         console.error(
           "processRecordedAnswer: Error response data:",
@@ -526,7 +504,6 @@ export function AIInterview() {
         error !== null &&
         "request" in error
       ) {
-        // Axios-specific error handling
         const errObj = error as { request: any };
         console.error(
           "processRecordedAnswer: Error request data:",
@@ -549,161 +526,23 @@ export function AIInterview() {
     }
   };
 
-  // const handleStartRecording = () => {
-  //   if (!mediaStream) {
-  //     toast.error(
-  //       "Media stream not available. Please check camera/microphone permissions."
-  //     );
-  //     return;
-  //   }
-  //   if (!canEditAnswer) {
-  //     toast.error(
-  //       "Please wait for the question to finish playing or for recording to be enabled."
-  //     );
-  //     return;
-  //   }
-  //   if (isSpeaking) {
-  //     toast.error("Please wait for the AI to finish speaking.");
-  //     return;
-  //   }
-
-  //   const recorder = new MediaRecorder(mediaStream);
-  //   setRecordedChunks([]); // Clear previous chunks
-
-  //   recorder.ondataavailable = (e) => {
-  //     if (e.data.size > 0) setRecordedChunks((prev) => [...prev, e.data]);
-  //   };
-
-  //   recorder.onstop = async () => {
-  //     // This will be triggered by handleStopRecording.
-  //     // Process recorded answer after chunks are finalized.
-  //     // The state `recordedChunks` will be used in `processRecordedAnswer`.
-  //   };
-
-  //   recorder.onerror = (e) => {
-  //     console.error("MediaRecorder error:", e);
-  //     toast.error("Recording failed. Please try again.");
-  //     setIsRecording(false);
-  //     if (recordingTimer.current) {
-  //       clearInterval(recordingTimer.current);
-  //       recordingTimer.current = null;
-  //     }
-  //   };
-
-  //   recorder.start();
-  //   setMediaRecorder(recorder);
-  //   setIsRecording(true);
-  //   setAnswer(""); // Clear previous typed answer if any
-
-  //   setRecordingDuration(0);
-  //   if (recordingTimer.current) clearInterval(recordingTimer.current); // Clear any existing timer
-  //   recordingTimer.current = setInterval(() => {
-  //     setRecordingDuration((prev) => prev + 1);
-  //   }, 1000);
-  // };
-
-  // const handleStopRecording = async () => {
-  //   if (mediaRecorder && isRecording) {
-  //     mediaRecorder.stop();
-  //     setIsRecording(false);
-
-  //     if (recordingTimer.current) {
-  //       clearInterval(recordingTimer.current);
-  //       recordingTimer.current = null;
-  //     }
-
-  //     // Create audio blob from recorded chunks
-  //     const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
-
-  //     if (audioBlob.size > 0) {
-  //       await processRecordedAnswer(audioBlob);
-  //     } else {
-  //       toast("No audio recorded. Please try again.");
-  //       setCanEditAnswer(true);
-  //     }
-  //   }
-  // };
-
-  // const processRecordedAnswer = async (audioBlob: Blob) => {
-  //   try {
-  //     setIsProcessingAnswer(true);
-  //     const formData = new FormData();
-  //     formData.append("audio", audioBlob, "answer.webm");
-
-  //     // Send to backend for speech-to-text conversion
-  //     const sttResponse = await api.post("/interviews/stt/", formData);
-  //     const transcribedText = sttResponse.data.text;
-
-  //     // Display transcribed text in answer box
-  //     setAnswer(transcribedText);
-  //     setCanEditAnswer(true); // Allow editing of transcribed text
-  //   } catch (error) {
-  //     console.error("STT error:", error);
-  //     toast.error("Voice-to-text failed. Please type your answer.");
-  //     setCanEditAnswer(true);
-  //   } finally {
-  //     setIsProcessingAnswer(false);
-  //   }
-  // };
-
-  // const processRecordedAnswer = async (audioBlob: Blob) => {
-  //   try {
-  //     setIsProcessingAnswer(true);
-  //     const formData = new FormData();
-  //     formData.append("audio", audioBlob, "answer.webm");
-
-  //     const sttResponse = await api.post("/interviews/stt/", formData);
-  //     const transcribedText = sttResponse.data.text;
-
-  //     setAnswer(transcribedText);
-  //     setCanEditAnswer(true); // Allow editing of transcribed text
-  //   } catch (error) {
-  //     console.error("STT error:", error);
-  //     toast.error("Voice-to-text failed. Please type your answer.");
-  //     setCanEditAnswer(true);
-  //   } finally {
-  //     setIsProcessingAnswer(false);
-  //   }
-  // };
-
   const handleAnswerSubmit = async () => {
     if (!answer.trim() || isProcessingAnswer || isLoading) return;
 
     setIsProcessingAnswer(true);
     setIsLoading(true);
-    setCanEditAnswer(false); // Disable editing during submission
+    setCanEditAnswer(false);
 
     try {
       const formData = new FormData();
       formData.append("question", questions[currentQuestionIndex]?.text || "");
       formData.append("answer_text", answer);
-      // The backend expects interview_id and question_id in the URL or data,
-      // The provided backend `SubmitAnswerView` expects `interview_id` and `question_id` in POST data.
-      // However, the URL structure is usually `/interviews/{interview_id}/submit-answer/` or question ID is part of it.
-      // Let's assume the endpoint /interviews/${interviewId}/submit-answer/ is correct and it infers the question based on order or expects it.
-      // The backend code shows `question_id` in data, so we need the current question's ID.
-      // The frontend `questions` state doesn't have IDs yet.
-      // This implies the `QuestionData` interface and the data fetched/set for questions should include an `id`.
-      // For now, sending `question_index` as the backend might use it to find the question.
-      // The provided backend Python code for SubmitAnswerView does NOT use question_index. It uses question_id.
-      // This is a potential mismatch. The current frontend does not store question IDs.
-      // The backend `/interviews/start/` returns questions. These should include IDs.
-      // For this update, I'll keep `question_index` as the frontend currently has it.
-      // This needs to be reconciled with the backend expecting `question_id`.
-      // I will proceed with `question_text` and `question_index` as per current frontend.
-      // The backend Python code `SubmitAnswerView` uses `data.get('question_id')`.
-      // This means `questions` objects in the frontend *must* have an `id`.
-      // Modifying `QuestionData` and assuming `id` is available.
 
-      // Assuming `questions[currentQuestionIndex]` has an `id` property passed from backend.
-      // If not, this part of the backend contract is not met by current frontend state.
-      // The backend `QuestionSerializer` sends `__all__` fields, so `id` should be there.
-      // formData.append("question_id", questions[currentQuestionIndex]?.id); // This would be correct if 'id' exists on QuestionData
       formData.append(
         "question_text",
         questions[currentQuestionIndex]?.text || "Unknown question"
-      ); // Fallback, backend should primarily use ID
-      formData.append("question_index", currentQuestionIndex.toString()); // For backend to identify if ID is not primary
+      );
+      formData.append("question_index", currentQuestionIndex.toString());
 
       if (recordedChunks.length > 0) {
         const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
@@ -715,7 +554,6 @@ export function AIInterview() {
         videoRef.current.readyState === 4 &&
         cameraEnabled
       ) {
-        // Ensure video is ready
         const canvas = document.createElement("canvas");
         canvas.width = videoRef.current.videoWidth;
         canvas.height = videoRef.current.videoHeight;
@@ -728,52 +566,40 @@ export function AIInterview() {
               if (blob) {
                 formData.append("video_frame", blob, "frame.jpg");
               }
-              // Submit after blob processing (or handle async nature better)
-              // For simplicity, this assumes blob processing is quick enough.
-              // A more robust way is to chain this into another async step.
-              // For now, continuing the submission logic here.
-              // This immediate continuation might send the form before the blob is appended.
-              // It's better to await this or make API call inside the callback.
-              // Let's refactor to send form data after blob is ready
+
               sendFormData(formData);
             },
             "image/jpeg",
             imageQuality
           );
         } else {
-          await sendFormData(formData); // Send without video if canvas context fails
+          await sendFormData(formData);
         }
       } else {
-        await sendFormData(formData); // Send without video if not available/ready
+        await sendFormData(formData);
       }
     } catch (error) {
-      // This outer catch is for immediate errors before sendFormData
       console.error("Answer submission preparation error:", error);
       toast.error("Failed to prepare answer for submission. Please try again.");
       setIsLoading(false);
       setIsProcessingAnswer(false);
-      setCanEditAnswer(true); // Allow re-editing
+      setCanEditAnswer(true);
     }
   };
 
   const sendFormData = async (formData: FormData) => {
     try {
       const response = await api.post(
-        `/interviews/${interviewId}/submit-answer/`, // Endpoint from backend structure
+        `/interviews/${interviewId}/submit-answer/`,
         formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data", // Axios usually sets this for FormData
-            // Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // Handled by api instance if configured
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
-      // const answerScore = response.data.score || 5; // Score from Groq
-      // setCurrentQuestionScore(answerScore); // Not directly used for frontend generation anymore
-
       if (response.data.completed || currentQuestionIndex >= 14) {
-        // 15 questions total (0-14)
         toast.success("Interview completed!");
         navigate(`/interview-result/${interviewId}`);
         return;
@@ -784,22 +610,17 @@ export function AIInterview() {
         const newQuestion: QuestionData = {
           text: backendNextQuestion.text,
           difficulty: backendNextQuestion.difficulty,
-          is_predefined: false, // Generated questions
-          // id: backendNextQuestion.id, // Assuming backend sends ID for next question
+          is_predefined: false,
         };
 
         setQuestions((prev) => [...prev, newQuestion]);
         setCurrentQuestionIndex((prev) => prev + 1);
         setAnswer("");
-        setRecordedChunks([]); // Clear chunks for next answer
-
-        // Play next question audio
+        setRecordedChunks([]);
         setTimeout(() => {
           playQuestionAudio(newQuestion.text);
-        }, 500); // Short delay before playing next question
+        }, 500);
       } else {
-        // This means no next question, and not completed - potentially an error or unexpected end.
-        // The backend should ideally always send 'completed:true' if it's the end.
         console.warn(
           "No next question received, but interview not marked as completed. Navigating to results."
         );
@@ -809,7 +630,7 @@ export function AIInterview() {
     } catch (error) {
       console.error("Answer submission error:", error);
       toast.error("Failed to submit answer. Please try again.");
-      setCanEditAnswer(true); // Allow re-editing
+      setCanEditAnswer(true);
     } finally {
       setIsLoading(false);
       setIsProcessingAnswer(false);
@@ -829,7 +650,6 @@ export function AIInterview() {
 
   const toggleCamera = async () => {
     if (cameraEnabled && mediaStream) {
-      // Only stop video tracks
       mediaStream.getVideoTracks().forEach((track) => track.stop());
       if (videoStream) videoStream.getTracks().forEach((track) => track.stop());
       setCameraEnabled(false);
@@ -849,44 +669,18 @@ export function AIInterview() {
     }
   };
 
-  //  useEffect(() => {
-  //   return () => {
-  //     if (cameraEnabled) {
-  //       if (mediaStream) {
-  //         mediaStream.getTracks().forEach((track) => track.stop());
-  //       }
-  //       if (videoStream) {
-  //         videoStream.getTracks().forEach((track) => track.stop());
-  //       }
-  //     }
-  //     if (recordingTimer.current) {
-  //       clearInterval(recordingTimer.current);
-  //     }
-  //     if (mediaRecorder && mediaRecorder.state !== "inactive") {
-  //       mediaRecorder.stop();
-  //     }
-  //   };
-  // }, [mediaStream, videoStream, mediaRecorder, cameraEnabled]); // Add cameraEnabled to dependency array
-
   const showWarning = !audioEnabled || !cameraEnabled;
 
   const calculateProgress = () => {
     if (questions.length === 0) return 0;
-    // Assuming 15 questions means index 0 to 14.
-    // Progress should be based on number of questions answered / total questions.
-    // If currentQuestionIndex is the index of the *current* question being displayed:
-    return (currentQuestionIndex / 15) * 100; // e.g. for Q1 (index 0), 0/15=0%. After Q1, index becomes 1 (for Q2), so 1/15 progress.
-    // For Q15 (index 14), it shows 14/15 progress.
+    return (currentQuestionIndex / 15) * 100;
   };
 
   const currentDisplayedQuestion = questions[currentQuestionIndex];
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-sky-50 flex flex-col">
-      {/* Popup JSX remains the same */}
       <AnimatePresence mode="wait">
         {showPopup && (
-          // ... Popup motion.div and content ...
-          // (This part is identical to the previous full code response)
           <motion.div
             key="popup"
             className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
@@ -1038,10 +832,7 @@ export function AIInterview() {
             exit="exit"
             className="flex-1 flex flex-col"
           >
-            {/* Navbar JSX remains the same */}
             <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 py-3 shadow-sm">
-              {/* ... Navbar content ... */}
-              {/* (This part is identical to the previous full code response) */}
               <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6">
                 <div className="flex items-center space-x-2 sm:space-x-3">
                   <div className="bg-indigo-100 p-1.5 sm:p-2 rounded-full">
@@ -1083,18 +874,8 @@ export function AIInterview() {
                 />
               </div>
             </nav>
-
-            {/* THIS IS THE SECTION WITH REVERTED GRID CLASSES */}
             <main className="flex-grow max-w-8xl w-full mx-auto px-4 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              {" "}
-              {/* Reverted to lg:grid-cols-2 */}
               <section className="lg:col-span-1 space-y-4 sm:space-y-6">
-                {" "}
-                {/* Reverted to lg:col-span-1 */}
-                {/* Video player and media warnings/tips JSX remains the same */}
-                {/* ... motion.div for video ... */}
-                {/* ... motion.div for warnings/tips ... */}
-                {/* (These parts are identical to the previous full code response) */}
                 <motion.div
                   className="relative bg-gradient-to-b from-gray-800 to-gray-700 rounded-xl sm:rounded-2xl overflow-hidden shadow-lg aspect-video"
                   variants={fadeInVariants}
@@ -1312,20 +1093,6 @@ export function AIInterview() {
                   <div className="space-y-3 sm:space-y-4 flex-grow flex flex-col">
                     <div className="flex justify-between items-start mb-2 sm:mb-3">
                       <div className="flex-1">
-                        {/* <div className="flex items-center mb-1 sm:mb-2">
-                          <h3 className="text-md sm:text-lg font-semibold text-gray-700">
-                            Current Question
-                          </h3>
-                          {currentDisplayedQuestion?.difficulty && (
-                            <span
-                              className={`ml-2 sm:ml-3 px-2 py-0.5 sm:px-2.5 rounded-full text-xs font-medium ${getDifficultyColor(
-                                currentDisplayedQuestion.difficulty
-                              )}`}
-                            >
-                              {currentDisplayedQuestion.difficulty.charAt(0).toUpperCase() + currentDisplayedQuestion.difficulty.slice(1)}
-                            </span>
-                          )}
-                        </div> */}
                         <p className="text-md sm:text-lg font-medium text-gray-800 leading-relaxed">
                           {currentDisplayedQuestion?.text ||
                             (isLoading && !isProcessingAnswer
